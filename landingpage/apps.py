@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SchoolsConfig(AppConfig):
+class LandingpageConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'Schools'
+    name = 'landingpage'
