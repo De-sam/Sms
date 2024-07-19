@@ -1,0 +1,70 @@
+    {% load static %}
+    {% load crispy_forms_tags %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ title }}</title>
+        <!-- Add your CSS and other head elements here -->
+        <link rel="stylesheet" href="{% static 'landingpage/css/styles.css' %}">
+        <!-- Example: Include Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    </head>
+    <body bgcolor="{{ school.theme_color1 }}">
+        {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'warning' %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'info' %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% else %}
+                    <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                {% endif %}
+                        {{ message }}
+            
+                    </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="">
+            <h1>{{ school.school_name }} Login</h1>
+            <div class="card border-dark mb-3" style="max-width: 20rem;">
+                <div class="card-header">
+                    
+                Login
+
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <button class="btn btn-block" style="background-color: {{ school.theme_color1 }};" type="submit">Student's Registaration</button>
+                      </div>
+                      <div class="form-group">
+                        <button class="btn btn-block" style="background-color: {{ school.theme_color1 }};" type="submit">Teacher's Registaration</button>
+                      </div>  
+                    <form method="post">
+                        {% csrf_token %}
+                        <fieldset class="form-group" action="{% url 'dashboard' school.short_code %}">
+                            {{ form | crispy }}
+                        </fieldset>
+                        <div class="form-group">
+                          <button class="btn btn-block" style="background-color: {{ school.theme_color1 }};" type="submit">Register</button>
+                        </div>
+                      </form>
+                    {% if form.errors %}
+                        <p class="text-danger">{{ form.non_field_errors }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Display other school details -->
+       
+        <!-- Example: Include Bootstrap JS (Optional) -->
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+Tp4Qr5lyAEmLZ+g4te7gGdo8NYwG4pD2iV" crossorigin="anonymous"></script>
+    </body>
+    </html>

@@ -1,0 +1,32 @@
+<!-- dashboard.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>Welcome to {{ school.school_name }} Dashboard</h1>
+    
+    <h2>School Details</h2>
+    <p><strong>School Details:</strong></p>
+    <p><strong>school_name:</strong> {{ school.school_name }}</p>
+    <p><strong>Address:</strong> {{ school.address }}</p>
+    <p><strong>City:</strong> {{ school.city }}</p>
+    <p><strong>State:</strong> {{ school.state }}</p>
+    <p><strong>LGA:</strong> {{ school.lga }}</p>
+    <p><strong>Logo:</strong> <img src="{{ logos }}" alt="School Logo"></p>
+    <img src="{% static 'images/your-image.jpg' %}" alt="Your Image Description">
+    <p><strong>Theme:</strong> {{ school.theme_color1 }}</p>
+    <p><strong>Theme:</strong> {{ school.theme_color1 }}</p>
+    <p><strong>Admin Name:</strong> {{ school.first_name }} {{ last_name }}</p>
+    <p><strong>Admin Email:</strong> {{ school.email }}</p>
+    <p><strong>Admin Phone:</strong> {{ school.admin_phone_number }}</p>
+    <p><strong>Referral Source:</strong> {{ school.referral_source }}</p>
+    <p><strong>School ID:</strong> {{ school.school_id }}</p>
+    <!-- Add more details as needed -->
+    
+    <!--  -->
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "landingpage/base.html" %}
+{% block content %}
+<p> Your school was registered successfully!</p>
+<p>You will receive an email with your school details</p>
+<p> You will now be redirected to the login page... </p>
+{% if redirect %}
+<p>You will be redirected to the login page shortly...</p>
+<script>
+setTimeout(function() {
+  window.location.href = "{% url 'login-page' shortcode %}";
+}, 6000);  // 3000 milliseconds = 3 seconds
+</script>
+
+{% endif  %}
+{% endblock content %}
