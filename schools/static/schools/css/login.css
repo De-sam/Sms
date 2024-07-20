@@ -1,0 +1,25 @@
+.btn-block {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: var(--theme-color1);
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+/* .btn-block:hover {
+    background-color: darken(var(--theme-color1), 10%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-block:active {
+    background-color: darken(var(--theme-color1), 20%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+} */

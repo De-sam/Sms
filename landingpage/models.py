@@ -17,7 +17,7 @@ class SchoolRegistration(models.Model):
     state = models.CharField(max_length=100)
     lga = models.CharField(max_length=100)
     short_code = models.CharField(max_length=50, unique=True)
-    logo = models.ImageField(upload_to='logos/')
+    logo = models.ImageField(default='default.jpeg',upload_to='logos')
     theme_color1 = models.CharField(max_length=7)
     theme_color2 = models.CharField(max_length=7)
     username = models.CharField(max_length=100)

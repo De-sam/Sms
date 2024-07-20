@@ -7,6 +7,11 @@
   position: relative;
 }
 
+.logo{
+  width: 5px;
+  height: 5px;
+}
+
 .step-card {
   width: 100%;
   z-index: 1;
