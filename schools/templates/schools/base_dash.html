@@ -1,0 +1,36 @@
+{% extends 'adminlte/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block sidebar %}
+    {% include 'adminlte/lib/_main_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>
+                Dashboard-
+                <small>Main dashboard</small>
+            </h1>
+            <ol class="breadcrumb">
+                <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li class="active">Dashboard</li>
+            </ol>
+        </section>
+        <section class="content">
+            <!-- Main content here -->
+            <h1>Welcome to My Dashboard</h1>
+            <p>This is your custom dashboard content.</p>
+        </section>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <footer class="main-footer">
+        <div class="pull-right hidden-xs">
+            Anything you want
+        </div>
+        <strong>Copyright &copy; 2024 <a href="#">Company</a>.</strong> All rights reserved.
+    </footer>
+{% endblock %}

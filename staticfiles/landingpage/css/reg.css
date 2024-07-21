@@ -1,0 +1,73 @@
+.container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.steps-container {
+  position: relative;
+}
+
+.logo{
+  width: 5px;
+  height: 5px;
+}
+
+.step-card {
+  width: 100%;
+  z-index: 1;
+}
+
+.vertical-line {
+  position: absolute;
+  left: 35px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #007bff;
+  z-index: 0;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .container-fluid h2 {
+    font-size: 24px;
+  }
+  .container-fluid p {
+    font-size: 14px;
+  }
+  .mb-4 img {
+    height: auto;
+    width: 100%;
+  }
+  .vertical-line {
+    left: 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .container-fluid h2 {
+    font-size: 28px;
+  }
+  .container-fluid p {
+    font-size: 16px;
+  }
+  .vertical-line {
+    left: 25px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container-fluid h2 {
+    font-size: 32px;
+  }
+  .container-fluid p {
+    font-size: 18px;
+  }
+  .vertical-line {
+    left: 30px;
+  }
+}
+

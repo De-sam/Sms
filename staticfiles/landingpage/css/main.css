@@ -1,0 +1,12 @@
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030; /* Ensure it is above other elements */
+}
+
+.content {
+    padding-top: 50px; /* Adjust based on the header height */
+}
+

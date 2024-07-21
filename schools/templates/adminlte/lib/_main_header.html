@@ -1,0 +1,14 @@
+{% extends 'adminlte/lib/_main_header.html' %}
+
+{% block logo %}
+<a href="{% block logo_href %}/{% endblock %}" class="logo">
+    <!-- mini logo for sidebar mini 50x50 pixels -->
+    <span class="logo-mini">
+        {% if school.logo %}
+            <img src="{{ school.logo.url }}" class="img-fluid" alt="Logo" style="max-width: 40px; height: auto; border-radius: 50px;" alt="School Logo">       
+        {% endif %}
+    </span>
+    <!-- logo for regular state and mobile devices -->
+    <span class="logo-lg">{{ school.school_name }}</span>
+</a>
+{% endblock %}
