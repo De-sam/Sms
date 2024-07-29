@@ -1,6 +1,6 @@
 {% extends 'adminlte/base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard-{{ school.school_name }} {% endblock %}
 
 {% block sidebar %}
     {% include 'adminlte/lib/_main_sidebar.html' %}
@@ -20,17 +20,8 @@
         </section>
         <section class="content">
             <!-- Main content here -->
-            <h1>Welcome to My Dashboard</h1>
-            <p>This is your custom dashboard content.</p>
-        </section>
+           
     </div>
 {% endblock %}
 
-{% block footer %}
-    <footer class="main-footer">
-        <div class="pull-right hidden-xs">
-            Anything you want
-        </div>
-        <strong>Copyright &copy; 2024 <a href="#">Company</a>.</strong> All rights reserved.
-    </footer>
-{% endblock %}
+

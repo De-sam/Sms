@@ -1,105 +1,226 @@
-{% extends 'adminlte/lib/_main_sidebar.html' %}
-
-
-{% block nav_links %}
-    <!-- Existing Menu Items -->
-    <li>
-        <a href="{% url 'dashboard' school.short_code %}">
-            <i class="fa fa-dashboard"></i> <span>Home</span>
+{% load adminlte_helpers %}
+{%load static %}
+<!-- Left side column. contains the sidebar -->
+<aside class="main-sidebar sidebar-dark-primary  elevation-4">
+     <!-- Brand Logo -->
+    {% block logo %}
+    {% if school.short_code %}
+        <a href="{% url 'schools_dashboard' school.short_code %}" class="brand-link">
+            
+            {% if school.logo %}
+            <img src="{{ school.logo.url }}" alt="school Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+            {% else %}
+                <span>No logo available</span>
+            {% endif %}
+            
+            {% block logo_text %}<span style="font-size: x-small;" class="brand-text font-weight-light">{{ school.school_name }}</span>{% endblock %}
         </a>
-    </li>
+        {% endif %}
+    {% endblock %}
+    <!-- sidebar: style can be found in sidebar.less -->
+    <div class="sidebar">
+        <!-- Sidebar user panel -->
+        {% block user_panel %}
+        <!-- Sidebar user panel (optional) -->
+      <!-- <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+          <img src="{% avatar_url size=90 %}" class="img-circle elevation-2" alt="User Image">
+        </div>
+        <div class="info">
+          <a href="#" class="d-block">{% firstof request.user.get_full_name request.user.username %}</a>
+        </div>
+      </div> -->
+        {% endblock %}
 
-    <!-- school profile -->
-    <li class="treeview">
-        <a href="#">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-building-fill-gear" viewBox="0 0 16 16">
-                <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7.256A4.5 4.5 0 0 0 12.5 8a4.5 4.5 0 0 0-3.59 1.787A.5.5 0 0 0 9 9.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .39-.187A4.5 4.5 0 0 0 8.027 12H6.5a.5.5 0 0 0-.5.5V16H3a1 1 0 0 1-1-1zm2 1.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m3 0v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M7.5 5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M4.5 8a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
-                <path d="M11.886 9.46c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
-              </svg></i> <span>School profile</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> Add a new branch </a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Edit school profile </a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Edit branch profile </a></li>
-        </ul>
-    </li>
+        {% block form %}{% endblock %}
 
-    <!-- Students Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-users"></i> <span>Students</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> All Students Records</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Reset Student Credentials</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Students Deactivation</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Students Transfer</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Record Students Misconduct</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> View Students Misconduct</a></li>
-        </ul>
-    </li>
+        <!-- sidebar menu: : style can be found in sidebar.less -->
+        {% block nav_links_ul %}
+        <nav class="mt-2 overflow-auto">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% block nav_links_outer %}
+            <li class="nav-header">{% block nav_heading %}MAIN NAVIGATION{% endblock %}</li>
 
-    <!-- Parents Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-users"></i> <span>Parents</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> Add Parents Record</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> All Parents Records</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Parents Profile</a></li>
-        </ul>
-    </li>
-
-    <!-- Staff and Teachers Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-users"></i> <span>Staff and Teachers</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> Add New Staff</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> View Staff</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Add/View Staff Category</a></li>
-        </ul>
-    </li>
-
-    <!-- Academic Reports Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-book"></i> <span>Academic Reports</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> End of Term (KG)</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> End of Term (Nur)</a></li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> End of Term (Sec)</a></li>
-        </ul>
-    </li>
-
-    <!-- Accounts & Finance Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-dollar"></i> <span>Accounts & Finance</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href=""><i class="fa fa-circle-o"></i> Add Menu for Accounts</a></li>
-        </ul>
-    </li>
-
-    <!-- Job Applicants Menu -->
-    <li class="treeview">
-        <a href="#">
-            <i class="fa fa-briefcase"></i> <span>Job Applicants</span>
-            <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-            <li><a href=""><i class="fa fa-circle-o"></i> Add Menu for Job Application</a></li>
-        </ul>
-    </li>
-
-{% endblock nav_links %}
+            {% block nav_links %}
+            <!-- <li class="nav-item">
+                <a href="" class="nav-link">
+                    <i class="nav-icon fas fa-tachometer-alt"></i> 
+                    <p>Home</p>
+                </a>
+            </li> -->
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-school"></i>
+                    <p>School profile</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview menu-open">
+                    <li class="nav-item">
+                        
+                        <a href="{% url 'school_profile' school.short_code %}" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Edit school profile
+                        </a>
+                       
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Edit branch profile
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-user-graduate"></i>  
+                    <p>Students</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>Students Records
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Reset Credentials
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Deactivation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Transfer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Misconduct
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Misconduct Records
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-users"></i> 
+                    <p>Parents</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add Parents Record
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> All Parents Records
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Parents Profile
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-users"></i> 
+                    <p>Staff and Teachers</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add New Staff
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> View Staff
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add/View Staff Category
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-book"></i> 
+                    <p>Academic Reports</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (KG)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Nur)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Sec)
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-dollar-sign"></i> 
+                    <p>Accounts & Finance</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add Menu for Accounts
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-item has-tree-view">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-briefcase"></i> 
+                    <p>Job Applicants</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Application
+                        </a>
+                    </li>
+                </ul>
+            </li>            
+                
+            {% endblock nav_links %}
+            {% endblock nav_links_outer %}
+            </ul>
+            </nav>
+        {% endblock nav_links_ul %}
+    </div>
+    <!-- /.sidebar -->
+</aside>

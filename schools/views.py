@@ -1,14 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as django_login
+from django.contrib.auth import authenticate, login as django_login, logout
 from django.contrib import messages
 from landingpage.models import SchoolRegistration
-from .forms import LoginForm
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
+from schools.models import PrimarySchool
+from .forms import LoginForm, SchoolProfileUpdateForm, BranchForm, PrimarySchoolForm
+from django.urls import reverse
+from functools import wraps
+from django.db import IntegrityError
+
+# Custom decorator
+def login_required_with_short_code(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            short_code = kwargs.get('short_code', 'default')  # Ensure default value is handled
+            login_url = reverse('login-page', kwargs={'short_code': short_code})
+            return redirect(f'{login_url}?next={request.path}')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -16,10 +29,10 @@ def login(request, short_code):
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
             if user is not None:
-                # Verify if the user is the admin of the school
                 if user == school.admin_user:
                     django_login(request, user)
-                    return redirect('loader',  short_code=short_code)  # Adjust to your dashboard URL
+                    next_url = request.GET.get('next', reverse('schools_dashboard', kwargs={'short_code': short_code}))
+                    return redirect(next_url)
                 else:
                     messages.error(request, 'You are not authorized to log in for this school.')
             else:
@@ -38,18 +51,89 @@ def login(request, short_code):
 def loader(request, short_code):
     return render(request, 'schools/loader.html', {'short_code': short_code})
 
-
-
-def logout_view(request,  short_code):
+def logout_view(request, short_code):
     logout(request)
-   
-    
-    return redirect('login', short_code=short_code)  # Redirect to login after logout
+    messages.success(request, 'logged out sucessfully!!!.')
+    return redirect('login-page', short_code=short_code)
 
-
-@login_required
+@login_required_with_short_code
 def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    
-    # Add additional logic for the dashboard here
     return render(request, 'schools/base_dash.html', {'school': school})
+
+@login_required_with_short_code
+def school_profile(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    try:
+        # Attempt to get the PrimarySchool instance
+        primary_school = PrimarySchool.objects.get(parent_school=school)
+        primary_school = [primary_school]  # Wrap it in a list to match the template expectations
+    except PrimarySchool.DoesNotExist:
+        # Handle the case where no PrimarySchool is found
+        primary_school = []
+    print(f"School: {school}")
+    print(f"Primary Schools: {primary_school}")
+
+    
+    return render(request, "schools/school_profile.html", {
+        'school': school,
+        'pry_school': primary_school,
+    })
+
+@login_required_with_short_code
+def edit_sch_profile(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    if request.method == 'POST':
+        form = SchoolProfileUpdateForm(request.POST, request.FILES, instance=school)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'School profile updated successfully!')
+            return redirect('edit_sch_profile', short_code=short_code)
+    else:
+        form = SchoolProfileUpdateForm(instance=school)
+
+    return render(request, "schools/edit_sch_profile.html", {'school': school, 'form': form})
+
+@login_required_with_short_code
+def add_branch(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    if request.method == 'POST':
+        form = BranchForm(request.POST)
+        if form.is_valid():
+            branch = form.save(commit=False)
+            branch.school = school
+            branch.save()
+            messages.success(request, 'Branch added successfully!')
+            return redirect('school_profile', short_code=short_code)
+    else:
+        form = BranchForm()
+
+    return render(request, 'schools/add_branch.html', {'form': form, 'school': school})
+
+@login_required_with_short_code
+def add_primary_school(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    if request.method == 'POST':
+        form = PrimarySchoolForm(request.POST, request.FILES)
+        if form.is_valid():
+            primary_school = form.save(commit=False)
+            primary_school.admin_user = request.user  # Ensure admin_user is set
+            primary_school.school_id = school.school_id
+            primary_school.parent_school = school 
+
+            try:
+                primary_school.save()
+                messages.success(request, 'Primary section added successfully!')
+                return redirect ( 'school_profile', short_code=short_code )
+            except IntegrityError:
+                # Handle the case where the unique constraint fails
+                messages.error(request, 'A primary school already exists for this secondary school. Please check and try again.')
+                return render(request, 'schools/add_primary_school.html', {'form': form, 'school': school})
+    else:
+        form = PrimarySchoolForm()
+
+    return render(request, 'schools/add_primary_school.html', {'form': form, 'school': school})

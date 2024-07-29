@@ -13,6 +13,7 @@ def generate_shortcode(name):
     shortcode = ''.join([word[0] + word[-1] for word in words]).lower()
     return shortcode
 
+
 def home(request):
     return render(request, 'landingpage/home.html', {'title': 'Home'})
 

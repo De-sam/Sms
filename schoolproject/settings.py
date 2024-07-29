@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'landingpage.apps.LandingpageConfig',
-    'django_adminlte',
-    'django_adminlte_theme',
+    'adminlte3',
+    'adminlte3_theme',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -117,14 +117,14 @@ USE_I18N = True
 
 USE_TZ = True
 
-LOGIN_URL = '/login/'
+LOGIN_URL = 'login-page'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 import os
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+# STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static'),

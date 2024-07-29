@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from PIL import Image
 
 class SchoolRegistration(models.Model):
     REFERRAL_SOURCES = [
@@ -35,11 +36,26 @@ class SchoolRegistration(models.Model):
         return shortcode
 
     def save(self, *args, **kwargs):
+        # Generate school_id and short_code if not already set
         if not self.school_id:
             self.school_id = f"{self.school_name[:3].upper()}{str(uuid.uuid4())[:4]}"
         if not self.short_code:
             self.short_code = self.generate_shortcode()
+
+        # Save the model instance
         super(SchoolRegistration, self).save(*args, **kwargs)
+
+        # Handle image resizing after the instance is saved
+        if self.logo:
+            img = Image.open(self.logo.path)
+            if img.height > 300 or img.width > 300:
+                output_size = (300, 300)
+                img.thumbnail(output_size)
+                img.save(self.logo.path)
+
+
+
+        
 
     def __str__(self):
         return (f"ID: {self.school_id},"
@@ -47,3 +63,6 @@ class SchoolRegistration(models.Model):
                 f"Admin: {self.first_name} {self.last_name},"
                 f"Phone: {self.admin_phone_number}, "
                 f"Short Code: {self.short_code}")
+
+    def is_secondary_school(self):
+        return True  # Every SchoolRegistration is considered a Secondary School
