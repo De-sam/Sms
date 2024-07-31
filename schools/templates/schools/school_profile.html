@@ -124,7 +124,7 @@
 <!-- primary profile -->
 <h4 class="text-center">
     <i class="nav-icon fas fa-school"></i>
-     Primary School Profile 
+    Primary School Profile 
 </h4>
 <div class="container mt-2">
 <table class="table table-striped table-bordered">
@@ -133,6 +133,7 @@
             <th class="bg-primary text-white" >School ID</th>
             <th class="bg-primary text-white">School Name</th>
             <th class="bg-primary text-white">School Address</th>
+            <th class="bg-primary text-white">School EmIL</th>
             <th class="bg-primary text-white">Actions</th>
         </tr>
     </thead>
@@ -161,12 +162,7 @@
                             </svg>
                             Add Branch
                         </a></li>
-                        <li><a class="dropdown-item" href="{% url 'add_primary_school' school.short_code %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                          </svg>
-                          Add Primary Section
-                        </a></li>
+                       
                         <li><a class="dropdown-item" href="{% url 'edit_sch_profile' school.short_code %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>

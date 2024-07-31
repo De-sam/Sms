@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as django_login, logout
 from django.contrib import messages
 from landingpage.models import SchoolRegistration
-from schools.models import PrimarySchool
+from schools.models import PrimarySchool,Branch
 from .forms import LoginForm, SchoolProfileUpdateForm, BranchForm, PrimarySchoolForm
 from django.urls import reverse
 from functools import wraps
@@ -68,14 +68,9 @@ def school_profile(request, short_code):
     try:
         # Attempt to get the PrimarySchool instance
         primary_school = PrimarySchool.objects.get(parent_school=school)
-        primary_school = [primary_school]  # Wrap it in a list to match the template expectations
     except PrimarySchool.DoesNotExist:
-        # Handle the case where no PrimarySchool is found
         primary_school = []
-    print(f"School: {school}")
-    print(f"Primary Schools: {primary_school}")
 
-    
     return render(request, "schools/school_profile.html", {
         'school': school,
         'pry_school': primary_school,
@@ -112,6 +107,30 @@ def add_branch(request, short_code):
         form = BranchForm()
 
     return render(request, 'schools/add_branch.html', {'form': form, 'school': school})
+
+@login_required_with_short_code
+def branch_list(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    
+    # Fetch branches associated with the general school
+    secondary_school_branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
+    
+    # Fetch  primary schools associated with school
+    try:
+        # Attempt to get the PrimarySchool instance
+        primary_school = PrimarySchool.objects.get(parent_school=school)
+    except PrimarySchool.DoesNotExist:
+        primary_school = []
+
+    # Fetch branches associated with primary schools
+    primary_school_branches = Branch.objects.filter(primary_school__isnull=False, primary_school__parent_school=school)
+
+    return render(request, 'schools/branch_list.html',{
+        'school': school,
+        'pry_sch': primary_school,
+        'sec_sch_branches': secondary_school_branches,
+        'pry_sch_branches': primary_school_branches,
+    })
 
 @login_required_with_short_code
 def add_primary_school(request, short_code):
