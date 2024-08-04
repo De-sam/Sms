@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'classes.apps.ClassesConfig',
     'schools.apps.SchoolsConfig',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'adminlte3_theme',
     'django.contrib.admin',
     'django.contrib.auth',
+     'django.contrib.humanize',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',

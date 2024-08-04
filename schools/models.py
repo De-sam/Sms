@@ -53,7 +53,7 @@ class PrimarySchool(models.Model):
             uuid_part = str(uuid.uuid4().hex[:6].upper())
 
             # Combine them to create a unique ID
-            self.pry_school_id = f"{school_prefix}-{uuid_part}"
+            self.pry_school_id = f"{school_prefix}{uuid_part}"
 
         super().save(*args, **kwargs)
 

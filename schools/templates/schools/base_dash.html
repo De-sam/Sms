@@ -1,27 +1,77 @@
 {% extends 'adminlte/base.html' %}
 
-{% block title %}Dashboard-{{ school.school_name }} {% endblock %}
+{% block title %}Dashboard - {{ school.school_name }}{% endblock %}
 
 {% block sidebar %}
     {% include 'adminlte/lib/_main_sidebar.html' %}
 {% endblock %}
 
 {% block content %}
-    <div class="content-wrapper">
-        <section class="content-header">
-            <h1>
-                Dashboard-
-                <small>Main dashboard</small>
-            </h1>
-            <ol class="breadcrumb">
-                <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li class="active">Dashboard</li>
-            </ol>
-        </section>
-        <section class="content">
-            <!-- Main content here -->
-           
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Welcome and Setup Card -->
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Welcome to the Dashboard!</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Welcome to your new dashboard, {{ user.first_name }}! Please set up your school by filling out the necessary information. If you need assistance, consult the setup guide or contact support.
+                        </p>
+                        <a href="" class="btn btn-primary">Set Up Your School</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='primary' icon='fas fa-building' title='Number of Branches' number=number_of_branches %}
+            </div>
+
+            <!-- Number of Students Info Box -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='secondary' icon='fas fa-user-graduate' title='Number of Students' number=number_of_students %}
+            </div>
+
+            <!-- Number of Teachers Info Box -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='success' icon='fas fa-chalkboard-teacher' title='Number of Teachers' number=number_of_teachers %}
+            </div>
+
+            <!-- Total Attendance Info Box -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='info' icon='fas fa-calendar-check' title='Total Attendance' number=total_attendance %}
+            </div>
+
+            <!-- Placeholder Info Box 1 -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='warning' icon='fas fa-cog' title='Placeholder Title' number=Placeholder_title  %}
+            </div>
+
+            <!-- Placeholder Info Box 2 -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='danger' icon='fas fa-exclamation-triangle' title='Placeholder Title' number='Content for this box goes here.' %}
+            </div>
+
+            <!-- Placeholder Info Box 3 -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='dark' icon='fas fa-info-circle' title='Placeholder Title' number='Content for this box goes here.' %}
+            </div>
+
+
+
+
+        </div>
     </div>
 {% endblock %}
-
-

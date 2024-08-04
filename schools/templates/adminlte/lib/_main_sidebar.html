@@ -42,22 +42,21 @@
             <li class="nav-header">{% block nav_heading %}MAIN NAVIGATION{% endblock %}</li>
 
             {% block nav_links %}
-            <!-- <li class="nav-item">
-                <a href="" class="nav-link">
+            <li class="nav-item">
+                <a href="{% url 'schools_dashboard' school.short_code %}" class="nav-link">
                     <i class="nav-icon fas fa-tachometer-alt"></i> 
-                    <p>Home</p>
+                    <p>Dashboard</p>
                 </a>
-            </li> -->
+            </li>
             
             <li class="nav-item has-tree-view">
                 <a href="#" class="nav-link">
                     <i class="nav-icon fas fa-school"></i>
-                    <p>School profile</p>
+                    <p>School profile/Setup    </p>
                     <i class="right fas fa-angle-left"></i>
                 </a>
                 <ul class="nav nav-treeview menu-open">
                     <li class="nav-item">
-                        
                         <a href="{% url 'school_profile' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> view/Edit school profile
                         </a>
@@ -68,7 +67,7 @@
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
                             View/Edit branch profile
                         </a>
-                    </li>
+                    </li>   
                 </ul>
             </li>
             

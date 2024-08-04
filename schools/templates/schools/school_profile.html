@@ -2,238 +2,293 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
-<h4 class="text-center">
-    <i class="nav-icon fas fa-school"></i>
-     secondary School Profile 
-</h4>
-<div class="container m-2">
-    <!-- Secondary profile -->
-    <table class="table table-striped table-bordered">
-        <thead >
-            <tr >
-                <th class="bg-primary text-white" >School ID</th>
-                <th class="bg-primary text-white">School Name</th>
-                <th class="bg-primary text-white">School Address</th>
-                <th class="bg-primary text-white">School Email</th>
-                <th class="bg-primary text-white">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ school.school_id }}</td>
-                <td>{{ school.school_name }} </td>
-                <td> {{ school.address }}   </td>
-                <td>{{ school.email }}</td>
-                <td>
-                    <div class="dropdown"> 
-                        <div type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square " viewBox="0 0 16 16">
-                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                            </svg>
-                        </div>
-                        <ul class="dropdown-menu bg-light" aria-labelledby="dropdownMenuButton">
-                            <li><a class="dropdown-item" href="{% url 'add_branch' school.short_code %}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                                </svg>
-                                Add Branch
-                            </a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_primary_school' school.short_code %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                              </svg>
-                              Add Primary Section
-                            </a></li>
-                            <li><a class="dropdown-item" href="{% url 'edit_sch_profile' school.short_code %}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                  </svg>
-                                Edit School Profile
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewSchoolModal">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-                                  </svg>
-                                View School Profile
-                            </a></li>
-                        </ul>
-                    </div>
+<!-- Secondary profile -->
+<div class="accordion" id="accordionExample">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                <i class="nav-icon fas fa-school m-1"></i>
+                secondary School Profile
+            </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+            data-bs-parent="#accordionExample">
+            <div class="accordion-body">
 
-                    <!--school details Modal -->
-                        <div class="modal fade" id="viewSchoolModal" tabindex="-1" aria-labelledby="viewSchoolModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                <h5 class="modal-title" id="viewSchoolModalLabel">School Profile</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                <!-- School details content goes here -->
-                                
-                                {% if school.logo %}
-                                <img src="{{ school.logo.url }}" alt="School Logo"
-                                style="display: block; margin: 0 auto; max-width: 50px; max-height: 50px; object-fit: contain; border-radius: 50%; border: 2px solid #ddd; margin-bottom: 1rem;">
-                                {% else %}
-                                  <p class="text-center"><span >No logo available</span> </p>
-                                {% endif %}
-                                
-                                <p class="text-center"><strong>School ID:</strong> {{ school.school_id }}</p>
-                                <p class="text-center"><strong>school name:</strong> {{ school.school_name }} </p>
-                                <p class="text-center"><strong>Address:</strong> {{ school.address }}</p>
-                                <p class="text-center"><strong>State:</strong> {{ school.state }}</p>
-                                <p class="text text-center"><strong>LGA:</strong> {{ school.lga }}</p>
-                                <p class="text-center"><strong>Admin Email:</strong> {{ school.email }}</p>
-                                <p class="text-center"><strong>Admin Phone:</strong> {{ school.admin_phone_number }}</p>
-                                <p class="text-center"><strong>Brand Color 1: 
-                                    <div style="text-align: center;">
-                                        <div style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color1 }}; border: 1px solid #000;">
-                                    </div>        
-                                </div></strong></p>
-                                <p class="text-center"><strong>Brand Color 2: 
-                                    <div style="text-align: center;">
-                                        <div style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color2 }}; border: 1px solid #000;">
+                <div class="container m-2 table-responsive" style="height: 270px;">
+                    <table class="table table-striped table-bordered ">
+                        <thead>
+                            <tr>
+                                <th class="bg-primary text-white">School ID</th>
+                                <th class="bg-primary text-white">School Name</th>
+                                <th class="bg-primary text-white">School Address</th>
+                                <th class="bg-primary text-white">School Email</th>
+                                <th class="bg-primary text-white">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ school.school_id }}</td>
+                                <td>{{ school.school_name }} </td>
+                                <td> {{ school.address }} </td>
+                                <td>{{ school.email }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <div type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                fill="currentColor" class="bi bi-pencil-square " viewBox="0 0 16 16">
+                                                <path
+                                                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                <path fill-rule="evenodd"
+                                                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                            </svg>
+                                        </div>
+                                        <ul class="dropdown-menu bg-light" aria-labelledby="dropdownMenuButton">
+                                            <li><a class="dropdown-item"
+                                                    href="{% url 'add_branch' school.short_code %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                        fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                                        <path
+                                                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                                    </svg>
+                                                    Add Branch
+                                                </a></li>
+                                            <li><a class="dropdown-item"
+                                                    href="{% url 'add_primary_school' school.short_code %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                        fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                                        <path
+                                                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                                    </svg>
+                                                    Add Primary Section
+                                                </a></li>
+                                            <li><a class="dropdown-item"
+                                                    href="{% url 'edit_sch_profile' school.short_code %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                        fill="currentColor" class="bi bi-pencil-square"
+                                                        viewBox="0 0 16 16">
+                                                        <path
+                                                            d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                        <path fill-rule="evenodd"
+                                                            d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                                    </svg>
+                                                    Edit School Profile
+                                                </a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                    data-bs-target="#viewSchoolModal">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                        fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                                        <path
+                                                            d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+                                                        <path
+                                                            d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+                                                    </svg>
+                                                    View School Profile
+                                                </a></li>
+                                        </ul>
                                     </div>
-                                    </div></strong></p>
-                                <!-- Add more details as needed -->
-                                </div>
-                                <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                       
-                     </div>
+
+                                    <!--school details Modal -->
+                                    <div class="modal fade" id="viewSchoolModal" tabindex="-1"
+                                        aria-labelledby="viewSchoolModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="viewSchoolModalLabel">School Profile
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- School details content goes here -->
+
+                                                    {% if school.logo %}
+                                                    <img src="{{ school.logo.url }}" alt="School Logo"
+                                                        style="display: block; margin: 0 auto; max-width: 50px; max-height: 50px; object-fit: contain; border-radius: 50%; border: 2px solid #ddd; margin-bottom: 1rem;">
+                                                    {% else %}
+                                                    <p class="text-center"><span>No logo available</span> </p>
+                                                    {% endif %}
+
+                                                    <p class="text-center"><strong>School ID:</strong> {{school.school_id }}</p>
+                                                    <p class="text-center"><strong>school name:</strong> {{school.school_name }} </p>
+                                                    <p class="text-center"><strong>Address:</strong> {{ school.address}}</p>
+                                                    <p class="text-center"><strong>State:</strong> {{ school.state }}
+                                                    </p>
+                                                    <p class="text text-center"><strong>LGA:</strong> {{ school.lga }}
+                                                    </p>
+                                                    <p class="text-center"><strong>Admin Email:</strong> {{ school.email}}</p>
+                                                    <p class="text-center"><strong>Admin Phone:</strong> {{ school.admin_phone_number }}</p>
+                                                    <p class="text-center"><strong>Brand Color 1:
+                                                            <div style="text-align: center;">
+                                                                <div
+                                                                    style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color1 }}; border: 1px solid #000;">
+                                                                </div>
+                                                            </div>
+                                                        </strong></p>
+                                                    <p class="text-center"><strong>Brand Color 2:
+                                                            <div style="text-align: center;">
+                                                                <div
+                                                                    style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color2 }}; border: 1px solid #000;">
+                                                                </div>
+                                                            </div>
+                                                        </strong></p>
+                                                    <!-- Add more details as needed -->
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-danger"
+                                                        data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                 </div>
             </div>
+        </div>
         </td>
-     </tr>
-            
-           
+        </tr>
+
+
         </tbody>
+        </table>
+    </div>
+</div>
+</div>
+</div>
+<!-- primary profile -->
+{% if pry_school %}
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingTwo">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo"
+            aria-expanded="false" aria-controls="collapseTwo">
+            <i class="nav-icon fas fa-school m-1"></i>
+            Primary School Profile
+        </button>
+    </h2>
+    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+        data-bs-parent="#accordionExample">
+        <div class="accordion-body">
+
+            <div class="container mt-2 table-responsive" style="height: 270px;">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th class="bg-primary text-white">School ID</th>
+                            <th class="bg-primary text-white">School Name</th>
+                            <th class="bg-primary text-white">School Address</th>
+                            <th class="bg-primary text-white">School EmaIL</th>
+                            <th class="bg-primary text-white">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+
+                            <td>{{ pry_school.pry_school_id }}</td>
+                            <td>{{ pry_school.school_name }} </td>
+                            <td> {{ pry_school.address }} </td>
+                            <td>{{ school.email }}</td>
+
+
+                            <td>
+                                <div class="dropdown">
+                                    <div type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            fill="currentColor" class="bi bi-pencil-square " viewBox="0 0 16 16">
+                                            <path
+                                                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                            <path fill-rule="evenodd"
+                                                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                        </svg>
+                                    </div>
+                                    <ul class="dropdown-menu bg-light" aria-labelledby="dropdownMenuButton">
+                                        <li><a class="dropdown-item"
+                                                href="{% url 'add_primary_branch' school.short_code %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                                </svg>
+                                                Add Branch
+                                            </a></li>
+
+                                        <li><a class="dropdown-item"
+                                                href="{% url 'edit_pry_profile' school.short_code %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                    <path fill-rule="evenodd"
+                                                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                                </svg>
+                                                Edit School Profile
+                                            </a></li>
+                                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                data-bs-target="#viewprySchoolModal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+                                                    <path
+                                                        d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+                                                </svg>
+                                                View School Profile
+                                            </a></li>
+                                    </ul>
+                                </div>
+
+                                <!-- primary school details Modal -->
+                                <div class="modal fade" id="viewprySchoolModal" tabindex="-1"
+                                    aria-labelledby="viewSchoolModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="viewSchoolModalLabel">School Profile</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <!-- School details content goes here -->
+
+                                                {% if pry_school.logo %}
+                                                <img src="{{ pry_school.logo.url }}" alt="School Logo"
+                                                    style="display: block; margin: 0 auto; max-width: 50px; max-height: 50px; object-fit: contain; border-radius: 50%; border: 2px solid #ddd; margin-bottom: 1rem;">
+                                                {% else %}
+                                                <p class="text-center"><span>No logo available</span> </p>
+                                                {% endif %}
+
+                                                <p class="text-center"><strong>School ID:</strong> {{pry_school.pry_school_id }}</p>
+                                                <p class="text-center"><strong>school name:</strong> {{pry_school.school_name }} </p>
+                                                <p class="text-center"><strong>Address:</strong> {{ pry_school.address}}</p>
+
+
+                                                <!-- Add more details as needed -->
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-danger"
+                                                    data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+            </div>
+        </div>
+    </div>
+    </td>
+    </tr>
+
+
+    </tbody>
     </table>
 </div>
 
-
-
-{% if pry_school %}
-
-<!-- primary profile -->
-<h4 class="text-center">
-    <i class="nav-icon fas fa-school"></i>
-    Primary School Profile 
-</h4>
-<div class="container mt-2">
-<table class="table table-striped table-bordered">
-    <thead >
-        <tr >
-            <th class="bg-primary text-white" >School ID</th>
-            <th class="bg-primary text-white">School Name</th>
-            <th class="bg-primary text-white">School Address</th>
-            <th class="bg-primary text-white">School EmIL</th>
-            <th class="bg-primary text-white">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        
-        <tr>
-            
-            <td>{{ pry_school.pry_school_id }}</td>
-            <td>{{ pry_school.school_name }} </td>
-            <td> {{ pry_school.address }}   </td>
-            <td>{{ school.email }}</td>
-            
-
-            <td>
-                <div class="dropdown"> 
-                    <div type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square " viewBox="0 0 16 16">
-                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                        </svg>
-                    </div>
-                    <ul class="dropdown-menu bg-light" aria-labelledby="dropdownMenuButton">
-                        <li><a class="dropdown-item" href="{% url 'add_branch' school.short_code %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                            </svg>
-                            Add Branch
-                        </a></li>
-                       
-                        <li><a class="dropdown-item" href="{% url 'edit_sch_profile' school.short_code %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                              </svg>
-                            Edit School Profile
-                        </a></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewSchoolModal">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-                              </svg>
-                            View School Profile
-                        </a></li>
-                    </ul>
-                </div>
-
-                <!--school details Modal -->
-                    <div class="modal fade" id="viewSchoolModal" tabindex="-1" aria-labelledby="viewSchoolModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                            <h5 class="modal-title" id="viewSchoolModalLabel">School Profile</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                            <!-- School details content goes here -->
-                            
-                            {% if school.logo %}
-                            <img src="{{ school.logo.url }}" alt="School Logo"
-                            style="display: block; margin: 0 auto; max-width: 50px; max-height: 50px; object-fit: contain; border-radius: 50%; border: 2px solid #ddd; margin-bottom: 1rem;">
-                            {% else %}
-                              <p class="text-center"><span >No logo available</span> </p>
-                            {% endif %}
-                            
-                            <p class="text-center"><strong>School ID:</strong> {{ school.school_id }}</p>
-                            <p class="text-center"><strong>school name:</strong> {{ school.school_name }} </p>
-                            <p class="text-center"><strong>Address:</strong> {{ school.address }}</p>
-                            <p class="text-center"><strong>State:</strong> {{ school.state }}</p>
-                            <p class="text text-center"><strong>LGA:</strong> {{ school.lga }}</p>
-                            <p class="text-center"><strong>Admin Email:</strong> {{ school.email }}</p>
-                            <p class="text-center"><strong>Admin Phone:</strong> {{ school.admin_phone_number }}</p>
-                            <p class="text-center"><strong>Brand Color 1: 
-                                <div style="text-align: center;">
-                                    <div style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color1 }}; border: 1px solid #000;">
-                                </div>        
-                            </div></strong></p>
-                            <p class="text-center"><strong>Brand Color 2: 
-                                <div style="text-align: center;">
-                                    <div style="display: inline-block; width: 20px; height: 20px; background-color: {{ school.theme_color2 }}; border: 1px solid #000;">
-                                </div>
-                                </div></strong></p>
-                            <!-- Add more details as needed -->
-                            </div>
-                            <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                   
-                 </div>
-            </div>
-        </div>
-    </td>
- </tr>
-        
-       
-    </tbody>
-</table>
 </div>
-{% endif %}
+</div>
+</div>
 
+{% endif %}
 {% endblock %}

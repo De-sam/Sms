@@ -1,0 +1,19 @@
+{% extends 'adminlte/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h3>Classes</h3>
+<ul>
+    {% for cls in classes %}
+        <li>
+            {{ cls.name }}  
+            {% if cls.department %}
+                {{ cls.department.name }}
+            {% else %}
+                
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No classes available</li>
+    {% endfor %}
+</ul>
+{% endblock %}

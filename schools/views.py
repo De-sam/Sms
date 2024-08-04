@@ -3,7 +3,9 @@ from django.contrib.auth import authenticate, login as django_login, logout
 from django.contrib import messages
 from landingpage.models import SchoolRegistration
 from schools.models import PrimarySchool,Branch
-from .forms import LoginForm, SchoolProfileUpdateForm, BranchForm, PrimarySchoolForm
+from .forms import LoginForm,\
+SchoolProfileUpdateForm, BranchForm,\
+PrimarySchoolForm,PrimaryBranchForm,UpdatePrimarySchoolForm
 from django.urls import reverse
 from functools import wraps
 from django.db import IntegrityError
@@ -31,7 +33,7 @@ def login(request, short_code):
             if user is not None:
                 if user == school.admin_user:
                     django_login(request, user)
-                    next_url = request.GET.get('next', reverse('schools_dashboard', kwargs={'short_code': short_code}))
+                    next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
                     return redirect(next_url)
                 else:
                     messages.error(request, 'You are not authorized to log in for this school.')
@@ -59,7 +61,34 @@ def logout_view(request, short_code):
 @login_required_with_short_code
 def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    return render(request, 'schools/base_dash.html', {'school': school})
+    
+   # Count branches directly associated with the school (secondary branches)
+    secondary_school_branches_count = Branch.objects.filter(school=school).count()
+
+    # Fetch branches associated with the secondary school
+    secondary_school_branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
+    secondary_school_branches_count = secondary_school_branches.count()
+
+    # Fetch primary schools associated with the secondary school
+    primary_schools = PrimarySchool.objects.filter(parent_school=school)
+
+    # Fetch branches associated with all primary schools
+    primary_school_branches = Branch.objects.filter(primary_school__in=primary_schools)
+    primary_school_branches_count = primary_school_branches.count()
+
+    # Total branches
+    total_branches = secondary_school_branches_count + primary_school_branches_count
+    
+    context = {
+        'number_of_branches': total_branches,
+        'number_of_students': 500,
+        'number_of_teachers': 25,
+        'total_attendance': 4500,
+        'Placeholder_title': 'Sample Title',
+        'school':school
+        # Add other context variables as needed
+    }
+    return render(request, 'schools/base_dash.html', context)
 
 @login_required_with_short_code
 def school_profile(request, short_code):
@@ -92,6 +121,34 @@ def edit_sch_profile(request, short_code):
     return render(request, "schools/edit_sch_profile.html", {'school': school, 'form': form})
 
 @login_required_with_short_code
+def edit_pry_profile(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    try:
+        # Attempt to get the PrimarySchool instance associated with the SchoolRegistration
+        primary_school = PrimarySchool.objects.get(parent_school=school)
+    except PrimarySchool.DoesNotExist:
+        # Handle the case where no PrimarySchool is found
+        messages.error(request, 'No primary school found for the selected school.')
+        return redirect('school_profile', short_code=short_code)
+
+    if request.method == 'POST':
+        form = UpdatePrimarySchoolForm(request.POST, request.FILES, instance=primary_school)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'School profile updated successfully!')
+            return redirect('school_profile', short_code=short_code)
+    else:
+        form = UpdatePrimarySchoolForm(instance=primary_school)
+
+    return render(request, "schools/edit_pry_profile.html",
+                {'school': school,
+                'form': form,
+                'pry_school':primary_school
+                })
+
+
+@login_required_with_short_code
 def add_branch(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -107,6 +164,38 @@ def add_branch(request, short_code):
         form = BranchForm()
 
     return render(request, 'schools/add_branch.html', {'form': form, 'school': school})
+
+@login_required_with_short_code
+def add_primary_branch(request, short_code):
+    # Get the SchoolRegistration instance for the provided short_code
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    try:
+        # Attempt to get the PrimarySchool instance associated with the SchoolRegistration
+        primary_school = PrimarySchool.objects.get(parent_school=school)
+    except PrimarySchool.DoesNotExist:
+        # Handle the case where no PrimarySchool is found
+        messages.error(request, 'No primary school found for the selected school.')
+        return redirect('school_profile', short_code=short_code)
+
+    if request.method == 'POST':
+        form = PrimaryBranchForm(request.POST)
+        if form.is_valid():
+            branch = form.save(commit=False)
+            branch.school = school
+            branch.primary_school = primary_school
+            branch.save()
+            messages.success(request, 'Branch added successfully!')
+            return redirect('branch_list', short_code=short_code)
+    else:
+        form = PrimaryBranchForm()
+
+    return render(request, 'schools/add_pry_branch.html', {
+        'form': form,
+        'school': school,
+        'primary_school': primary_school
+    })
+
 
 @login_required_with_short_code
 def branch_list(request, short_code):

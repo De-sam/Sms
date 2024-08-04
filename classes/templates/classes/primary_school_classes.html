@@ -1,0 +1,30 @@
+{% extends 'adminlte/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h2>Classes Linked to Primary Schools</h2>
+
+<h3>Primary Schools</h3>
+<ul>
+    {% for primary_school in primary_schools %}
+        <li>{{ primary_school.school_name }}</li>
+    {% empty %}
+        <li>No primary schools available</li>
+    {% endfor %}
+</ul>
+
+<h3>Classes</h3>
+<ul>
+    {% for cls in classes %}
+        <li>
+            {{ cls.name }} - 
+            {% if cls.department %}
+                {{ cls.department.name }}
+            {% else %}
+                No Department
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No classes available</li>
+    {% endfor %}
+</ul>
+{% endblock %}

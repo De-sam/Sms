@@ -57,7 +57,15 @@ class PrimarySchoolForm(forms.ModelForm):
         model = PrimarySchool
         fields = ['school_name', 'address', 'logo']
 
-        
-        
+class UpdatePrimarySchoolForm(forms.ModelForm):
+    class Meta:
+        model = PrimarySchool
+        fields = ['school_name', 'address', 'logo']
+
+
+class PrimaryBranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['branch_name', 'address']      
         
         
