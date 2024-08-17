@@ -1,19 +1,96 @@
 {% extends 'adminlte/base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
-<h3>Classes</h3>
-<ul>
-    {% for cls in classes %}
-        <li>
-            {{ cls.name }}  
-            {% if cls.department %}
-                {{ cls.department.name }}
-            {% else %}
-                
+<div class="container mt-4">
+    <h2>Classes Assigned to {{ school.school_name }}</h2>
+
+    <!-- Branch Filter Form -->
+    <form method="get" id="branch-filter-form" class="mb-4">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="branch" class="form-label">Filter by Branch:</label>
+                <select name="branch" id="branch" class="form-select" onchange="document.getElementById('branch-filter-form').submit();">
+                    <option value="">All Branches</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == selected_branch_id %}selected{% endif %}>
+                            {{ branch.branch_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <!-- Classes Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-primary">
+                <tr>
+                    <th scope="col">S/N</th>
+                    <th scope="col">Class</th>
+                    
+                    <th scope="col">Level</th>
+                    <th scope="col">Branch</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cls, branch in class_branch_pairs %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ cls.name }} {% if cls.department %}{{ cls.department.name }}{% else %}{% endif %}</td>
+                        <td>{{ cls.get_level_display }}</td>
+                        <td>{{ branch.branch_name }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No classes assigned yet 
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'assign_classes_secondary' school.short_code %}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/>
+                                </svg>
+                                Assign classes
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_branch_id %}branch={{ selected_branch_id }}&{% endif %}page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_branch_id %}branch={{ selected_branch_id }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
             {% endif %}
-        </li>
-    {% empty %}
-        <li>No classes available</li>
-    {% endfor %}
-</ul>
+            {% for i in paginator.page_range %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?{% if selected_branch_id %}branch={{ selected_branch_id }}&{% endif %}page={{ i }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_branch_id %}branch={{ selected_branch_id }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_branch_id %}branch={{ selected_branch_id }}&{% endif %}page={{ paginator.num_pages }}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 {% endblock %}

@@ -18,6 +18,7 @@ class Branch(models.Model):
         blank=True)
     branch_name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
+    
 
     def __str__(self):
         if self.primary_school:
