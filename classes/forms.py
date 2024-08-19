@@ -1,6 +1,9 @@
 from django import forms
 from schools.models import Branch
 from .models import Subject, Class, SubjectType, Department,Arm
+from .models import Staff, TeacherSubjectClassAssignment
+from classes.models import Class
+
 
 class ClassAssignmentForm(forms.Form):
     branches = forms.ModelMultipleChoiceField(
@@ -48,3 +51,25 @@ class SubjectForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 1, 'cols': 50}),  # Adjust rows and cols to reduce size
         }      
+
+
+
+class ClassTeacherAssignmentForm(forms.ModelForm):
+    class_teachers = forms.ModelMultipleChoiceField(
+        queryset=Staff.objects.filter(role__name='Teacher'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+    class Meta:
+        model = Class
+        fields = ['name', 'class_teachers']
+
+class TeacherSubjectClassAssignmentForm(forms.ModelForm):
+    teacher = forms.ModelChoiceField(queryset=Staff.objects.filter(role__name='Teacher'), required=True)
+    subject = forms.ModelChoiceField(queryset=Subject.objects.all(), required=True)
+    class_assigned = forms.ModelChoiceField(queryset=Class.objects.all(), required=True)
+
+    class Meta:
+        model = TeacherSubjectClassAssignment
+        fields = ['teacher', 'subject', 'class_assigned']

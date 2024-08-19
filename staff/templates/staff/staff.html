@@ -1,0 +1,20 @@
+{% extends "adminlte/base.html" %}
+
+{% block content %}
+  <div class="content-wrapper">
+    <section class="content-header">
+      <h1>Register Staff</h1>
+    </section>
+    <section class="content">
+      <div class="box">
+        <div class="box-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Register</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

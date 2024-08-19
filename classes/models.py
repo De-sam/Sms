@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 from schools.models import Branch
+from staff.models import Staff
 
 class SubjectType(models.Model):
     LEVEL_CHOICES = [
@@ -49,6 +50,7 @@ class Class(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     arms = models.ManyToManyField(Arm, blank=True)
     branches = models.ManyToManyField(Branch, related_name='classes', blank=True)
+    class_teachers = models.ManyToManyField(Staff, related_name='class_teacher_of', blank=True) 
 
     def __str__(self):
         return f"{self.name} ({self.get_level_display()}) {self.department.name if self.department else ''}"
@@ -82,3 +84,14 @@ class Subject(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.subject_code})"
+
+class TeacherSubjectClassAssignment(models.Model):
+    teacher = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='subject_class_assignments')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='teacher_assignments')
+    classes_assigned = models.ManyToManyField(Class, related_name='teacher_subject_classes')
+
+    class Meta:
+        unique_together = ('teacher', 'subject')
+
+    def __str__(self):
+        return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name}"

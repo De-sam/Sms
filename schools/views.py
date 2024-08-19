@@ -35,6 +35,11 @@ def login(request, short_code):
                     django_login(request, user)
                     next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
                     return redirect(next_url)
+                elif hasattr(user, 'staff') and user.staff.branches.filter(school=school).exists():
+                    # Staff member assigned to the school or branch
+                    django_login(request, user)
+                    next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
+                    return redirect(next_url)  # Redirect to the school's dashboard
                 else:
                     messages.error(request, 'You are not authorized to log in for this school.')
             else:
