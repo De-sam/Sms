@@ -22,7 +22,7 @@ class Branch(models.Model):
 
     def __str__(self):
         if self.primary_school:
-            return f"{self.primary_school.school_name} - {self.branch_name} (Primary)"
+            return f"{self.primary_school.school_name} - {self.branch_name}(Primary)"
         elif self.school:
             return f"{self.school.school_name} - {self.branch_name} (Secondary)"
         return f"Branch: {self.branch_name}"

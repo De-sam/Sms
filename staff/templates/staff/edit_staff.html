@@ -11,7 +11,7 @@
                         <path d="M12.5 9a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7m.354 5.854 1.5-1.5a.5.5 0 0 0-.708-.708l-.646.647V10.5a.5.5 0 0 0-1 0v2.793l-.646-.647a.5.5 0 0 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                         <path d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
                       </svg>
-                    Add Staff for {{ school.school_name }}
+                    Edit Staff for {{ school.school_name }}
                 </h1>
             </div>
 
@@ -29,9 +29,6 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="document-uploads-tab" data-bs-toggle="tab" href="#document-uploads" role="tab" aria-controls="document-uploads" aria-selected="false">Document Uploads</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="account-info-tab" data-bs-toggle="tab" href="#account-info" role="tab" aria-controls="account-info" aria-selected="false">Account Information</a>
                         </li>
                     </ul>
 
@@ -118,37 +115,17 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Account Information Section -->
-                        <div class="tab-pane fade" id="account-info" role="tabpanel" aria-labelledby="account-info-tab">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Account Information</h3>
-                                </div>
-                                <div class="card-body bg-light">
-                                    <div class="form-group">
-                                        {{ form.username|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.password1|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.password2|as_crispy_field }}
-                                    </div>
-                                </div>
-                                <div class="card-footer d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-primary" id="addStaffButton">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
-                                            <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
-                                            <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
-                                          </svg>
-                                        Add Staff
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
+                    <div class="card-footer d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary" id="addStaffButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                                <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                              </svg>
+                            Update Staff
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

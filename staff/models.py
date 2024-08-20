@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from schools.models import Branch
 
-# Create your models here.
 class Role(models.Model):
     name = models.CharField(max_length=50)
 
@@ -33,6 +32,11 @@ class Staff(models.Model):
         ('non_academic', 'Non-Academic'),
     ]
 
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     branches = models.ManyToManyField(Branch, related_name='staff')  # Changed to ManyToManyField
@@ -43,11 +47,11 @@ class Staff(models.Model):
     address = models.CharField(max_length=255)
     nationality = models.CharField(max_length=20, choices=NATIONALITY_CHOICES)
     staff_category = models.CharField(max_length=15, choices=STAFF_CATEGORY_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')  # New field for Active/Inactive status
     school_details = models.TextField(blank=True, null=True)  # Additional school-related information
-    cv = models.FileField(upload_to='cvs/', blank=True, null=True)  # Field to upload CV
+    cv = models.FileField(upload_to='cvs/', blank=False, null=False)  # Made required
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    staff_signature = models.FileField(upload_to='signatures/', blank=True, null=True)  # Signature upload
+    staff_signature = models.FileField(upload_to='signatures/', blank=False, null=False)  # Made required
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.role.name}"
-

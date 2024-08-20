@@ -3,13 +3,13 @@ from .models import Staff, Role
 from classes.models import TeacherSubjectClassAssignment
 
 class StaffAdmin(admin.ModelAdmin):
-    list_display = ('user', 'role', 'gender', 'marital_status', 'phone_number', 'nationality', 'staff_category')
-    list_filter = ('role', 'gender', 'marital_status', 'nationality', 'staff_category')
+    list_display = ('user', 'role', 'gender', 'marital_status', 'phone_number', 'nationality', 'staff_category', 'status')
+    list_filter = ('role', 'gender', 'marital_status', 'nationality', 'staff_category', 'status')
     search_fields = ('user__first_name', 'user__last_name', 'user__username', 'phone_number', 'address')
-
+    
     fieldsets = (
         (None, {
-            'fields': ('user', 'role', 'branches', 'staff_category')
+            'fields': ('user', 'role', 'branches', 'staff_category', 'status')
         }),
         ('Personal Info', {
             'fields': ('gender', 'marital_status', 'date_of_birth', 'phone_number', 'address', 'nationality')
@@ -18,7 +18,7 @@ class StaffAdmin(admin.ModelAdmin):
             'fields': ('school_details', 'cv', 'profile_picture', 'staff_signature')
         }),
     )
-    filter_horizontal = ('branches',)  # This allows you to select multiple branches in a horizontal filter box
+    filter_horizontal = ('branches',)  # Allows selecting multiple branches with a horizontal filter box
 
 admin.site.register(Staff, StaffAdmin)
 admin.site.register(Role)
