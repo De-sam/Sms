@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Staff, Role
 from schools.models import Branch
+from classes.models import Subject, Class, TeacherSubjectClassAssignment
+
 
 class StaffCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -175,3 +177,31 @@ class UserUpdateForm(forms.ModelForm):
             staff.save()
 
         return user
+    
+
+class TeacherSubjectAssignmentForm(forms.Form):
+    branch = forms.ModelChoiceField(queryset=Branch.objects.none())
+    subject = forms.ModelChoiceField(queryset=Subject.objects.none())
+    classes = forms.ModelMultipleChoiceField(queryset=Class.objects.none(),
+                                              widget=forms.CheckboxSelectMultiple)
+  
+    def __init__(self, *args, **kwargs):
+        school = kwargs.pop('school', None)
+        branch_id = kwargs.pop('branch_id', None)
+        staff = kwargs.pop('staff', None)  # Get the staff object
+        super().__init__(*args, **kwargs)
+
+        if school and staff:
+            # Filter branches to only those associated with the school and assigned to the staff
+            self.fields['branch'].queryset = Branch.objects.filter(school=school, staff=staff).distinct()
+            print(f"Available Branches for Form: {self.fields['branch'].queryset}")
+
+        if branch_id:
+            branch = Branch.objects.get(id=branch_id)
+            classes_in_branch = branch.classes.all()
+            self.fields['subject'].queryset = Subject.objects.filter(classes__in=classes_in_branch).distinct()
+            self.fields['classes'].queryset = classes_in_branch
+
+        if self.data.get('subject'):
+            subject_id = int(self.data.get('subject'))
+            self.fields['classes'].queryset = self.fields['classes'].queryset.filter(subjects__id=subject_id)

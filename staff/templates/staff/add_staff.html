@@ -22,16 +22,37 @@
                     <!-- Bootstrap Tabs -->
                     <ul class="nav nav-tabs" id="staffFormTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="personal-info-tab" data-bs-toggle="tab" href="#personal-info" role="tab" aria-controls="personal-info" aria-selected="true">Personal Information</a>
+                            <a class="nav-link active" id="personal-info-tab" data-bs-toggle="tab" href="#personal-info" role="tab" aria-controls="personal-info" aria-selected="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                  </svg>
+                                Personal Information
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="professional-details-tab" data-bs-toggle="tab" href="#professional-details" role="tab" aria-controls="professional-details" aria-selected="false">Professional Details</a>
+                            <a class="nav-link" id="professional-details-tab" data-bs-toggle="tab" href="#professional-details" role="tab" aria-controls="professional-details" aria-selected="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-workspace" viewBox="0 0 16 16">
+                                    <path d="M4 16s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-5.95a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+                                    <path d="M2 1a2 2 0 0 0-2 2v9.5A1.5 1.5 0 0 0 1.5 14h.653a5.4 5.4 0 0 1 1.066-2H1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v9h-2.219c.554.654.89 1.373 1.066 2h.653a1.5 1.5 0 0 0 1.5-1.5V3a2 2 0 0 0-2-2z"/>
+                                  </svg>
+                                Professional Details
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="document-uploads-tab" data-bs-toggle="tab" href="#document-uploads" role="tab" aria-controls="document-uploads" aria-selected="false">Document Uploads</a>
+                            <a class="nav-link" id="document-uploads-tab" data-bs-toggle="tab" href="#document-uploads" role="tab" aria-controls="document-uploads" aria-selected="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus-fill" viewBox="0 0 16 16">
+                                    <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0"/>
+                                  </svg>
+                                Document Uploads
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="account-info-tab" data-bs-toggle="tab" href="#account-info" role="tab" aria-controls="account-info" aria-selected="false">Account Information</a>
+                            <a class="nav-link" id="account-info-tab" data-bs-toggle="tab" href="#account-info" role="tab" aria-controls="account-info" aria-selected="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-lock" viewBox="0 0 16 16">
+                                    <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5v-1a2 2 0 0 1 .01-.2 4.49 4.49 0 0 1 1.534-3.693Q8.844 9.002 8 9c-5 0-6 3-6 4m7 0a1 1 0 0 1 1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm3-3a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1"/>
+                                  </svg>
+                                Account Information
+                            </a>
                         </li>
                     </ul>
 
@@ -42,35 +63,48 @@
                         <div class="tab-pane fade show active" id="personal-info" role="tabpanel" aria-labelledby="personal-info-tab">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Personal Information</h3>
+                                    <h3 class="card-title">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                          </svg>
+                                        Personal Information
+                                    </h3>
                                 </div>
                                 <div class="card-body bg-light">
-                                    <div class="form-group">
-                                        {{ form.first_name|as_crispy_field }}
+                                    <div class="form-group row">
+                                        <div class="col-md-6">
+                                            {{ form.first_name|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.last_name|as_crispy_field }}
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        {{ form.last_name|as_crispy_field }}
+                                    <div class="form-group row">
+                                        <div class="col-md-6">
+                                            {{ form.email|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.phone_number|as_crispy_field }}
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        {{ form.email|as_crispy_field }}
+                                    <div class="form-group row">
+                                        <div class="col-md-6">
+                                            {{ form.date_of_birth|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.marital_status|as_crispy_field }}
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        {{ form.gender|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.marital_status|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.date_of_birth|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.phone_number|as_crispy_field }}
+                                    <div class="form-group row">
+                                        <div class="col-md-6">
+                                            {{ form.gender|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.nationality|as_crispy_field }}
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         {{ form.address|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.nationality|as_crispy_field }}
                                     </div>
                                 </div>
                             </div>
@@ -80,7 +114,13 @@
                         <div class="tab-pane fade" id="professional-details" role="tabpanel" aria-labelledby="professional-details-tab">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Professional Details</h3>
+                                    <h3 class="card-title">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-workspace" viewBox="0 0 16 16">
+                                            <path d="M4 16s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-5.95a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+                                            <path d="M2 1a2 2 0 0 0-2 2v9.5A1.5 1.5 0 0 0 1.5 14h.653a5.4 5.4 0 0 1 1.066-2H1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v9h-2.219c.554.654.89 1.373 1.066 2h.653a1.5 1.5 0 0 0 1.5-1.5V3a2 2 0 0 0-2-2z"/>
+                                          </svg>
+                                        Professional Details
+                                    </h3>
                                 </div>
                                 <div class="card-body bg-light">
                                     <div class="form-group">
@@ -103,7 +143,12 @@
                         <div class="tab-pane fade" id="document-uploads" role="tabpanel" aria-labelledby="document-uploads-tab">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Document Uploads</h3>
+                                    <h3 class="card-title">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus-fill" viewBox="0 0 16 16">
+                                            <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0"/>
+                                          </svg>
+                                        Document Uploads
+                                    </h3>
                                 </div>
                                 <div class="card-body bg-light">
                                     <div class="form-group">
@@ -123,7 +168,12 @@
                         <div class="tab-pane fade" id="account-info" role="tabpanel" aria-labelledby="account-info-tab">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Account Information</h3>
+                                    <h3 class="card-title">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-lock" viewBox="0 0 16 16">
+                                            <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5v-1a2 2 0 0 1 .01-.2 4.49 4.49 0 0 1 1.534-3.693Q8.844 9.002 8 9c-5 0-6 3-6 4m7 0a1 1 0 0 1 1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm3-3a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1"/>
+                                          </svg>
+                                        Account Information
+                                    </h3>
                                 </div>
                                 <div class="card-body bg-light">
                                     <div class="form-group">

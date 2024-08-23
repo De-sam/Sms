@@ -7,6 +7,15 @@
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Staff Members</h3>
                 
+                <!-- Search Field -->
+            
+                <form method="get" class="d-flex align-items-center" id="searchForm">
+                    <div class="col-12 col-md-auto d-flex align-items-center">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
+                        <input type="text" name="q" value="{{ query }}" placeholder="Search..." class="form-control form-control-sm me-2 w-100 w-md-auto" id="searchInput">
+                    </div>
+                </form>
+                
                 <!-- Add Staff button triggering the modal -->
                 <button type="button" class="btn btn-primary btn-sm ml-auto text-light" data-bs-toggle="modal" data-bs-target="#addStaffModal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle text-light" viewBox="0 0 16 16">
@@ -20,85 +29,108 @@
                 <!-- Top controls: Items per page and search box -->
                 <div class="d-flex justify-content-between mb-3">
                     <form method="get" class="d-flex align-items-center">
+                        <input type="hidden" name="status" value="{{ status_filter }}"> <!-- Status filter hidden input -->
                         <label for="per_page" class="me-2">Show</label>
                         <select name="per_page" id="per_page" class="form-control form-control-sm" onchange="this.form.submit()">
                             <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
                             <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
                             <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
                         </select>
-                        <span class="ms-2">entries</span>
+                        <span class="ms-1">entries</span>
                     </form>
                     
-                    <form method="get" class="d-flex align-items-center">
-                        <input type="hidden" name="per_page" value="{{ per_page }}">
-                        <input type="text" name="q" value="{{ query }}" placeholder="Search..." class="form-control form-control-sm me-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                    </form>
+                    <form method="get" class="mb-3">
+                        <div class="row gx-0">
+                            <!-- Status Filter Field and Label -->
+                            <div class="col-12 col-md-auto d-flex align-items-center ">
+                                <label for="status" class="me-2 d-flex align-items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-funnel-fill me-1" viewBox="0 0 16 16">
+                                        <path d="M1.5 1.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v1a1 1 0 0 1-.293.707L10 8.414V13.5a1 1 0 0 1-.553.894l-3 1.5a1 1 0 0 1-1.447-.894V8.414L1.793 3.207A1 1 0 0 1 1.5 2.5v-1z"/>
+                                    </svg>
+                                    <span class="small">Filter by Status</span>
+                                </label>
+                                <select name="status" id="status" class="form-control form-control-sm" style="width: auto; min-width: 120px;" onchange="this.form.submit();">
+                                    <option value="">All</option>
+                                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>                    
+                    
                 </div>
 
-                <!-- Table -->
                 <div class="container mt-2 table-responsive" style="height: 270px;">
-                <table class="table table-bordered table-striped">
-                    <thead table-primary>
-                        <tr>
-                            <th>Username</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Phone Number</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for staff in staff_members %}
-                        <tr>
-                            <td>{{ staff.user.username }}</td>
-                            <td>{{ staff.user.first_name }} {{ staff.user.last_name }}</td>
-                            <td>{{ staff.user.email }}</td>
-                            <td>{{ staff.role.name }}</td>
-                            <td>{{ staff.phone_number }}</td>
-                            <td>
-                                {% if staff.status == 'active' %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-warning">Inactive</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <!-- Dropdown button for actions -->
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Actions
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        <li><a class="dropdown-item" href="{% url 'edit_staff' school.short_code staff.id %}">Edit</a></li>
-                                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" data-staff-id="{{ staff.id }}">Delete</a></li>
-                                        <li>
-                                            <a class="dropdown-item" href="#" 
-                                               data-bs-toggle="modal" 
-                                               data-bs-target="#viewStaffModal" 
-                                               data-staff-id="{{ staff.id }}" 
-                                               data-staff-name="{{ staff.user.first_name }} {{ staff.user.last_name }}" 
-                                               data-staff-gender="{{ staff.gender }}" 
-                                               data-staff-phone="{{ staff.phone_number }}" 
-                                               data-staff-address="{{ staff.address }}" 
-                                               data-staff-nationality="{{ staff.nationality }}" 
-                                               data-staff-category="{{ staff.staff_category }}" 
-                                               data-staff-status="{{ staff.status }}" 
-                                               data-staff-branches="{% for branch in staff.branches.all %}{% if branch.primary_school %}{{ branch.branch_name }}-(Primary)  
-                                               |   {% elif branch.school %}{{ branch.branch_name }}-(Secondary)  |   {% else %}{{ branch.branch_name }}{% endif %}{% if not forloop.last %} {% endif %}{% endfor %}" 
-                                               data-staff-image="{% if staff.profile_picture %}{{ staff.profile_picture.url }}{% else %}/static/default_profile.png{% endif %}">
-                                                View Details
-                                            </a>
-                                        </li>                                                                      </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Phone Number</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if staff_members %}
+                                {% for staff in staff_members %}
+                                    <tr>
+                                        <td>{{ staff.user.username }}</td>
+                                        <td>{{ staff.user.first_name }} {{ staff.user.last_name }}</td>
+                                        <td>{{ staff.user.email }}</td>
+                                        <td>{{ staff.role.name }}</td>
+                                        <td>{{ staff.phone_number }}</td>
+                                        <td>
+                                            {% if staff.status == 'active' %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <!-- Dropdown button for actions -->
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                                    <li><a class="dropdown-item" href="{% url 'edit_staff' school.short_code staff.id %}">Edit</a></li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" 
+                                                           data-bs-toggle="modal" 
+                                                           data-bs-target="#viewStaffModal" 
+                                                           data-staff-id="{{ staff.id }}" 
+                                                           data-staff-name="{{ staff.user.first_name }} {{ staff.user.last_name }}" 
+                                                           data-staff-gender="{{ staff.gender }}" 
+                                                           data-staff-phone="{{ staff.phone_number }}" 
+                                                           data-staff-address="{{ staff.address }}" 
+                                                           data-staff-nationality="{{ staff.nationality }}" 
+                                                           data-staff-category="{{ staff.staff_category }}" 
+                                                           data-staff-status="{{ staff.status }}" 
+                                                           data-staff-branches="{% for branch in staff.branches.all %}{% if branch.primary_school %}{{ branch.branch_name }}-(Primary) | {% elif branch.school %}{{ branch.branch_name }}-(Secondary) | {% else %}{{ branch.branch_name }}{% endif %}{% if not forloop.last %} {% endif %}{% endfor %}" 
+                                                           data-staff-image="{% if staff.profile_picture %}{{ staff.profile_picture.url }}{% else %}/static/default_profile.png{% endif %}">
+                                                            View Details
+                                                        </a>
+                                                    </li>
+                                                    <li><a class="dropdown-item" href="{% url 'assign_subjects_to_staff' school.short_code staff.id %}">Assign Subject(s)</a></li>
+                                                    <li><a class="dropdown-item" href="{% url 'edit_staff' school.short_code staff.id %}">Assign Class(s)</a></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" data-staff-id="{{ staff.id }}">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No staff details available.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
 
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
@@ -106,7 +138,7 @@
                         <ul class="pagination pagination-sm">
                             {% if staff_members.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&page={{ staff_members.previous_page_number }}" aria-label="Previous">
+                                    <a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&status={{ status_filter }}&page={{ staff_members.previous_page_number }}" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
@@ -115,12 +147,12 @@
                                 {% if staff_members.number == i %}
                                     <li class="page-item active"><a class="page-link">{{ i }}</a></li>
                                 {% else %}
-                                    <li class="page-item"><a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&page={{ i }}">{{ i }}</a></li>
+                                    <li class="page-item"><a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&status={{ status_filter }}&page={{ i }}">{{ i }}</a></li>
                                 {% endif %}
                             {% endfor %}
                             {% if staff_members.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&page={{ staff_members.next_page_number }}" aria-label="Next">
+                                    <a class="page-link" href="?q={{ query }}&per_page={{ per_page }}&status={{ status_filter }}&page={{ staff_members.next_page_number }}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
@@ -165,7 +197,12 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               <!-- Status Filter Dropdown -->
+                <select name="status" class="form-control form-control-sm me-2">
+                    <option value="">All</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -214,7 +251,7 @@
                         <p><strong>Nationality:</strong> <span id="staffNationality"></span></p>
                         <p><strong>Staff Category:</strong> <span id="staffCategory"></span></p>
                         <p><strong>Status:</strong> <span id="staffStatus"></span></p>
-                        <p><strong>Branches:</strong> <span id="staffBranches"></span></p>
+                        <p><strong>Assigned Branches:</strong> <span id="staffBranches"></span></p>
                     </div>
                 </div>
             </div>
@@ -226,6 +263,26 @@
 </div>
 
 <script>
+    let typingTimer;                // Timer identifier
+    let doneTypingInterval = 1000;  // Time in ms (5 seconds) after user stops typing
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(function() {
+            document.getElementById('searchForm').submit();
+        }, doneTypingInterval);
+    });
+
+    // If user presses a key, clear the timeout to reset the timer
+    document.getElementById('searchInput').addEventListener('keydown', function() {
+        clearTimeout(typingTimer);
+    });
+
+    // If user presses a key, clear the timeout to reset the timer
+    document.getElementById('searchInput').addEventListener('keydown', function() {
+        clearTimeout(typingTimer);
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         // Delete button handling
         var deleteModal = document.getElementById('deleteModal');
