@@ -53,7 +53,6 @@ class SubjectForm(forms.ModelForm):
         }      
 
 
-
 class ClassTeacherAssignmentForm(forms.ModelForm):
     class_teachers = forms.ModelMultipleChoiceField(
         queryset=Staff.objects.filter(role__name='Teacher'),
