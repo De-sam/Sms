@@ -1,0 +1,63 @@
+{% extends "adminlte/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Staff Data Management</h2>
+
+    <!-- Bootstrap Tabs -->
+    <ul class="nav nav-tabs" id="staffTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="download-tab" data-bs-toggle="tab" href="#download" role="tab" aria-controls="download" aria-selected="true">Download Templates</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload Staff Data</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4" id="staffTabsContent">
+        <!-- Download Tab Content -->
+        <div class="tab-pane fade show active" id="download" role="tabpanel" aria-labelledby="download-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Download Staff Templates</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <a href="{% url 'download_staff_template' short_code=school.short_code %}" class="btn btn-primary">
+                            Download Staff Templates for All Branches
+                        </a>
+                    </p>
+                    <p class="text-muted">
+                        Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Tab Content -->
+        <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Upload Staff Data</h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        <div>
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                       
+                        <input type="file" name="file" multiple class="form-control mb-3">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

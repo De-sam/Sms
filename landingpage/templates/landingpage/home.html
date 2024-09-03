@@ -1,5 +1,37 @@
 {% extends "landingpage/base.html" %}
 {% load static %}
 {% block content %}
- <h1 class="">Home</h1>
+<main>
+    <!-- Hero Section -->
+    <section class="bg-primary text-white text-center py-5">
+        <div class="container">
+            <h1>Welcome to School App</h1>
+            <p class="lead">Your all-in-one solution for managing school activities effortlessly</p>
+            <a href="#" class="btn btn-light btn-lg">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <i class="bi bi-laptop fs-1 text-primary"></i>
+                    <h3>Feature One</h3>
+                    <p>Manage student records efficiently with our powerful tool.</p>
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-calendar-event fs-1 text-primary"></i>
+                    <h3>Feature Two</h3>
+                    <p>Schedule events and classes with ease using our calendar integration.</p>
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-bar-chart-line fs-1 text-primary"></i>
+                    <h3>Feature Three</h3>
+                    <p>Track student performance with our comprehensive analytics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 {%  endblock content%}

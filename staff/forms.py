@@ -4,7 +4,10 @@ from django.contrib.auth.models import User
 from .models import Staff, Role
 from schools.models import Branch
 from classes.models import Subject, Class, TeacherSubjectClassAssignment
+from django import forms
 
+class StaffUploadForm(forms.Form):
+    file = forms.FileField()
 
 class StaffCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)

@@ -77,7 +77,7 @@ def dashboard(request, short_code):
     
     context = {
         'number_of_branches': total_branches,
-        'number_of_students': 500,
+        'number_of_students': 5900,
         'number_of_teachers': 25,
         'total_attendance': 4500,
         'Placeholder_title': 'Sample Title',

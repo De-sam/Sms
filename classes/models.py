@@ -88,10 +88,11 @@ class Subject(models.Model):
 class TeacherSubjectClassAssignment(models.Model):
     teacher = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='subject_class_assignments')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='teacher_assignments')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='subject_assignments')
     classes_assigned = models.ManyToManyField(Class, related_name='teacher_subject_classes')
 
     class Meta:
-        unique_together = ('teacher', 'subject')
+        unique_together = ('teacher', 'subject','branch')
 
     def __str__(self):
         return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name}"

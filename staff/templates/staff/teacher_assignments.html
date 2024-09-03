@@ -1,0 +1,163 @@
+{% extends "adminlte/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- School Name and Teacher Assignments Title Card -->
+    <div class="card bg-primary mb-4">
+        <div class="card-body">
+            <h4 class="mb-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-person" viewBox="0 0 16 16">
+                    <path d="M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2v9.255S12 12 8 12s-5 1.755-5 1.755V2a1 1 0 0 1 1-1h5.5z"/>
+                  </svg>
+                Teacher Assignments
+            </h4>
+        </div>
+    </div>
+
+    <!-- Bootstrap Tabs -->
+    <ul class="nav nav-tabs mb-4" id="assignmentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="subject-assignment-tab" data-bs-toggle="tab" data-bs-target="#subject-assignment" type="button" role="tab" aria-controls="subject-assignment" aria-selected="true">Assigned Subjects</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="class-assignment-tab" data-bs-toggle="tab" data-bs-target="#class-assignment" type="button" role="tab" aria-controls="class-assignment" aria-selected="false">Assigned Classes</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="assignmentTabsContent">
+        <div class="tab-pane fade show active" id="subject-assignment" role="tabpanel" aria-labelledby="subject-assignment-tab">
+
+            <!-- Branch Filter Form -->
+            <form method="GET" action="{% url 'teacher_assignments' short_code=school.short_code %}" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="branch" class="col-form-label">Select Branch:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="branch_id" id="branch" class="form-select" onchange="this.form.submit();">
+                            <option value="">-- Select Branch --</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}" {% if branch.id == selected_branch.id %}selected{% endif %}>
+                                    {% if branch.primary_school %}
+                                        {{ branch.primary_school.school_name }} - {{ branch.branch_name }} (Primary)
+                                    {% else %}
+                                        {{ branch.school.school_name }} - {{ branch.branch_name }} (Secondary)
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="search" name="search" class="form-control" placeholder="Search by teacher name..." value="{{ search_query }}">
+                    </div>
+                </div>
+            </form>
+
+            {% if selected_branch %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">
+                            {% if selected_branch.primary_school %}
+                                {{ selected_branch.primary_school.school_name }} - {{ selected_branch.branch_name }} (Primary)
+                            {% else %}
+                                {{ selected_branch.school.school_name }} - {{ selected_branch.branch_name }} (Secondary)
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {% if teacher_assignments %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th>Teacher</th>
+                                            <th>Subject</th>
+                                            <th>Classes (Department)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for teacher, assignments in teacher_assignments.items %}
+                                            {% for assignment in assignments %}
+                                            <tr>
+                                                <td>{{ teacher.user.first_name }} {{ teacher.user.last_name }}</td>
+                                                <td>{{ assignment.subject.name }}</td>
+                                                <td>
+                                                    {% for cls in assignment.classes %}
+                                                        {{ cls.name }} 
+                                                        {% if cls.department %}
+                                                            ({{ cls.department.name }})
+                                                        {% endif %}
+                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination Controls -->
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?page=1&branch_id={{ selected_branch.id }}&search={{ search_query }}">&laquo; First</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">&lsaquo; Previous</a></li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
+                                        <li class="page-item disabled"><span class="page-link">&lsaquo; Previous</span></li>
+                                    {% endif %}
+
+                                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">Next &rsaquo;</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">Last &raquo;</a></li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">Next &rsaquo;</span></li>
+                                        <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                                </svg>
+                                No assignments found for this branch.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                      </svg>
+                    Please select a branch to view its teacher assignments.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="class-assignment" role="tabpanel" aria-labelledby="class-assignment-tab">
+            <!-- Placeholder for Assigned Classes -->
+            <!-- Future implementation for displaying class assignments will go here -->
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Delayed Search -->
+<script>
+    let timeout = null;
+
+    document.getElementById('search').addEventListener('input', function() {
+        clearTimeout(timeout);
+
+        timeout = setTimeout(function() {
+            document.forms[0].submit();  // Submit the form after 5 seconds of inactivity
+        }, 5000);
+    });
+</script>
+{% endblock %}

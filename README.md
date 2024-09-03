@@ -65,12 +65,12 @@ The **School Management System (SMS)** is a comprehensive, feature-rich applicat
 - **Node.js and npm** (for front-end assets and tools)
 
 ### Setup Instructions
-
+<!-- 
 1. **Clone the Repository**
    ```bash
    git clone https://github.com/yourusername/school-management-system.git
-   cd school-management-system
-   ```
+   cd school-  management-system
+   ``` -->
 
 2. **Create and Activate Virtual Environment**
    ```bash
@@ -96,15 +96,15 @@ The **School Management System (SMS)** is a comprehensive, feature-rich applicat
    python manage.py createsuperuser
    ```
 
-7. **Collect Static Files**
+<!-- 7. **Collect Static Files**
    ```bash
    python manage.py collectstatic
-   ```
-
+   ``` -->
+<!-- 
 8. **Run the Development Server**
    ```bash
    python manage.py runserver
-   ```
+   ``` -->
 
 9. **Access the System**
    - Navigate to `http://127.0.0.1:8000/` in your web browser.
@@ -152,6 +152,3 @@ For support, you can reach out to us via email at `support@example.com`.
 - **Bootstrap** - For responsive front-end design.
 - **FontAwesome** - For icons used throughout the interface.
 
----
-
-This README is structured to look great on GitHub, providing all the necessary details in a clear and organized manner. Adjust the links and specific details as necessary to fit your project.
