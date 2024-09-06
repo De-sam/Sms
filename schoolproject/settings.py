@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'classes.apps.ClassesConfig',
     'schools.apps.SchoolsConfig',
     'crispy_forms',
+    'debug_toolbar',
+    'django_celery_results',
     'crispy_bootstrap5',
     'landingpage.apps.LandingpageConfig',
     'adminlte3',
@@ -56,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'schoolproject.urls'
@@ -109,6 +112,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -146,6 +153,16 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+#celery 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Still using Redis for broker
+
+# Use Django's database as the result backend
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
 
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

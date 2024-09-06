@@ -49,15 +49,74 @@
                         </div>
                     {% endif %}
 
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
                         {% csrf_token %}
                        
-                        <input type="file" name="file" multiple class="form-control mb-3">
-                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <input type="file" name="file" class="form-control mb-3">
+                        <button type="submit" class="btn btn-primary" id="submitButton">Upload</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadModalLabel">Upload Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="uploadModalBody">
+        <!-- This content will be replaced dynamically -->
+      </div>
+      <div class="modal-footer">
+        <a href="{% url 'staff_list' short_code=school.short_code %}" class="btn btn-primary" id="goToStaffList">Go to Staff List</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    const uploadForm = document.getElementById('uploadForm');
+    const loader = document.getElementById('loader');
+    const submitButton = document.getElementById('submitButton');
+    const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    const modalBody = document.getElementById('uploadModalBody');
+    
+    // Pick the task_id passed from Django to the template
+    const taskId = "{{ task_id|default:'' }}";  // Task ID passed from the backend
+    
+    uploadForm.addEventListener('submit', function() {
+        // Show loader, hide submit button when form is submitted
+        loader.style.display = 'block';
+        submitButton.style.display = 'none';
+    });
+
+    if (taskId) {
+        checkTaskStatus(taskId);  // Start polling when the task ID is available
+
+        function checkTaskStatus(taskId) {
+            fetch(`/task-status/${taskId}/`)  // Call Django view to get task status
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "SUCCESS") {
+                    loader.style.display = 'none';  // Hide loader
+                    modalBody.innerText = "Staff upload completed successfully.";
+                    modal.show();  // Show success modal
+                } else if (data.status === "FAILURE") {
+                    loader.style.display = 'none';  // Hide loader
+                    modalBody.innerText = "Staff upload failed. Please check the file and try again.";
+                    modal.show();  // Show failure modal
+                } else {
+                    // Keep polling if the task is still in progress
+                    setTimeout(() => checkTaskStatus(taskId), 2000);
+                }
+            });
+        }
+    }
+</script>
 {% endblock %}

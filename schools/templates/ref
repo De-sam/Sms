@@ -1,3 +1,6 @@
 http://localhost:8000/schools/escnce/login
 http://localhost:8000/schools/escnce/dashboard/
 http://localhost:8000/schools/teasce/dashboard/
+
+
+update all print staements to logs 

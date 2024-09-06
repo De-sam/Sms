@@ -19,20 +19,35 @@ class SubjectType(models.Model):
     name = models.CharField(max_length=50, unique=True)
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),  # Index for quick lookups by name
+            models.Index(fields=['level'])  # Index for level to optimize filtering
+        ]
+
     def __str__(self):
         return self.name
+
 
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
+    class Meta:
+        indexes = [models.Index(fields=['name'])]  # Index for quick lookup by name
+
     def __str__(self):
         return self.name
+
 
 class Arm(models.Model):
     name = models.CharField(max_length=10, unique=True)
 
+    class Meta:
+        indexes = [models.Index(fields=['name'])]  # Index for quick lookup by name
+
     def __str__(self):
         return self.name
+
 
 class Class(models.Model):
     LEVEL_CHOICES = [
@@ -52,8 +67,16 @@ class Class(models.Model):
     branches = models.ManyToManyField(Branch, related_name='classes', blank=True)
     class_teachers = models.ManyToManyField(Staff, related_name='class_teacher_of', blank=True) 
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),    # Index on class name for searching
+            models.Index(fields=['level']),   # Index on level for filtering
+            models.Index(fields=['department'])  # Foreign key indexing for joins with department
+        ]
+
     def __str__(self):
         return f"{self.name} ({self.get_level_display()}) {self.department.name if self.department else ''}"
+
 
 class Subject(models.Model):
     name = models.CharField(max_length=100)
@@ -65,6 +88,13 @@ class Subject(models.Model):
     is_general = models.BooleanField(default=False)
     classes = models.ManyToManyField(Class, related_name='subjects', blank=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),           # Index on subject name for searching
+            models.Index(fields=['subject_code']),   # Index on unique subject code for quick lookups
+            models.Index(fields=['subject_type']),   # Foreign key indexing for subject type
+        ]
+
     def save(self, *args, **kwargs):
         if not self.subject_code:
             prefix = (self.subject_code_prefix or self.name[:3]).upper()
@@ -75,7 +105,6 @@ class Subject(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Automatically link General subjects to appropriate classes
         if self.is_general:
             if self.subject_type.level == 'general_primary':
                 self.classes.set(Class.objects.filter(level='primary'))
@@ -85,6 +114,7 @@ class Subject(models.Model):
     def __str__(self):
         return f"{self.name} ({self.subject_code})"
 
+
 class TeacherSubjectClassAssignment(models.Model):
     teacher = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='subject_class_assignments')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='teacher_assignments')
@@ -92,7 +122,12 @@ class TeacherSubjectClassAssignment(models.Model):
     classes_assigned = models.ManyToManyField(Class, related_name='teacher_subject_classes')
 
     class Meta:
-        unique_together = ('teacher', 'subject','branch')
+        unique_together = ('teacher', 'subject', 'branch')
+        indexes = [
+            models.Index(fields=['teacher']),  # Index to speed up queries involving teacher
+            models.Index(fields=['subject']),  # Index to optimize subject-based filtering
+            models.Index(fields=['branch']),   # Index to optimize branch-based filtering
+        ]
 
     def __str__(self):
         return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name}"

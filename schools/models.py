@@ -9,16 +9,24 @@ class Branch(models.Model):
         on_delete=models.CASCADE, 
         related_name='branches', 
         null=True, 
-        blank=True)
+        blank=True
+    )
     primary_school = models.ForeignKey(
         'PrimarySchool', 
         on_delete=models.CASCADE, 
         related_name='primary_branches', 
         null=True, 
-        blank=True)
+        blank=True
+    )
     branch_name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
-    
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['branch_name']),  # Index on branch name for filtering
+            models.Index(fields=['school']),       # Foreign key index for faster joins
+            models.Index(fields=['primary_school'])  # Foreign key index for faster joins
+        ]
 
     def __str__(self):
         if self.primary_school:
@@ -38,32 +46,28 @@ class PrimarySchool(models.Model):
         SchoolRegistration,
         on_delete=models.CASCADE,
         related_name='primary_schools',
-        null=True, blank=True
+        null=True, 
+        blank=True
     )
     pry_school_id = models.CharField(max_length=10, unique=True, editable=False)
     school_name = models.CharField(max_length=255)
-    logo = models.ImageField(default='default.jpeg',upload_to='logos')
+    logo = models.ImageField(default='default.jpeg', upload_to='logos')
     address = models.CharField(max_length=255)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['school_name']),  # Index for filtering by school name
+            models.Index(fields=['pry_school_id']),  # Index on unique school ID
+            models.Index(fields=['secondary_school'])  # Foreign key index for joins
+        ]
 
     def save(self, *args, **kwargs):
         if not self.pry_school_id:
-            # Extract the first 3 letters of the school name, default to "XXX" if the name is too short
             school_prefix = self.school_name[:3].upper() if self.school_name else 'XXX'
-
-            # Generate a unique ID part using UUID
             uuid_part = str(uuid.uuid4().hex[:6].upper())
-
-            # Combine them to create a unique ID
             self.pry_school_id = f"{school_prefix}{uuid_part}"
 
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return (f"ID: {self.pry_school_id},"
-                f"School Name: {self.school_name},"
-                f"Adress: {self.address}")
-               
-
-   
-    
-
+        return (f"ID: {self.pry_school_id}, School Name: {self.school_name}, Address: {self.address}")

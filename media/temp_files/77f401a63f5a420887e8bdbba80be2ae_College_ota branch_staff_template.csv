@@ -1,0 +1,7 @@
+first_name,last_name,email,role,gender,marital_status,date_of_birth,phone_number,address,nationality,staff_category,status
+John,Doe,john.doe@example.com,Teacher,male,single,1990-01-01,8012345678,123 Demo Street,nigerian,academic,active
+Jane,Smith,jane.smith@example.com,Administrator,female,married,1985-05-15,9087654321,456 Example Avenue,non_nigerian,non_academic,active
+Michael,Johnson,michael.johnson@example.com,Accountant,male,divorced,1982-09-20,7023456789,789 Sample Road,nigerian,academic,inactive
+Jesse,Jane,jj@example.com,Teacher,Female,Single,1999-08-09,7808911982,901 jesse str,non_nigerian,academic,active
+Kimberly,West,"kkw,@example.com",Teacher,female,divorced,1995-07-05,8080633666,kk west avenue,non_nigerian,academic,inactive
+Davy,Jones,"dj, @example.com",Administrator,Male,Single,1930-08-02,9018202190,DJ locker str,non_nigerian,non_academic,active
