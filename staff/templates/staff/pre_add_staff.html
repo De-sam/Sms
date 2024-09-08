@@ -1,0 +1,96 @@
+{% extends "adminlte/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Staff Data Management</h2>
+
+    <!-- Bootstrap Tabs -->
+    <ul class="nav nav-tabs" id="staffTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="download-tab" data-bs-toggle="tab" href="#download" role="tab" aria-controls="download" aria-selected="true">Download Templates</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload Staff Data</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4" id="staffTabsContent">
+        <!-- Download Tab Content -->
+        <div class="tab-pane fade show active" id="download" role="tabpanel" aria-labelledby="download-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Download Staff Templates</h5>
+                </div>
+                <div class="card-body">
+                    
+
+                    <ol>
+                        
+                        <li>
+                            <p class="text-muted">
+                               Download the staff upload template
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               If you have just one branch you will get one file otherwise you will get a zipfile ensure to uzip or extract files before going to the next step
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                              Open the file(s) and remove the demo or sample data, its there to guide you!
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Fill out the template with your staff details without modifying the header.
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Save the file without modifying its file name otherwise it would not be accepted during  upload!!
+                            </p>
+                        </li>
+                    </ol>
+
+                    <p>
+                        <a href="{% url 'download_staff_template' short_code=school.short_code %}" class="btn btn-primary">
+                            Download Staff Template(s)
+                        </a>
+                    </p>
+                   
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Tab Content -->
+        <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Upload Staff Data</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>
+                            <p class="text-danger">
+                                Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Bulk operations such as this might take a few minutes therefore staff data might not show up in staff list immidiately
+                            </p>
+                        </li>
+                    </ol>
+                    
+                   
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

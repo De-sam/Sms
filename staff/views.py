@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import csv
+from django.core.cache import cache
 from .forms import StaffCreationForm,UserUpdateForm,\
 TeacherSubjectAssignmentForm,StaffUploadForm
 from django.http import HttpResponse, HttpResponseBadRequest
@@ -14,7 +15,8 @@ from django.db import transaction
 from django.http import HttpResponse
 import zipfile
 from io import StringIO, BytesIO
-from .utils import normalize_branch_name_for_matching
+from .utils import normalize_branch_name_for_matching\
+, is_valid_staff_file_name
 from .tasks import process_file_task
 import os
 from django.conf import settings
@@ -45,25 +47,29 @@ def upload_staff(request, short_code):
         form = StaffUploadForm(request.POST, request.FILES)
         if form.is_valid():
             uploaded_file = request.FILES['file']
+
+            # Validate the file name before proceeding
+            if not is_valid_staff_file_name(uploaded_file.name, school):
+                messages.error(request, "Invalid file name or format. Please download another template to fill or upload the correct one.")
+                return redirect('upload_staff', short_code=short_code)
+
             file_path = save_temp_file(uploaded_file)
-            
+
             print("Starting task to process the file")  # Debugging line
             task = process_file_task.delay(file_path, uploaded_file.name, school.id)  # Dispatch task
             print(f"Task dispatched with ID {task.id}")  # Debugging line
             
             # Instead of redirecting, render the page with the task ID to be used by JavaScript
-            messages.success(request, "File is being processed. staff data will be updated in few minutes.")
-            return render(request, 'staff/staff_list.html', {
-                'form': form,
-                'school': school,
-                'task_id': task.id,  # Pass the task ID to the template
-            })
+            messages.success(request, "File is being processed... this may take a few minutes.")
+            messages.info(request, "Press ctrl + F5 on your computer if newly added names are not showing up or wait a few minutes!!!")
+            return redirect('staff_list', short_code=school.short_code)
         else:
             messages.error(request, "Invalid form submission.")
     else:
         form = StaffUploadForm()
 
     return render(request, 'staff/upload_staff.html', {'form': form, 'school': school})
+
 
 
 
@@ -78,14 +84,15 @@ def download_staff_template(request, short_code):
 
     # Create an in-memory ZIP file
     zip_buffer = BytesIO()
-    
+
     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+
         # Loop through each branch and generate a separate CSV file
         for branch in branches:
             # Create an in-memory CSV file for the current branch using StringIO (for text data)
             csv_buffer = StringIO()
             writer = csv.writer(csv_buffer)
-            
+
             # Define the headers
             headers = [
                 'first_name', 'last_name', 'email', 'role', 'gender', 'marital_status',
@@ -108,17 +115,33 @@ def download_staff_template(request, short_code):
             ]
 
             # Add the demo rows to the CSV
-            for demo_data in demo_data_list:
-                writer.writerow(demo_data)
+            writer.writerows(demo_data_list)
 
             # Normalize the branch name
             branch_name = normalize_branch_name_for_matching(branch.branch_name)
 
-            # Determine the school type (Primary or College)
-            primary_or_college = "Primary" if branch.primary_school else "College"
+            # Determine the school type and get the correct school name and initials
+            if branch.primary_school:
+                # Use the primary school name and generate initials
+                school_name = branch.primary_school.school_name
+                school_type = "Primary"
+                school_initials = ''.join([word[0].upper() for word in branch.primary_school.school_name.split()])
+            elif branch.school:
+                # Use the secondary school name and generate initials
+                school_name = branch.school.school_name
+                school_type = "Secondary"
+                school_initials = ''.join([word[0].upper() for word in branch.school.school_name.split()])
+            else:
+                # Fallback to an unknown school name (this should rarely happen)
+                school_name = "Unknown_School"
+                school_type = "Unknown"
+                school_initials = "UNK"
 
-            # Create the filename based on the branch and school type
-            file_name = f"{primary_or_college}_{branch_name}_staff_template.csv"
+            # Generate a unique part for the file name using UUID
+            unique_suffix = uuid4().hex[-3:]
+
+            # Create the filename based on school initials, branch, and school type
+            file_name = f"{school_initials}_{school_type}_{branch_name}_{unique_suffix}_staff_template.csv"
 
             # Move the StringIO buffer position to the start so it can be read
             csv_buffer.seek(0)
@@ -132,6 +155,7 @@ def download_staff_template(request, short_code):
     response['Content-Disposition'] = f'attachment; filename={school.short_code}_staff_templates.zip'
 
     return response
+
 
 @login_required_with_short_code
 def add_staff(request, short_code):
@@ -184,27 +208,42 @@ def add_staff(request, short_code):
 
 @login_required_with_short_code
 def staff_list(request, short_code):
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    # Generate a unique cache key based on the school and query parameters
+    cache_key = f"staff_list_{short_code}_{request.GET.get('q', '')}_{request.GET.get('page', 1)}_{request.GET.get('status', '').lower()}"
+    cached_staff_list = cache.get(cache_key)
+
+    # Check if the result is already cached
+    if cached_staff_list:
+        return cached_staff_list
+
+    # Fetch the school object
+    school = get_object_or_404(SchoolRegistration.objects.select_related('admin_user'), short_code=short_code)
+    
     query = request.GET.get('q', '')
     per_page = request.GET.get('per_page', 10)
     status_filter = request.GET.get('status', '').lower()
 
-    staff_members = Staff.objects.filter(branches__school=school).select_related('role').prefetch_related('branches').distinct()
+    # Use select_related and prefetch_related for optimized querying
+    staff_members = Staff.objects.filter(branches__school=school).select_related('role', 'user').prefetch_related('branches').distinct()
 
+    # Apply search query filtering
     staff_members = staff_members.filter(
-    Q(user__username__icontains=query) |
-    Q(user__first_name__icontains=query) |
-    Q(user__last_name__icontains=query) |
-    Q(user__email__icontains=query) |
-    Q(phone_number__icontains=query) |
-    Q(role__name__icontains=query)
-).distinct()
+        Q(user__username__icontains=query) |
+        Q(user__first_name__icontains=query) |
+        Q(user__last_name__icontains=query) |
+        Q(user__email__icontains=query) |
+        Q(phone_number__icontains=query) |
+        Q(role__name__icontains=query)
+    ).distinct()
 
+    # Apply status filtering if specified
     if status_filter in ['active', 'inactive']:
         staff_members = staff_members.filter(status=status_filter)
 
+    # Paginate the staff members list
     paginator = Paginator(staff_members, per_page)
     page = request.GET.get('page')
+    
     try:
         staff_members = paginator.page(page)
     except PageNotAnInteger:
@@ -212,13 +251,19 @@ def staff_list(request, short_code):
     except EmptyPage:
         staff_members = paginator.page(paginator.num_pages)
 
-    return render(request, 'staff/staff_list.html', {
+    # Render the response
+    response = render(request, 'staff/staff_list.html', {
         'staff_members': staff_members,
         'school': school,
         'query': query,
         'per_page': per_page,
         'status_filter': status_filter,
     })
+
+    # Cache the rendered response for 5 minutes (300 seconds)
+    cache.set(cache_key, response, 300)
+
+    return response
 
 @login_required_with_short_code
 def edit_staff(request, short_code, staff_id):
@@ -264,7 +309,7 @@ def delete_staff(request, short_code, staff_id):
     # Ensure that the staff member is associated with the correct school branches
     if not staff.branches.filter(school=school).exists():
         messages.error(request, 'This staff member does not belong to this school.')
-        return redirect('staff_list', short_code=short_code)
+        return redirect('staff_list', short_code=school.short_code)
 
     if request.method == 'POST':
         user = staff.user  # Capture the associated user before deleting staff
@@ -273,6 +318,7 @@ def delete_staff(request, short_code, staff_id):
         user.delete()
 
         messages.success(request, 'Staff member deleted successfully.')
+        messages.info(request, 'press ctrl + F5 if deleted name is still showing up!!!')
         return redirect('staff_list', short_code=short_code)
     
     return render(request, 'staff/delete_staff.html', {

@@ -10,12 +10,18 @@ def process_file_task(file_path, file_name, school_id):
     """internal imports"""
     from staff.utils import process_uploaded_file, extract_branch_from_filename
 
-    
-    school = SchoolRegistration.objects.get(id=school_id)
-    branch = extract_branch_from_filename(file_name, school)
-    if branch:
-        with open(file_path, 'rb') as file:
-            process_uploaded_file(file, file_name, branch, school)
+    try:
+        school = SchoolRegistration.objects.get(id=school_id)
+        branch = extract_branch_from_filename(file_name, school)
+        
+        if branch:
+            with open(file_path, 'rb') as file:
+                process_uploaded_file(file, file_name, branch, school)
+        else:
+            print(f"Branch could not be detected for file {file_name}")
+    except Exception as e:
+        print(f"Error processing file task: {e}")
+        raise  # Re-raise the exception so it can be tracked by Celery
 
 
 @shared_task

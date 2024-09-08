@@ -7,10 +7,22 @@
     <!-- Bootstrap Tabs -->
     <ul class="nav nav-tabs" id="staffTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="download-tab" data-bs-toggle="tab" href="#download" role="tab" aria-controls="download" aria-selected="true">Download Templates</a>
+            <a class="nav-link active" id="download-tab" data-bs-toggle="tab" href="#download" role="tab" aria-controls="download" aria-selected="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+                  </svg>
+                Download Templates
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload Staff Data</a>
+            <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-upload" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383"/>
+                    <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708z"/>
+                  </svg>
+                Upload Staff Data
+            </a>
         </li>
     </ul>
 
@@ -22,14 +34,46 @@
                     <h5 class="card-title">Download Staff Templates</h5>
                 </div>
                 <div class="card-body">
+                    
+
+                    <ol>
+                        
+                        <li>
+                            <p class="text-muted">
+                               Download the staff upload template
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               If you have just one branch you will get one file otherwise you will get a zipfile ensure to uzip or extract files before going to the next step
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                              Open the file(s) and remove the demo or sample data, its there to guide you!
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Fill out the template with your staff details without modifying the header.
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Save the file without modifying its file name otherwise it would not be accepted during  upload!!
+                            </p>
+                        </li>
+                    </ol>
+
                     <p>
                         <a href="{% url 'download_staff_template' short_code=school.short_code %}" class="btn btn-primary">
-                            Download Staff Templates for All Branches
+                            Download Staff Template(s)
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-arrow-down-fill" viewBox="0 0 16 16">
+                                <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M8 5a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5A.5.5 0 0 1 8 5"/>
+                              </svg>
                         </a>
                     </p>
-                    <p class="text-muted">
-                        Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
-                    </p>
+                   
                 </div>
             </div>
         </div>
@@ -41,19 +85,31 @@
                     <h5 class="card-title">Upload Staff Data</h5>
                 </div>
                 <div class="card-body">
-                    {% if messages %}
-                        <div>
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                    <ol>
+                        <li>
+                            <p class="text-danger">
+                                Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
+                            </p>
+                        </li>
+                        <li>
+                            <p class="text-muted">
+                               Bulk operations such as this might take a few minutes therefore staff data might not show up in staff list immidiately
+                            </p>
+                        </li>
+                    </ol>
+                    
+                   
 
                     <form method="post" enctype="multipart/form-data" id="uploadForm">
                         {% csrf_token %}
                        
                         <input type="file" name="file" class="form-control mb-3">
-                        <button type="submit" class="btn btn-primary" id="submitButton">Upload</button>
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            Upload
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-upload-fill" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 0a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 4.095 0 5.555 0 7.318 0 9.366 1.708 11 3.781 11H7.5V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11h4.188C14.502 11 16 9.57 16 7.773c0-1.636-1.242-2.969-2.834-3.194C12.923 1.999 10.69 0 8 0m-.5 14.5V11h1v3.5a.5.5 0 0 1-1 0"/>
+                              </svg>
+                        </button>
                     </form>
                 </div>
             </div>

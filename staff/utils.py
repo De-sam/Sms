@@ -1,4 +1,4 @@
-
+import datetime
 import re
 import logging
 import csv
@@ -10,23 +10,23 @@ from .tasks import send_staff_creation_email
 
 logger = logging.getLogger(__name__)
 
-def generate_unique_username(last_name, school_name):
-    # Extract the first 3 letters of the school's name in uppercase
-    school_prefix = school_name[:3].upper()
-    # Ensure the last name is fully capitalized
-    last_name = last_name.upper()
-    base_username = f"{school_prefix}/{last_name}/"
+def generate_unique_username(school_initials, last_name, current_year):
+    """
+    Generates a unique username in the format:
+    SCHOOLINITIALS/LASTNAME/YEAR/COUNTER
+    """
+    base_username = f"{school_initials}/{last_name.upper()}/{current_year}"
+    
+    # Start with a counter of 1 and increment if necessary
     counter = 1
+    unique_username = f"{base_username}/{counter}"
 
-    # Find the next available unique username
-    while True:
-        username = f"{base_username}{counter}"  # Natural counter (1, 2, 3, etc.)
-        if not User.objects.filter(username=username).exists():
-            break
+    # Keep incrementing the counter until a unique username is found
+    while User.objects.filter(username=unique_username).exists():
         counter += 1
-
-    return username
-
+        unique_username = f"{base_username}/{counter}"
+    
+    return unique_username
 
 
 def process_uploaded_file(file, file_name, branch, school):
@@ -61,6 +61,20 @@ def process_uploaded_file(file, file_name, branch, school):
         if missing_headers:
             raise ValueError(f"Missing required headers: {', '.join(missing_headers)}")
         
+        # Determine if the file is for primary or secondary school based on file_name
+        school_type = "Primary" if "Primary" in file_name else "Secondary"
+        print(f"Detected school type: {school_type}")
+
+        # Get school initials based on school type
+        if school_type == "Primary" and hasattr(school, 'primary_school'):
+            school_initials = ''.join([word[0].upper() for word in school.primary_school.school_name.split()])
+        else:
+            school_initials = ''.join([word[0].upper() for word in school.school_name.split()])
+
+        print(f"Using school initials: {school_initials}")
+        
+        current_year = datetime.datetime.now().year
+
         for idx, row in enumerate(data):
             try:
                 first_name = row.get('first_name', '').strip()
@@ -71,7 +85,7 @@ def process_uploaded_file(file, file_name, branch, school):
                     continue
 
                 # Generate a unique username
-                username = generate_unique_username(last_name, school.school_name)
+                username = generate_unique_username(school_initials, last_name, current_year)
 
                 # Check if a user with the same username exists
                 if User.objects.filter(username=username).exists():
@@ -93,7 +107,7 @@ def process_uploaded_file(file, file_name, branch, school):
                 user = User.objects.create_user(username=username, email=email, first_name=first_name, last_name=last_name.upper())
                 user.set_password('new_staff')  # Set default password
                 user.save()
-        
+
                 print(f"Created user: {user.username}")
 
                 # Send email asynchronously using Celery
@@ -125,7 +139,6 @@ def process_uploaded_file(file, file_name, branch, school):
         print(f"Error processing file {file_name}: {e}")
         raise
 
-
 def normalize_branch_name_for_matching(branch_name):
     # Convert to lowercase
     branch_name = branch_name.lower()
@@ -136,10 +149,44 @@ def normalize_branch_name_for_matching(branch_name):
     return branch_name
 
 def extract_branch_from_filename(filename, school):
-    match = re.search(r'^(Primary|College)_(.*?)_staff_template\.csv$', filename, re.IGNORECASE)  # Updated to .csv
+    # Match the pattern: SCHOOLINITIALS_Primary_BranchName_UUID_staff_template.csv
+    match = re.search(r'^[A-Z]{1,}_+(Primary|Secondary)_(.*?)_\w{3}_staff_template\.csv$', filename, re.IGNORECASE)
     if match:
         branch_name = normalize_branch_name_for_matching(match.group(2).strip().lower())
         branch = Branch.objects.filter(branch_name__iexact=branch_name, school=school).first()
         return branch
     return None
 
+def is_valid_staff_file_name(file_name, school):
+    """
+    Validates the staff file name against the expected format.
+    The format should be:
+    PRIMARYSCHOOLINITIALS_Primary_BranchName_UUID_staff_template.csv
+    or
+    SECONDARYSCHOOLINITIALS_Secondary_BranchName_UUID_staff_template.csv
+    """
+    # Extract initials for the primary and secondary schools
+    primary_school_initials = ''.join([word[0].upper() for word in school.primary_school.school_name.split()]) if hasattr(school, 'primary_school') else None
+    secondary_school_initials = ''.join([word[0].upper() for word in school.school_name.split()])
+
+    # Print to check what initials are being used for validation
+    print(f"Validating against primary school initials: {primary_school_initials}")
+    print(f"Validating against secondary school initials: {secondary_school_initials}")
+
+    # Regex pattern for both primary and secondary schools
+    file_name_pattern = rf'^({primary_school_initials}|{secondary_school_initials})_(Primary|Secondary)_(.*?)_\w{{3}}_staff_template\.csv$'
+    
+    # Print the file name being validated
+    print(f"Validating file name: {file_name}")
+
+    # Match the filename against the pattern
+    match = re.match(file_name_pattern, file_name, re.IGNORECASE)
+    
+    # Print whether the match was successful
+    if match:
+        print("File name is valid.")
+    else:
+        print("File name is invalid.")
+    
+    # Return True if the filename matches the expected pattern, otherwise False
+    return bool(match)
