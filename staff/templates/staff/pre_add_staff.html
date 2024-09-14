@@ -1,4 +1,5 @@
 {% extends "adminlte/base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 <div class="container mt-4">
@@ -6,91 +7,99 @@
 
     <!-- Bootstrap Tabs -->
     <ul class="nav nav-tabs" id="staffTabs" role="tablist">
+        <!-- Invite Staff Tab -->
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="download-tab" data-bs-toggle="tab" href="#download" role="tab" aria-controls="download" aria-selected="true">Download Templates</a>
+            <a class="nav-link active" id="invite-tab" data-bs-toggle="tab" href="#invite" role="tab" aria-controls="invite" aria-selected="true">
+                Invite Staff
+            </a>
         </li>
+        <!-- Add Staff Directly Tab -->
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload Staff Data</a>
+            <a class="nav-link" id="add-tab" data-bs-toggle="tab" href="#add" role="tab" aria-controls="add" aria-selected="false">
+                Add Staff Directly
+            </a>
+        </li>
+        <!-- Bulk Upload Staff Details Tab -->
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="bulk-upload-tab" data-bs-toggle="tab" href="#bulk-upload" role="tab" aria-controls="bulk-upload" aria-selected="false">
+                Bulk Upload Staff Details
+            </a>
         </li>
     </ul>
 
     <div class="tab-content mt-4" id="staffTabsContent">
-        <!-- Download Tab Content -->
-        <div class="tab-pane fade show active" id="download" role="tabpanel" aria-labelledby="download-tab">
+        <!-- Invite Staff Tab Content -->
+        <div class="tab-pane fade show active" id="invite" role="tabpanel" aria-labelledby="invite-tab">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Download Staff Templates</h5>
+                    <h5 class="card-title">Invite Staff Members</h5>
                 </div>
                 <div class="card-body">
-                    
-
-                    <ol>
-                        
-                        <li>
-                            <p class="text-muted">
-                               Download the staff upload template
-                            </p>
-                        </li>
-                        <li>
-                            <p class="text-muted">
-                               If you have just one branch you will get one file otherwise you will get a zipfile ensure to uzip or extract files before going to the next step
-                            </p>
-                        </li>
-                        <li>
-                            <p class="text-muted">
-                              Open the file(s) and remove the demo or sample data, its there to guide you!
-                            </p>
-                        </li>
-                        <li>
-                            <p class="text-muted">
-                               Fill out the template with your staff details without modifying the header.
-                            </p>
-                        </li>
-                        <li>
-                            <p class="text-muted">
-                               Save the file without modifying its file name otherwise it would not be accepted during  upload!!
-                            </p>
-                        </li>
-                    </ol>
-
+                    <p class="text-muted">
+                        Invite staff members into your system by allowing them to log in through Google.Click the button below to invite them.
+                    </p>
                     <p>
-                        <a href="{% url 'download_staff_template' short_code=school.short_code %}" class="btn btn-primary">
-                            Download Staff Template(s)
+                        <a href="#" class="btn btn-danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
+                                <path d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"/>
+                              </svg>
+                            Invite Staff
                         </a>
                     </p>
-                   
                 </div>
             </div>
         </div>
 
-        <!-- Upload Tab Content -->
-        <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+        <!-- Add Staff Directly Tab Content -->
+        <div class="tab-pane fade" id="add" role="tabpanel" aria-labelledby="add-tab">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Upload Staff Data</h5>
+                    <h5 class="card-title">Add New Staff Member</h5>
                 </div>
                 <div class="card-body">
-                    <ol>
-                        <li>
-                            <p class="text-danger">
-                                Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
-                            </p>
-                        </li>
-                        <li>
-                            <p class="text-muted">
-                               Bulk operations such as this might take a few minutes therefore staff data might not show up in staff list immidiately
-                            </p>
-                        </li>
-                    </ol>
-                    
-                   
+                    <p class="text-muted">
+                        Add a new staff member directly by entering their details yourself. Click the button below to proceed.
+                    </p>
+                    <p>
+                        <a href="{% url 'add_staff' short_code=school.short_code %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus" viewBox="0 0 16 16">
+                                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                                <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                              </svg>
+                            Add Staff Member
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
 
-                    
+        <!-- Bulk Upload Staff Details Tab Content -->
+        <div class="tab-pane fade" id="bulk-upload" role="tabpanel" aria-labelledby="bulk-upload-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Bulk Upload Staff Details</h5>
+                </div>
+                    <p class="text-muted">
+                        Add a new staff members by filling out a spraedsheet, this is useful if your school is just getting onboard
+                    </p>
+                    <p>
+                        <a href="{% url 'upload_staff' short_code=school.short_code %}" class="btn btn-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-arrow-up-fill" viewBox="0 0 16 16">
+                                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z"/>
+                              </svg>
+                           Begin bulk operation
+                        </a>
+                    </p>
+                    <p class="text-danger">
+                        Please ensure the filenames remain unchanged when you upload the files back. The filenames are used to detect branches automatically.
+                    </p>
+                    <p class="text-muted">
+                        Bulk operations such as this might take a few minutes; therefore, staff data might not show up in the staff list immediately.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 
 {% endblock %}

@@ -1,6 +1,8 @@
 from celery import shared_task
 from landingpage.models import SchoolRegistration
-from schools.models import Branch
+import os
+import time
+from django.conf import settings
 from django.core.mail import send_mail
 
 
@@ -49,3 +51,27 @@ def send_staff_creation_email(email, username, shortcode):
         print(f"Email sent to {email}")
     except Exception as e:
         print(f"Failed to send email to {email}: {e}")
+
+@shared_task
+def delete_temp_files():
+    """
+    Task to delete files from the 'temp_files' directory older than 1 minute.
+    """
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
+    
+    if not os.path.exists(temp_dir):
+        return  # Directory does not exist, so nothing to delete
+
+    # Get the current time
+    now = time.time()
+
+    # Iterate over the files in the temp_files directory
+    for filename in os.listdir(temp_dir):
+        file_path = os.path.join(temp_dir, filename)
+        
+        # Check if the file is older than 60 seconds (1 minute)
+        if os.path.isfile(file_path):
+            file_age = now - os.path.getmtime(file_path)
+            if file_age > 60:  # File older than 1 minute
+                os.remove(file_path)  # Delete the file
+                print(f"Deleted old temp file: {file_path}")

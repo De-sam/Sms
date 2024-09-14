@@ -17,7 +17,7 @@ import zipfile
 from io import StringIO, BytesIO
 from .utils import normalize_branch_name_for_matching\
 , is_valid_staff_file_name
-from .tasks import process_file_task
+from .tasks import process_file_task,send_staff_creation_email
 import os
 from django.conf import settings
 from uuid import uuid4
@@ -59,7 +59,7 @@ def upload_staff(request, short_code):
             task = process_file_task.delay(file_path, uploaded_file.name, school.id)  # Dispatch task
             print(f"Task dispatched with ID {task.id}")  # Debugging line
             
-            # Instead of redirecting, render the page with the task ID to be used by JavaScript
+        
             messages.success(request, "File is being processed... this may take a few minutes.")
             messages.info(request, "Press ctrl + F5 on your computer if newly added names are not showing up or wait a few minutes!!!")
             return redirect('staff_list', short_code=school.short_code)
@@ -156,55 +156,52 @@ def download_staff_template(request, short_code):
 
     return response
 
-
 @login_required_with_short_code
-def add_staff(request, short_code):
+def pre_add_staff(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)
-    
+    return render(request, 'staff/pre_add_staff.html', {
+        'school': school,
+
+    })
+
+
+@login_required_with_short_code
+@transaction.atomic
+def add_staff(request, short_code):
+    # Fetch the school object and its branches
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    branches = Branch.objects.filter(school=school)
+
     if request.method == 'POST':
         form = StaffCreationForm(request.POST, request.FILES, school=school)
         form.fields['branches'].queryset = branches
+
         if form.is_valid():
-            user = form.save(commit=False)
-            user.save()
+            # Save the user and staff object from the form
+            user = form.save()
 
-            staff = Staff.objects.create(
-                user=user,
-                role=form.cleaned_data['role'],
-                gender=form.cleaned_data['gender'],
-                marital_status=form.cleaned_data['marital_status'],
-                date_of_birth=form.cleaned_data['date_of_birth'],
-                phone_number=form.cleaned_data['phone_number'],
-                address=form.cleaned_data['address'],
-                nationality=form.cleaned_data['nationality'],
-                staff_category=form.cleaned_data['staff_category'],
-                status=form.cleaned_data['status'],
-                cv=form.cleaned_data.get('cv'),
-                profile_picture=form.cleaned_data.get('profile_picture'),
-                staff_signature=form.cleaned_data.get('staff_signature'),
-            )
+            # Send the account creation email asynchronously
+            send_staff_creation_email.delay(user.email, user.username, school.short_code)
 
-            staff.branches.set(form.cleaned_data['branches'])
-            staff.save()
-
-            messages.success(request, 'Staff member added successfully!')
+            # Success message and redirect to staff list
+            messages.success(request, f'Staff member {user.username} added successfully! An email has been sent with login details.')
             return redirect('staff_list', short_code=school.short_code)
         else:
-            messages.error(request, 'Please correct the errors below and try again.')
+            # Handle form errors and show error messages
+            messages.error(request, 'There was an error with your submission. Please correct the issues below.')
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"Error in {field}: {error}")
     else:
+        # Initialize the form with the school-specific context
         form = StaffCreationForm(school=school)
         form.fields['branches'].queryset = branches
 
     return render(request, 'staff/add_staff.html', {
         'form': form,
         'school': school,
-
     })
-
 
 @login_required_with_short_code
 def staff_list(request, short_code):

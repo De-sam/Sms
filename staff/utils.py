@@ -15,16 +15,16 @@ def generate_unique_username(school_initials, last_name, current_year):
     Generates a unique username in the format:
     SCHOOLINITIALS/LASTNAME/YEAR/COUNTER
     """
-    base_username = f"{school_initials}/{last_name.upper()}/{current_year}"
+    base_username = f"{school_initials}-{last_name.upper()}-{current_year}"
     
     # Start with a counter of 1 and increment if necessary
     counter = 1
-    unique_username = f"{base_username}/{counter}"
+    unique_username = f"{base_username}-{counter}"
 
     # Keep incrementing the counter until a unique username is found
     while User.objects.filter(username=unique_username).exists():
         counter += 1
-        unique_username = f"{base_username}/{counter}"
+        unique_username = f"{base_username}-{counter}"
     
     return unique_username
 
