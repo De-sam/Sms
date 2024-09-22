@@ -77,7 +77,11 @@
                             {% if staff_members %}
                                 {% for staff in staff_members %}
                                     <tr>
-                                        <td>{{ staff.user.username }}</td>
+                                        <td>
+                                            <span class="badge bg-danger">
+                                                {{ staff.user.username }}
+                                            </span>
+                                        </td>
                                         <td>{{ staff.user.first_name }} {{ staff.user.last_name }}</td>
                                         <td>{{ staff.user.email }}</td>
                                         <td>{{ staff.role.name }}</td>

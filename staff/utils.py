@@ -2,32 +2,37 @@ import datetime
 import re
 import logging
 import csv
+import uuid
 from .models import Branch
-import pandas as pd
 from .models import Staff, Role
 from django.contrib.auth.models import User
 from .tasks import send_staff_creation_email
 
 logger = logging.getLogger(__name__)
 
-def generate_unique_username(school_initials, last_name, current_year):
+def generate_unique_username(last_name, current_year):
     """
     Generates a unique username in the format:
-    SCHOOLINITIALS/LASTNAME/YEAR/COUNTER
+    SCHOOLINITIALS-LASTNAME-YEAR-FIRST2-LAST2
     """
-    base_username = f"{school_initials}-{last_name.upper()}-{current_year}"
+    base_username = f"{last_name.upper()}-{current_year}"
     
-    # Start with a counter of 1 and increment if necessary
-    counter = 1
-    unique_username = f"{base_username}-{counter}"
+    # Generate a UUID and extract the first two and last two characters
+    def get_uuid_part():
+        full_uuid = str(uuid.uuid4())
+        first_two = full_uuid[:2]  # First two characters
+        last_two = full_uuid[-2:]  # Last two characters
+        return first_two + last_two
 
-    # Keep incrementing the counter until a unique username is found
+    uuid_part = get_uuid_part()
+    unique_username = f"{base_username}-{uuid_part}"
+
+    # Keep generating new UUID parts if the username already exists
     while User.objects.filter(username=unique_username).exists():
-        counter += 1
-        unique_username = f"{base_username}-{counter}"
+        uuid_part = get_uuid_part()  # Generate new UUID part
+        unique_username = f"{base_username}-{uuid_part}"
     
     return unique_username
-
 
 def process_uploaded_file(file, file_name, branch, school):
     try:
@@ -64,14 +69,6 @@ def process_uploaded_file(file, file_name, branch, school):
         # Determine if the file is for primary or secondary school based on file_name
         school_type = "Primary" if "Primary" in file_name else "Secondary"
         print(f"Detected school type: {school_type}")
-
-        # Get school initials based on school type
-        if school_type == "Primary" and hasattr(school, 'primary_school'):
-            school_initials = ''.join([word[0].upper() for word in school.primary_school.school_name.split()])
-        else:
-            school_initials = ''.join([word[0].upper() for word in school.school_name.split()])
-
-        print(f"Using school initials: {school_initials}")
         
         current_year = datetime.datetime.now().year
 
@@ -84,16 +81,16 @@ def process_uploaded_file(file, file_name, branch, school):
                     print(f"Skipping row {idx} due to missing first name or last name.")
                     continue
 
-                # Generate a unique username
-                username = generate_unique_username(school_initials, last_name, current_year)
+                # Generate a unique username using UUID logic
+                username = generate_unique_username(last_name, current_year)
 
-                # Check if a user with the same username exists
+                # Check if a user with the same username exists (though unlikely due to UUID)
                 if User.objects.filter(username=username).exists():
                     print(f"User with username {username} already exists. Skipping row {idx}.")
                     continue
 
                 email = row.get('email', '').strip()
-                role_name = row.get('role', '').strip()
+                role_name= row.get('role', '').strip()
 
                 if not email:
                     print(f"Skipping row {idx} due to missing email.")

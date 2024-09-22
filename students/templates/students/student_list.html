@@ -1,0 +1,53 @@
+{% extends "adminlte/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Students List for {{ school.name }}</h1>
+            
+            {% if students %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Class</th>
+                            <th>Branch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td>{{ student.id }}</td>
+                                <td>{{ student.first_name }}</td>
+                                <td>{{ student.last_name }}</td>
+                                <td>{{ student.user.email }}</td>
+                                <td>
+                                    {% if student.student_class %}
+                                        {{ student.student_class.name }}
+                                    {% else %}
+                                        No class assigned
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.branch %}
+                                        {{ student.branch.branch_name }}
+                                    {% else %}
+                                        No branch assigned
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No students found for this school.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

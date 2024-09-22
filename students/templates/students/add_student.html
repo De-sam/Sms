@@ -1,0 +1,93 @@
+{% extends "adminlte/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    
+    <div class="form-group">
+        {{ form.first_name|as_crispy_field }}
+        {{ form.first_name.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.last_name|as_crispy_field }}
+        {{ form.last_name.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.email|as_crispy_field }}
+        {{ form.email.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.gender|as_crispy_field }}
+        {{ form.gender.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.date_of_birth|as_crispy_field }}
+        {{ form.date_of_birth.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.blood_group|as_crispy_field }}
+        {{ form.blood_group.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.peculiar_illnesses|as_crispy_field }}
+        {{ form.peculiar_illnesses.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.nationality|as_crispy_field }}
+        {{ form.nationality.errors }}
+    </div>
+    <div class="form-group">
+        
+        {{ form.address|as_crispy_field }}
+        {{ form.address.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.profile_picture|as_crispy_field }}
+        {{ form.profile_picture.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.branch|as_crispy_field }}
+        {{ form.branch.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.student_class|as_crispy_field }}
+        {{ form.student_class.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.admission_date|as_crispy_field }}
+        {{ form.admission_date.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.last_admitted_class|as_crispy_field }}
+        {{ form.last_admitted_class.errors }}
+    </div>
+    <div class="form-group">
+        {{ form.status|as_crispy_field }}
+        {{ form.status.errors }}
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Add Student</button>
+</form>
+<script>
+    $('#id_branch').change(function() {
+        var branchId = $(this).val();
+        if (branchId) {
+            $.ajax({
+                url: '/get-classes/' + branchId + '/',
+                success: function(data) {
+                    var classSelect = $('#id_student_class');
+                    classSelect.empty();  // Clear the existing options
+                    classSelect.append('<option value="">Select class</option>');  // Add a default option
+                    $.each(data.classes, function(index, value) {
+                        classSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                }
+            });
+        } else {
+            $('#id_student_class').empty().append('<option value="">Select class</option>');
+        }
+    });
+</script>
+{% endblock %}

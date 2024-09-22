@@ -79,185 +79,250 @@
                                             {{ form.last_name|as_crispy_field }}
                                         </div>
                                     </div>
-                                    <div class="form-group row">
-                                        <div class="col-md-6">
-                                            {{ form.email|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.phone_number|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <div class="col-md-6">
-                                            {{ form.date_of_birth|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.marital_status|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <div class="col-md-6">
-                                            {{ form.gender|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.nationality|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.address|as_crispy_field }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Professional Details Section -->
-                        <div class="tab-pane fade" id="professional-details" role="tabpanel" aria-labelledby="professional-details-tab">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-workspace" viewBox="0 0 16 16">
-                                            <path d="M4 16s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-5.95a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
-                                            <path d="M2 1a2 2 0 0 0-2 2v9.5A1.5 1.5 0 0 0 1.5 14h.653a5.4 5.4 0 0 1 1.066-2H1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v9h-2.219c.554.654.89 1.373 1.066 2h.653a1.5 1.5 0 0 0 1.5-1.5V3a2 2 0 0 0-2-2z"/>
-                                          </svg>
-                                        Professional Details
-                                    </h3>
-                                </div>
-                                <div class="card-body bg-light">
-                                    <div class="form-group">
-                                        {{ form.role|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.branches|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.staff_category|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.status|as_crispy_field }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Document Uploads Section -->
-                        <div class="tab-pane fade" id="document-uploads" role="tabpanel" aria-labelledby="document-uploads-tab">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus-fill" viewBox="0 0 16 16">
-                                            <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0"/>
-                                          </svg>
-                                        Document Uploads
-                                    </h3>
-                                </div>
-                                <div class="card-body bg-light">
-                                    <div class="form-group">
-                                        {{ form.cv|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.profile_picture|as_crispy_field }}
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.staff_signature|as_crispy_field }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Account Information Section -->
-                        <div class="tab-pane fade" id="account-info" role="tabpanel" aria-labelledby="account-info-tab">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">
-                                        Account Information
-                                    </h3>
-                                </div>
-                                <div class="card-body bg-light">
-                                    <div class="form-group">
-                                        {{ form.username|as_crispy_field }} <!-- This will be read-only -->
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.password1|as_crispy_field }} <!-- Password displayed as plain text in red -->
-                                    </div>
-                                    <div class="form-group">
-                                        {{ form.password2|as_crispy_field }} <!-- Password confirmation in red -->
-                                    </div>
-                                </div>
-                                <div class="card-footer d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-primary" id="addStaffButton">
-                                        Add Staff
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                </form>
-            </div>
-        </div>
-    </section>
+                                        <div class="form-group row">
+    <div class="col-md-6">
+        {{ form.email|as_crispy_field }}
+    </div>
+    <div class="col-md-6">
+        {{ form.phone_number|as_crispy_field }}
+    </div>
+</div>
+<div class="form-group row">
+    <div class="col-md-6">
+        {{ form.date_of_birth|as_crispy_field }}
+    </div>
+    <div class="col-md-6">
+        {{ form.marital_status|as_crispy_field }}
+    </div>
+</div>
+<div class="form-group row">
+    <div class="col-md-6">
+        {{ form.gender|as_crispy_field }}
+    </div>
+    <div class="col-md-6">
+        {{ form.nationality|as_crispy_field }}
+    </div>
+</div>
+<div class="form-group">
+    {{ form.address|as_crispy_field }}
+</div>
+</div>
+</div>
 </div>
 
-<!-- JavaScript to dynamically generate username -->
+<!-- Professional Details Section -->
+<div class="tab-pane fade" id="professional-details" role="tabpanel" aria-labelledby="professional-details-tab">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-workspace" viewBox="0 0 16 16">
+                    <path d="M4 16s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-5.95a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+                    <path d="M2 1a2 2 0 0 0-2 2v9.5A1.5 1.5 0 0 0 1.5 14h.653a5.4 5.4 0 0 1 1.066-2H1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v9h-2.219c.554.654.89 1.373 1.066 2h.653a1.5 1.5 0 0 0 1.5-1.5V3a2 2 0 0 0-2-2z"/>
+                </svg>
+                Professional Details
+            </h3>
+        </div>
+        <div class="card-body bg-light">
+            <div class="form-group">
+                {{ form.role|as_crispy_field }}
+            </div>
+            <div class="form-group">
+                {{ form.branches|as_crispy_field }}
+            </div>
+            <div class="form-group">
+                {{ form.staff_category|as_crispy_field }}
+            </div>
+            <div class="form-group">
+                {{ form.status|as_crispy_field }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Uploads Section -->
+<div class="tab-pane fade" id="document-uploads" role="tabpanel" aria-labelledby="document-uploads-tab">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus-fill" viewBox="0 0 16 16">
+                    <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0"/>
+                </svg>
+                Document Uploads
+            </h3>
+        </div>
+        <div class="card-body bg-light">
+            <div class="form-group">
+                {{ form.cv|as_crispy_field }}
+            </div>
+            <div class="form-group">
+                {{ form.profile_picture|as_crispy_field }}
+            </div>
+            <div class="form-group">
+                {{ form.staff_signature|as_crispy_field }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-pane fade" id="account-info" role="tabpanel" aria-labelledby="account-info-tab">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                Account Information
+            </h3>
+        </div>
+        <div class="card-body bg-light">
+            <div class="form-group">
+                {{ form.username|as_crispy_field }} <!-- This will be read-only -->
+            </div>
+            <div class="form-group">
+                {{ form.password1|as_crispy_field }} <!-- Password displayed as plain text in red -->
+            </div>
+            <div class="form-group">
+                {{ form.password2|as_crispy_field }} <!-- Password confirmation in red -->
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary" id="addStaffButton">
+                Add Staff
+            </button>
+        </div>
+    </div>
+</div>
+
+</form>
+</div>
+</div>
+</div>
+
+<!-- Bootstrap Modal for Alerts -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="alertModalLabel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                      </svg>
+                    An Error Occured
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="alertModalBody">
+                <!-- Alert message will be injected here -->
+            </div>
+            <div class="modal-footer bg-danger text-white">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle tab switching validation and modal logic -->
 <script>
+    
     document.addEventListener('DOMContentLoaded', function() {
-        // Get form fields
-        const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
-        const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
-        const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+    // Get form fields
+    const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
+    const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
 
-        // Function to generate school initials from school name
-        function getSchoolInitials(schoolName) {
-            return schoolName.split(' ')  // Split the school name into words
-                             .map(word => word.charAt(0).toUpperCase())  // Take the first letter of each word
-                             .join('');  // Join all initials together
+    // Function to generate a random UUID and return the first 4 characters
+    function getUUIDPart() {
+        return URL.createObjectURL(new Blob([])).slice(-36, -32);  // Get first 4 characters of UUID
+    }
+
+    // Year to be used in username
+    const currentYear = new Date().getFullYear(); // Get current year
+
+    function generateUsername() {
+        const lastName = lastNameInput.value.trim().toUpperCase();  // Get and format last name
+        const uuidPart = getUUIDPart();  // Get the first 4 characters of UUID
+        if (lastName) {
+            // Generate username in the format LAST_NAME-YEAR-UUID_PART
+            usernameInput.value = `${lastName}-${currentYear}-${uuidPart}`;
+        } else {
+            usernameInput.value = '';  // Clear username if last name is not provided
         }
+    }
 
-        // School initials and year to be used in username
-        const schoolInitials = getSchoolInitials('{{ school.school_name }}');
-        const currentYear = new Date().getFullYear(); // Current year
+    // Add event listener to update username as the last name is entered
+    lastNameInput.addEventListener('input', generateUsername);
 
-        function generateUsername() {
-            const lastName = lastNameInput.value.trim().toUpperCase();
-            if (lastName) {
-                // Replace / with valid characters like - (dash)
-                usernameInput.value = `${schoolInitials}-${lastName}-${currentYear}-1`;
+    // Initialize username on page load (in case last name is already filled)
+    generateUsername();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dobInput = document.getElementById('{{ form.date_of_birth.id_for_label }}'); // Date of Birth input
+    const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));  // Bootstrap modal instance
+
+    // Function to show modal with a custom message
+    function showAlert(message) {
+        const alertModalBody = document.getElementById('alertModalBody');
+        alertModalBody.textContent = message; // Set modal message
+        alertModal.show();  // Show modal
+    }
+
+    // Function to validate date of birth
+    function validateDateOfBirth() {
+        const dob = new Date(dobInput.value);
+        const today = new Date();
+        const age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        const dayDiff = today.getDate() - dob.getDate();
+
+        // Ensure that the DOB is not in the future or user is under 18
+        if (dob > today) {
+            return "Date of birth cannot be in the future.";
+        } else if (age < 18 || (age === 18 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)))) {
+            return "Please enter a valid date of birth to continue....";
+        }
+        return null; // No error
+    }
+
+    // Function to validate required fields in the current tab
+    function validateTab(tab) {
+        let valid = true;
+        const fields = tab.querySelectorAll('input, select, textarea');
+        
+        fields.forEach(function(field) {
+            if (!field.checkValidity()) {
+                valid = false;
+                field.classList.add('is-invalid');  // Add error class
             } else {
-                usernameInput.value = `${schoolInitials}-${currentYear}-1`; // Fallback
+                field.classList.remove('is-invalid');
             }
-        }
+        });
 
-        // Add event listeners to update username as first and last name are entered
-        firstNameInput.addEventListener('input', generateUsername);
-        lastNameInput.addEventListener('input', generateUsername);
+        return valid;
+    }
 
-        // Initialize username on page load
-        generateUsername();
-    });
+    // Tab switching logic to prevent switching if there are validation errors
+    document.querySelectorAll('#staffFormTabs a[data-bs-toggle="tab"]').forEach(function(tabLink) {
+        tabLink.addEventListener('show.bs.tab', function(event) {
+            const currentTab = document.querySelector(event.relatedTarget.getAttribute('href'));
 
-    document.addEventListener('DOMContentLoaded', function() {
-        function validateTab(tab) {
-            var valid = true;
-            var fields = tab.querySelectorAll('input, select, textarea');
-            fields.forEach(function(field) {
-                if (!field.checkValidity()) {
-                    valid = false;
-                    field.classList.add('is-invalid');
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            return valid;
-        }
-
-        document.querySelectorAll('#staffFormTabs a[data-bs-toggle="tab"]').forEach(function(tabLink) {
-            tabLink.addEventListener('show.bs.tab', function(event) {
-                var currentTab = document.querySelector(event.relatedTarget.getAttribute('href'));
-                if (!validateTab(currentTab)) {
-                    event.preventDefault(); // Prevent switching to the next tab if the current tab is invalid
-                    alert('Please fill in all required fields before proceeding to the next tab.');
-                }
-            });
+            // Validate the required fields in the current tab
+            const tabIsValid = validateTab(currentTab);
+            
+            // Validate the Date of Birth
+            const dobError = validateDateOfBirth();
+            
+            if (!tabIsValid) {
+                event.preventDefault();  // Prevent tab switching if required fields are missing
+                showAlert("Please fill in all required fields.");
+            } else if (dobError) {
+                event.preventDefault();  // Prevent tab switching if DOB validation fails
+                showAlert(dobError);  // Show DOB error message
+            }
         });
     });
+
+    // Modal logic to ensure that the overlay doesn't stay after closing the modal
+    document.getElementById('alertModal').addEventListener('hidden.bs.modal', function () {
+        document.querySelector('.modal-backdrop')?.remove(); // Remove overlay if present
+        document.body.classList.remove('modal-open'); // Remove the modal-open class from body
+    });
+});
 </script>
 {% endblock %}

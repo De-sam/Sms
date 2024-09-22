@@ -73,7 +73,7 @@ class StaffCreationForm(UserCreationForm):
 
             # Only generate the username if last_name is available
             if last_name:
-                self.fields['username'].initial = generate_unique_username(school_initials, last_name, current_year)
+                self.fields['username'].initial = generate_unique_username(last_name, current_year)
             else:
                 self.fields['username'].initial = f"{school_initials}/{current_year}/1"  # Default fallback
 
