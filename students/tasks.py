@@ -3,13 +3,14 @@ from django.core.mail import send_mail
 
 
 @shared_task
-def send_student_creation_email(email, username, short_code):
-    
+def send_student_creation_email(email, username, short_code, first_name, last_name):
     login_url = f'http://localhost:8000/schools/{short_code}/login/'
+    full_name = f"{first_name} {last_name}"
     
     # Email subject and message
     subject = 'Your New Account'
     message = (
+        f'Dear {full_name},\n\n'
         f'Your account has been created.\n\n'
         f'Username: "{username}"\n'
         f'Password: "student"\n\n'
@@ -27,4 +28,3 @@ def send_student_creation_email(email, username, short_code):
         print(f"Email sent to {email}")
     except Exception as e:
         print(f"Failed to send email to {email}: {e}")
-

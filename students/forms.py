@@ -102,9 +102,16 @@ class StudentCreationForm(forms.ModelForm):
 
             # Send the email using the Celery task
             school_shortcode = self.school.short_code if hasattr(self, 'school') else None
-            send_student_creation_email.delay(user.email, username, school_shortcode)
+            send_student_creation_email.delay(
+                user.email,
+                username,
+                school_shortcode,
+                self.cleaned_data['first_name'],
+                self.cleaned_data['last_name']
+            )
 
         return user
+
     
         
 class StudentUpdateForm(forms.ModelForm):

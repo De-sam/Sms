@@ -5,49 +5,182 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12">
-            <h1>Students List for {{ school.name }}</h1>
-            
-            {% if students %}
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Class</th>
-                            <th>Branch</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                            <tr>
-                                <td>{{ student.id }}</td>
-                                <td>{{ student.first_name }}</td>
-                                <td>{{ student.last_name }}</td>
-                                <td>{{ student.user.email }}</td>
-                                <td>
-                                    {% if student.student_class %}
-                                        {{ student.student_class.name }}
-                                    {% else %}
-                                        No class assigned
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if student.branch %}
-                                        {{ student.branch.branch_name }}
-                                    {% else %}
-                                        No branch assigned
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>No students found for this school.</p>
-            {% endif %}
+            <div class="card card-outline card-primary bg-light">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="filterDropdown">
+                            <h6 class="dropdown-header">Branches</h6>
+                            <div class="px-3">
+                                {% for branch in branches|dictsort:'branch_name' %}
+    {% if forloop.first or not forloop.previousitem or branch.branch_name != forloop.previousitem.branch_name %}
+        <div class="form-check">
+            <input class="form-check-input branch-filter" 
+            type="checkbox" 
+            value="{{ branch.branch_name }}" 
+            id="branch-{{ branch.id }}">
+            <label class="form-check-label" 
+            for="branch-{{ branch.id }}">
+                {{ branch.branch_name }}
+            </label>
+        </div>
+    {% endif %}
+{% endfor %}
+                            </div>
+                            
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Classes</h6>
+                            <div class="px-3">
+                                {% for student_class in classes|dictsort:'name' %}
+    {% if forloop.first or not forloop.previousitem or student_class.name != forloop.previousitem.name %}
+        <div class="form-check">
+            <input class="form-check-input class-filter" 
+            type="checkbox" 
+            value="{{ student_class.name }}" 
+            id="class-{{ student_class.id }}">
+            <label class="form-check-label" 
+            for="class-{{ student_class.id }}">
+                {{ student_class.name }}
+            </label>
+        </div>
+    {% endif %}
+{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-none d-md-block" style="max-width: 400px;">
+                        <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
+                    </div>
+                    <div class="d-block d-md-none">
+                        <button id="mobile-search-btn" class="btn btn-outline-secondary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary">
+                        Add Student
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                        <table class="table table-striped" id="students-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"></th>
+                                    <th>Profile Image</th>
+                                    <th>Username</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Class</th>
+                                    <th>Branch</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr class="student-row">
+                                        <td><input type="checkbox" class="student-checkbox"></td>
+                                        <td>
+                                            <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px;">
+                                        </td>
+                                        
+                                        <td>{{ student.user.username }}</td>
+                                        <td class="student-first-name">{{ student.first_name }}</td>
+                                        <td class="student-last-name">{{ student.last_name }}</td>
+                                        <td class="student-class">{% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</td>
+                                        <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
+                                        <td>
+                                            <a href="#" class="btn btn-primary btn-sm">Edit</a>
+                                            <a href="#" class="btn btn-danger btn-sm">Delete</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No students found for this school.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted">
+                    Total Students: {{ students|length }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal for mobile search -->
+<div class="modal fade" id="mobile-search-modal" tabindex="-1" aria-labelledby="mobileSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mobileSearchModalLabel">Search Students</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="mobile-student-search" class="form-control" placeholder="Search students by name...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="mobile-search-button">Search</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('select-all').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+    });
+
+    let searchTimeout;
+    document.getElementById('student-search').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchValue = this.value.toLowerCase();
+            filterStudents(searchValue);
+        }, 500);
+    });
+
+    document.getElementById('mobile-search-btn').addEventListener('click', function() {
+        const mobileSearchModal = new bootstrap.Modal(document.getElementById('mobile-search-modal'));
+        mobileSearchModal.show();
+    });
+
+    document.getElementById('mobile-search-button').addEventListener('click', function() {
+        const searchValue = document.getElementById('mobile-student-search').value.toLowerCase();
+        filterStudents(searchValue);
+        const mobileSearchModal = bootstrap.Modal.getInstance(document.getElementById('mobile-search-modal'));
+        mobileSearchModal.hide();
+    });
+
+    function filterStudents(searchValue) {
+        const rows = document.querySelectorAll('.student-row');
+        rows.forEach(row => {
+            const firstName = row.querySelector('.student-first-name').textContent.toLowerCase();
+            const lastName = row.querySelector('.student-last-name').textContent.toLowerCase();
+            const branchName = row.querySelector('.student-branch').textContent.toLowerCase();
+            const className = row.querySelector('.student-class').textContent.toLowerCase();
+            const branchFilters = Array.from(document.querySelectorAll('.branch-filter:checked')).map(el => el.value.toLowerCase());
+            const classFilters = Array.from(document.querySelectorAll('.class-filter:checked')).map(el => el.value.toLowerCase());
+
+            const matchesSearch = firstName.includes(searchValue) || lastName.includes(searchValue);
+            const matchesBranch = branchFilters.length === 0 || branchFilters.includes(branchName);
+            const matchesClass = classFilters.length === 0 || classFilters.includes(className);
+
+            if (matchesSearch && matchesBranch && matchesClass) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    document.querySelectorAll('.branch-filter, .class-filter').forEach(filter => {
+        filter.addEventListener('change', function() {
+            filterStudents(document.getElementById('student-search').value.toLowerCase());
+        });
+    });
+</script>
 {% endblock %}

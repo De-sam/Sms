@@ -37,6 +37,7 @@ def add_parent_guardian(request, short_code):
         'branches': branches  # If you need branches for the form or for future extension
     })
 
+@login_required_with_short_code
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -72,18 +73,31 @@ def student_list(request, short_code):
     # Fetch the classes associated with these branches
     classes = Class.objects.filter(branches__in=branches)
 
-    # Fetch the students in these classes
-    students = Student.objects.filter(student_class__in=classes).select_related('user', 'student_class', 'branch')
+    # Fetch the students in these classes and that belong to the specific school
+    students = Student.objects.filter(student_class__in=classes, branch__school=school).select_related('user', 'student_class', 'branch')
 
     context = {
         'school': school,
         'branches': branches,
-        'students': students
+        'students': students,
+        'classes':classes
     }
 
     return render(request, 'students/student_list.html', context)
 
-def get_classes(request, branch_id):
-    classes = Class.objects.filter(branch__id=branch_id)
-    classes_list = [{'id': cls.id, 'name': cls.name} for cls in classes]
+def get_classes(request, short_code, branch_id):
+    # Fetch the school using the short_code
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    # Fetch the classes for the given branch, ensuring that the branch is linked to the specified school
+    classes = Class.objects.filter(branches__id=branch_id, branches__school=school)
+
+    # Create a list of classes with their department names included
+    classes_list = [
+        {
+            'id': cls.id,
+            'name': f"{cls.name} - {cls.department.name}" if cls.department else cls.name
+        } for cls in classes
+    ]
+
     return JsonResponse({'classes': classes_list})
