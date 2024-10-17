@@ -11,42 +11,42 @@
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             Filter
                         </button>
-                        <div class="dropdown-menu" aria-labelledby="filterDropdown">
-                            <h6 class="dropdown-header">Branches</h6>
-                            <div class="px-3">
-                                {% for branch in branches|dictsort:'branch_name' %}
-    {% if forloop.first or not forloop.previousitem or branch.branch_name != forloop.previousitem.branch_name %}
-        <div class="form-check">
-            <input class="form-check-input branch-filter" 
-            type="checkbox" 
-            value="{{ branch.branch_name }}" 
-            id="branch-{{ branch.id }}">
-            <label class="form-check-label" 
-            for="branch-{{ branch.id }}">
-                {{ branch.branch_name }}
-            </label>
-        </div>
-    {% endif %}
-{% endfor %}
-                            </div>
-                            
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Classes</h6>
-                            <div class="px-3">
-                                {% for student_class in classes|dictsort:'name' %}
-    {% if forloop.first or not forloop.previousitem or student_class.name != forloop.previousitem.name %}
-        <div class="form-check">
-            <input class="form-check-input class-filter" 
-            type="checkbox" 
-            value="{{ student_class.name }}" 
-            id="class-{{ student_class.id }}">
-            <label class="form-check-label" 
-            for="class-{{ student_class.id }}">
-                {{ student_class.name }}
-            </label>
-        </div>
-    {% endif %}
-{% endfor %}
+                        <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdown" style="min-width: 600px;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="dropdown-header">Branches</h6>
+                                    <div class="px-3">
+                                        {% for branch_name in branches %}
+                                            <div class="form-check">
+                                                <input class="form-check-input branch-filter" 
+                                                type="checkbox" 
+                                                value="{{ branch_name }}" 
+                                                id="branch-{{ forloop.counter }}">
+                                                <label class="form-check-label" 
+                                                for="branch-{{ forloop.counter }}">
+                                                    {{ branch_name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="dropdown-header">Classes</h6>
+                                    <div class="px-3">
+                                        {% for class_name in classes %}
+                                            <div class="form-check">
+                                                <input class="form-check-input class-filter" 
+                                                type="checkbox" 
+                                                value="{{ class_name }}" 
+                                                id="class-{{ forloop.counter }}">
+                                                <label class="form-check-label" 
+                                                for="class-{{ forloop.counter }}">
+                                                    {{ class_name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

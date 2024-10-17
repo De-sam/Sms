@@ -9,28 +9,53 @@ PrimarySchoolForm,PrimaryBranchForm,UpdatePrimarySchoolForm
 from django.urls import reverse
 from django.db import IntegrityError
 from utils.decorator import login_required_with_short_code
+from students.models import ParentStudentRelationship
+
 
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
+            
             if user is not None:
+                # Admin user
                 if user == school.admin_user:
                     django_login(request, user)
                     next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
                     return redirect(next_url)
+
+                # Staff member
                 elif hasattr(user, 'staff') and user.staff.branches.filter(school=school).exists():
-                    if user.staff.status == 'active':  # Check if the staff member is active
+                    if user.staff.status == 'active':  # Ensure staff member is active
                         django_login(request, user)
                         next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                        return redirect(next_url)  # Redirect to the school's dashboard
+                        return redirect(next_url)
                     else:
                         messages.error(request, 'Your account is inactive. Please contact the administrator.')
+
+                # Student
+                elif hasattr(user, 'student_profile') and user.student_profile.branch.school == school:
+                    django_login(request, user)
+                    next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
+                    return redirect(next_url)
+
+                # Parent
+                elif hasattr(user, 'parent_guardian'):
+                    if ParentStudentRelationship.objects.filter(
+                        parent_guardian=user.parent_guardian, 
+                        student__branch__school=school
+                    ).exists():
+                        django_login(request, user)
+                        next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
+                        return redirect(next_url)
+                    else:
+                        messages.error(request, 'No students associated with your account in this school.')
+
                 else:
                     messages.error(request, 'You are not authorized to log in for this school.')
             else:
@@ -43,9 +68,8 @@ def login(request, short_code):
         'title': f'{school.school_name} Login',
         'form': form,
     }
-    
-    return render(request, 'schools/login.html', context)
 
+    return render(request, 'schools/login.html', context)
 def loader(request, short_code):
     return render(request, 'schools/loader.html', {'short_code': short_code})
 

@@ -43,21 +43,30 @@ def add_student(request, short_code):
 
     if request.method == 'POST':
         form = StudentCreationForm(request.POST, request.FILES, school=school)
-        if form.is_valid():
+        parent_student_relationship_form = ParentStudentRelationshipForm(request.POST)
+        
+        if form.is_valid() and parent_student_relationship_form.is_valid():
             try:
-                form.save()
+                student = form.save()
+                parent_student_relationship = parent_student_relationship_form.save(commit=False)
+                parent_student_relationship.student = student
+                parent_student_relationship.save()
+                
                 messages.success(request, "Student added successfully!")
                 return redirect('student_list', short_code=short_code)
             except Exception as e:
                 print(f"Error saving form: {e}")
         else:
             print("Form is invalid")
-            print(form.errors)  
+            print(form.errors)
+            print(parent_student_relationship_form.errors)
     else:
         form = StudentCreationForm(school=school)
+        parent_student_relationship_form = ParentStudentRelationshipForm()
 
     context = {
         'form': form,
+        'parent_student_relationship_form': parent_student_relationship_form,
         'school': school,
     }
     return render(request, 'students/add_student.html', context)
@@ -67,20 +76,20 @@ def student_list(request, short_code):
     # Fetch the school based on the short_code
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
-    # Fetch the branches associated with this school
-    branches = Branch.objects.filter(school=school)
+    # Fetch the branches associated with this school and get unique branch names
+    branches = Branch.objects.filter(school=school).values_list('branch_name', flat=True).distinct()
 
-    # Fetch the classes associated with these branches
-    classes = Class.objects.filter(branches__in=branches)
+    # Fetch the classes associated with these branches and get unique class names
+    classes = Class.objects.filter(branches__school=school).values_list('name', flat=True).distinct()
 
     # Fetch the students in these classes and that belong to the specific school
-    students = Student.objects.filter(student_class__in=classes, branch__school=school).select_related('user', 'student_class', 'branch')
+    students = Student.objects.filter(student_class__branches__school=school).select_related('user', 'student_class', 'branch')
 
     context = {
         'school': school,
         'branches': branches,
         'students': students,
-        'classes':classes
+        'classes': classes
     }
 
     return render(request, 'students/student_list.html', context)
