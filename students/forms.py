@@ -60,60 +60,65 @@ class StudentCreationForm(forms.ModelForm):
             self.fields['student_class'].queryset = Class.objects.filter(branch=self.instance.branch)
 
     def save(self, commit=True):
-        # Create user but don't save yet
-        user = User(
-            username=self.cleaned_data['email'],  # Using email as username initially
-            email=self.cleaned_data['email'],
-        )
-        # Set a default password for the student
-        default_password = "student"
-        user.set_password(default_password)
+        # First, check if a user with this email already exists
+        email = self.cleaned_data['email']
+        user = User.objects.filter(email=email).first()
 
-        # Save User and link it to the Student
+        if not user:
+            # If user doesn't exist, create one
+            user = User(
+                username=email,  # Using email as username initially
+                email=email,
+            )
+            # Set a default password for the student
+            default_password = "student"
+            user.set_password(default_password)
+
+        # Save User if not already saved
         if commit:
             user.save()
 
-            # Create the student object linked to the user
-            student, created = Student.objects.update_or_create(
-                user=user,
-                defaults={
-                    'first_name': self.cleaned_data['first_name'],
-                    'last_name': self.cleaned_data['last_name'],
-                    'gender': self.cleaned_data['gender'],
-                    'date_of_birth': self.cleaned_data['date_of_birth'],
-                    'blood_group': self.cleaned_data['blood_group'],
-                    'peculiar_illnesses': self.cleaned_data['peculiar_illnesses'],
-                    'nationality': self.cleaned_data['nationality'],
-                    'address': self.cleaned_data['address'],
-                    'profile_picture': self.cleaned_data['profile_picture'],
-                    'admission_date': self.cleaned_data['admission_date'],
-                    'last_admitted_class': self.cleaned_data['last_admitted_class'],
-                    'student_class': self.cleaned_data['student_class'],
-                    'status': self.cleaned_data['status'],
-                    'branch': self.cleaned_data['branch'],  # Save the branch!
-                }
-            )
+        # Create or update the student object linked to the user
+        student, created = Student.objects.update_or_create(
+            user=user,
+            defaults={
+                'first_name': self.cleaned_data['first_name'],
+                'last_name': self.cleaned_data['last_name'],
+                'gender': self.cleaned_data['gender'],
+                'date_of_birth': self.cleaned_data['date_of_birth'],
+                'blood_group': self.cleaned_data['blood_group'],
+                'peculiar_illnesses': self.cleaned_data['peculiar_illnesses'],
+                'nationality': self.cleaned_data['nationality'],
+                'address': self.cleaned_data['address'],
+                'profile_picture': self.cleaned_data['profile_picture'],
+                'admission_date': self.cleaned_data['admission_date'],
+                'last_admitted_class': self.cleaned_data['last_admitted_class'],
+                'student_class': self.cleaned_data['student_class'],
+                'status': self.cleaned_data['status'],
+                'branch': self.cleaned_data['branch'],  # Save the branch!
+            }
+        )
 
-            # Generate the username for the student
+        # Generate the username for the student if it's newly created
+        if created:
             student_id = student.id
             username = generate_student_username(self.cleaned_data['first_name'], self.cleaned_data['last_name'], student_id)
             user.username = username
             user.save()
 
-            # Send the email using the Celery task
-            school_shortcode = self.school.short_code if hasattr(self, 'school') else None
-            send_student_creation_email.delay(
-                user.email,
-                username,
-                school_shortcode,
-                self.cleaned_data['first_name'],
-                self.cleaned_data['last_name']
-            )
+        # Send the email using the Celery task
+        school_shortcode = self.school.short_code if hasattr(self, 'school') else None
+        send_student_creation_email.delay(
+            user.email,
+            user.username,
+            school_shortcode,
+            self.cleaned_data['first_name'],
+            self.cleaned_data['last_name']
+        )
 
-        return user
+        return student  # Return student instead of user to avoid confusion
 
-    
-        
+
 class StudentUpdateForm(forms.ModelForm):
     # Update form for existing student details
     first_name = forms.CharField(required=True)

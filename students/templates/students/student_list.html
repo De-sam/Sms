@@ -7,60 +7,88 @@
         <div class="col-md-12">
             <div class="card card-outline card-primary bg-light">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="dropdown me-3">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            Filter
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdown" style="min-width: 600px;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="dropdown-header">Branches</h6>
-                                    <div class="px-3">
-                                        {% for branch_name in branches %}
-                                            <div class="form-check">
-                                                <input class="form-check-input branch-filter" 
-                                                type="checkbox" 
-                                                value="{{ branch_name }}" 
-                                                id="branch-{{ forloop.counter }}">
-                                                <label class="form-check-label" 
-                                                for="branch-{{ forloop.counter }}">
-                                                    {{ branch_name }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
+                    <div class="d-none d-md-flex w-100">
+                        <div class="me-3" style="flex-shrink: 0;">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Filter
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdown" style="width: 100%; min-width: 100%;">
+                                <div class="row d-flex justify-content-between">
+                                    <div class="col-md-4">
+                                        <h6 class="dropdown-header">Branches</h6>
+                                        <div class="px-3">
+                                            {% for branch_name in branches %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input branch-filter" 
+                                                    type="checkbox" 
+                                                    value="{{ branch_name}}" 
+                                                    id="branch-{{ forloop.counter }}">
+                                                    <label class="form-check-label" 
+                                                    for="branch-{{ forloop.counter }}">
+                                                        {{ branch_name}}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="dropdown-header">Classes</h6>
+                                        <div class="px-3">
+                                            {% for class_name in classes %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input class-filter" 
+                                                    type="checkbox" 
+                                                    value="{{ class_name }}" 
+                                                    id="class-{{ forloop.counter }}">
+                                                    <label class="form-check-label" 
+                                                    for="class-{{ forloop.counter }}">
+                                                        {{ class_name }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="dropdown-header">Departments</h6>
+                                        <div class="px-3">
+                                            {% for department in departments %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input department-filter" 
+                                                    type="checkbox" 
+                                                    value="{{ department.name}}" 
+                                                    id="department-{{ forloop.counter }}">
+                                                    <label class="form-check-label" 
+                                                    for="department-{{ forloop.counter }}">
+                                                        {{ department.name}}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <h6 class="dropdown-header">Classes</h6>
-                                    <div class="px-3">
-                                        {% for class_name in classes %}
-                                            <div class="form-check">
-                                                <input class="form-check-input class-filter" 
-                                                type="checkbox" 
-                                                value="{{ class_name }}" 
-                                                id="class-{{ forloop.counter }}">
-                                                <label class="form-check-label" 
-                                                for="class-{{ forloop.counter }}">
-                                                    {{ class_name }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="flex-grow-1" style="max-width: 400px;">
+                            <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
+                        </div>
+                        <div class="ms-auto" style="flex-shrink: 0;">
+                            <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary">
+                                Add Student
+                            </a>
+                        </div>
                     </div>
-                    <div class="d-none d-md-block" style="max-width: 400px;">
-                        <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
-                    </div>
-                    <div class="d-block d-md-none">
+                    <div class="d-flex d-md-none w-100 justify-content-between align-items-center">
+                        <button id="mobile-menu-btn" class="btn btn-outline-secondary">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="d-none d-md-block" style="max-width: 400px;">
+                            <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
+                        </div>
                         <button id="mobile-search-btn" class="btn btn-outline-secondary">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
-                    <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary">
-                        Add Student
-                    </a>
                 </div>
                 <div class="card-body">
                     {% if students %}
@@ -73,6 +101,7 @@
                                     <th>First Name</th>
                                     <th>Last Name</th>
                                     <th>Class</th>
+                                    <th>Dept</th>
                                     <th>Branch</th>
                                     <th>Actions</th>
                                 </tr>
@@ -89,6 +118,7 @@
                                         <td class="student-first-name">{{ student.first_name }}</td>
                                         <td class="student-last-name">{{ student.last_name }}</td>
                                         <td class="student-class">{% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</td>
+                                        <td class="student-dept">{% if student.student_class %}{{ student.student_class.department }}{% else %}No class assigned{% endif %}</td>
                                         <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
                                         <td>
                                             <a href="#" class="btn btn-primary btn-sm">Edit</a>
@@ -105,6 +135,64 @@
                 <div class="card-footer text-muted">
                     Total Students: {{ students|length }}
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for mobile actions -->
+<div class="modal fade" id="mobile-menu-modal" tabindex="-1" aria-labelledby="mobileMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mobileMenuModalLabel">Options</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100 mb-3" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter
+                </button>
+                <div class="dropdown-menu dropdown-menu-wide w-100" aria-labelledby="filterDropdown" style="width: 100%; min-width: 100%;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="dropdown-header">Branches</h6>
+                            <div class="px-3">
+                                {% for branch_name in branches %}
+                                    <div class="form-check">
+                                        <input class="form-check-input branch-filter" 
+                                        type="checkbox" 
+                                        value="{{ branch_name }}" 
+                                        id="branch-{{ forloop.counter }}">
+                                        <label class="form-check-label" 
+                                        for="branch-{{ forloop.counter }}">
+                                            {{ branch_name }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="dropdown-header">Classes</h6>
+                            <div class="px-3">
+                                {% for class_name in classes %}
+                                    <div class="form-check">
+                                        <input class="form-check-input class-filter" 
+                                        type="checkbox" 
+                                        value="{{ class_name }}" 
+                                        id="class-{{ forloop.counter }}">
+                                        <label class="form-check-label" 
+                                        for="class-{{ forloop.counter }}">
+                                            {{ class_name }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary w-100 mt-3">
+                    Add Student
+                </a>
             </div>
         </div>
     </div>
@@ -155,21 +243,29 @@
         mobileSearchModal.hide();
     });
 
+    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+        const mobileMenuModal = new bootstrap.Modal(document.getElementById('mobile-menu-modal'));
+        mobileMenuModal.show();
+    });
+
     function filterStudents(searchValue) {
         const rows = document.querySelectorAll('.student-row');
         rows.forEach(row => {
             const firstName = row.querySelector('.student-first-name').textContent.toLowerCase();
             const lastName = row.querySelector('.student-last-name').textContent.toLowerCase();
             const branchName = row.querySelector('.student-branch').textContent.toLowerCase();
+            const departmentName = row.querySelector('.student-dept').textContent.toLowerCase();
             const className = row.querySelector('.student-class').textContent.toLowerCase();
             const branchFilters = Array.from(document.querySelectorAll('.branch-filter:checked')).map(el => el.value.toLowerCase());
             const classFilters = Array.from(document.querySelectorAll('.class-filter:checked')).map(el => el.value.toLowerCase());
+            const departmentFilters = Array.from(document.querySelectorAll('.department-filter:checked')).map(el => el.value.toLowerCase());
 
             const matchesSearch = firstName.includes(searchValue) || lastName.includes(searchValue);
             const matchesBranch = branchFilters.length === 0 || branchFilters.includes(branchName);
             const matchesClass = classFilters.length === 0 || classFilters.includes(className);
+            const matchesDepartment = departmentFilters.length === 0 || departmentFilters.includes(departmentName);
 
-            if (matchesSearch && matchesBranch && matchesClass) {
+            if (matchesSearch && matchesBranch && matchesClass && matchesDepartment) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
@@ -177,7 +273,7 @@
         });
     }
 
-    document.querySelectorAll('.branch-filter, .class-filter').forEach(filter => {
+    document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
         filter.addEventListener('change', function() {
             filterStudents(document.getElementById('student-search').value.toLowerCase());
         });
