@@ -8,6 +8,8 @@ from .forms import StudentCreationForm, ParentStudentRelationshipForm, ParentGua
 from landingpage.models import SchoolRegistration
 from schools.models import Branch
 from classes.models import Class,Department
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
 
 @login_required_with_short_code
 @transaction.atomic
@@ -65,21 +67,28 @@ def student_list(request, short_code):
     # Use the Class model instances to query Departments
     departments = Department.objects.filter(class__in=class1).distinct()
     
-    # Fetch students related to the school
-    students = Student.objects.filter(student_class__branches__school=school).select_related('user', 'student_class', 'branch')
+    # Fetch students related to the school, ensure distinct students
+    students = Student.objects.filter(student_class__branches__school=school).select_related('user', 'student_class', 'branch').distinct()
 
-    # Debugging output
-    print(f'classes (names): {classes}')
-    print(f'class1 (instances): {class1}')
-    print(f'departments: {departments}')
+    # Set up pagination: e.g., 10 students per page
+    paginator = Paginator(students, 10)  # 10 students per page
+    page = request.GET.get('page')
+
+    try:
+        students_paginated = paginator.page(page)
+    except PageNotAnInteger:
+        students_paginated = paginator.page(1)  # Show the first page if the page number is not an integer
+    except EmptyPage:
+        students_paginated = paginator.page(paginator.num_pages)  # Show the last page if the page is out of range
 
     return render(request, 'students/student_list.html', {
         'school': school,
         'branches': branches,
-        'students': students,
+        'students': students_paginated,  # Paginated students
         'departments': departments,  
-        'classes': classes,  # Pass class names
+        'classes': classes,
         'class_objects': class1,  # Pass actual class objects if needed in the template
+        'total_students': students.count(),  # Total number of students (unchanged)
     })
 
 def get_classes(request, short_code, branch_id):

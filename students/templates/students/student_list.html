@@ -5,8 +5,20 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12">
+            <h3 class="mb-4">Students List</h3>
             <div class="card card-outline card-primary bg-light">
                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <!-- Mobile View -->
+                    <div class="d-flex d-md-none w-100 justify-content-between align-items-center">
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <!-- Desktop View -->
                     <div class="d-none d-md-flex w-100">
                         <div class="me-3" style="flex-shrink: 0;">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -21,11 +33,11 @@
                                                 <div class="form-check">
                                                     <input class="form-check-input branch-filter" 
                                                     type="checkbox" 
-                                                    value="{{ branch_name}}" 
+                                                    value="{{ branch_name }}" 
                                                     id="branch-{{ forloop.counter }}">
                                                     <label class="form-check-label" 
                                                     for="branch-{{ forloop.counter }}">
-                                                        {{ branch_name}}
+                                                        {{ branch_name }}
                                                     </label>
                                                 </div>
                                             {% endfor %}
@@ -55,17 +67,16 @@
                                                 <div class="form-check">
                                                     <input class="form-check-input department-filter" 
                                                     type="checkbox" 
-                                                    value="{{ department.name}}" 
+                                                    value="{{ department.name }}" 
                                                     id="department-{{ forloop.counter }}">
                                                     <label class="form-check-label" 
                                                     for="department-{{ forloop.counter }}">
-                                                        {{ department.name}}
+                                                        {{ department.name }}
                                                     </label>
                                                 </div>
                                             {% endfor %}
                                         </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         </div>
@@ -73,25 +84,21 @@
                             <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
                         </div>
                         <div class="ms-auto" style="flex-shrink: 0;">
-                            <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary">
-                                Add Student
-                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" id="addStudentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Add Student
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="addStudentDropdown">
+                                    <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
+                                    <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex d-md-none w-100 justify-content-between align-items-center">
-                        <button id="mobile-menu-btn" class="btn btn-outline-secondary">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="d-none d-md-block" style="max-width: 400px;">
-                            <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
-                        </div>
-                        <button id="mobile-search-btn" class="btn btn-outline-secondary">
-                            <i class="fas fa-search"></i>
-                        </button>
                     </div>
                 </div>
                 <div class="card-body">
                     {% if students %}
+                        <div class="table-responsive" style="overflow-x: auto; overflow-y: auto; max-height: 500px;">
                         <table class="table table-striped" id="students-table">
                             <thead>
                                 <tr>
@@ -113,7 +120,6 @@
                                         <td>
                                             <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px;">
                                         </td>
-                                        
                                         <td>{{ student.user.username }}</td>
                                         <td class="student-first-name">{{ student.first_name }}</td>
                                         <td class="student-last-name">{{ student.last_name }}</td>
@@ -121,96 +127,168 @@
                                         <td class="student-dept">{% if student.student_class %}{{ student.student_class.department }}{% else %}No class assigned{% endif %}</td>
                                         <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
                                         <td>
-                                            <a href="#" class="btn btn-primary btn-sm">Edit</a>
-                                            <a href="#" class="btn btn-danger btn-sm">Delete</a>
-                                        </td>
+                                            <div class="dropdown">
+                                                <button class="btn  btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                                    </svg>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown{{ forloop.counter }}">
+                                                    <li><a class="dropdown-item" href="#">Edit Student</a></li>
+                                                    <li><a class="dropdown-item" href="#">Reset Password</a></li>
+                                                    <li><a class="dropdown-item" href="#">View Details</a></li>
+                                                </ul>
+                                            </div>
+                                            </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
+                        <!-- Pagination controls -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if students.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ students.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for i in students.paginator.page_range %}
+                                    {% if students.number == i %}
+                                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if students.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ students.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ students.paginator.num_pages }}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
                     {% else %}
                         <p>No students found for this school.</p>
                     {% endif %}
                 </div>
-                <div class="card-footer text-muted">
-                    Total Students: {{ students|length }}
-                </div>
+                <div class="card-footer text-muted" id="total-students">Total Students: {{ total_students }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal for mobile actions -->
-<div class="modal fade" id="mobile-menu-modal" tabindex="-1" aria-labelledby="mobileMenuModalLabel" aria-hidden="true">
+<!-- Filter Modal for Mobile View -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mobileMenuModalLabel">Options</h5>
+                <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100 mb-3" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    Filter
-                </button>
-                <div class="dropdown-menu dropdown-menu-wide w-100" aria-labelledby="filterDropdown" style="width: 100%; min-width: 100%;">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="dropdown-header">Branches</h6>
-                            <div class="px-3">
-                                {% for branch_name in branches %}
-                                    <div class="form-check">
-                                        <input class="form-check-input branch-filter" 
-                                        type="checkbox" 
-                                        value="{{ branch_name }}" 
-                                        id="branch-{{ forloop.counter }}">
-                                        <label class="form-check-label" 
-                                        for="branch-{{ forloop.counter }}">
-                                            {{ branch_name }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
+                <div class="me-3" style="flex-shrink: 0;">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdownMobile" style="width: 100%; min-width: 100%;">
+                        <div class="row d-flex justify-content-between">
+                            <div class="col-md-4">
+                                <h6 class="dropdown-header">Branches</h6>
+                                <div class="px-3">
+                                    {% for branch_name in branches %}
+                                        <div class="form-check">
+                                            <input class="form-check-input branch-filter" 
+                                            type="checkbox" 
+                                            value="{{ branch_name }}" 
+                                            id="branch-mobile-{{ forloop.counter }}">
+                                            <label class="form-check-label" 
+                                            for="branch-mobile-{{ forloop.counter }}">
+                                                {{ branch_name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="dropdown-header">Classes</h6>
-                            <div class="px-3">
-                                {% for class_name in classes %}
-                                    <div class="form-check">
-                                        <input class="form-check-input class-filter" 
-                                        type="checkbox" 
-                                        value="{{ class_name }}" 
-                                        id="class-{{ forloop.counter }}">
-                                        <label class="form-check-label" 
-                                        for="class-{{ forloop.counter }}">
-                                            {{ class_name }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
+                            <div class="col-md-4">
+                                <h6 class="dropdown-header">Classes</h6>
+                                <div class="px-3">
+                                    {% for class_name in classes %}
+                                        <div class="form-check">
+                                            <input class="form-check-input class-filter" 
+                                            type="checkbox" 
+                                            value="{{ class_name }}" 
+                                            id="class-mobile-{{ forloop.counter }}">
+                                            <label class="form-check-label" 
+                                            for="class-mobile-{{ forloop.counter }}">
+                                                {{ class_name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="dropdown-header">Departments</h6>
+                                <div class="px-3">
+                                    {% for department in departments %}
+                                        <div class="form-check">
+                                            <input class="form-check-input department-filter" 
+                                            type="checkbox" 
+                                            value="{{ department.name }}" 
+                                            id="department-mobile-{{ forloop.counter }}">
+                                            <label class="form-check-label" 
+                                            for="department-mobile-{{ forloop.counter }}">
+                                                {{ department.name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <a href="{% url 'add-student' school.short_code %}" class="btn btn-primary w-100 mt-3">
-                    Add Student
-                </a>
+                <div class="mt-3">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle w-100" type="button" id="addStudentDropdownModal" data-bs-toggle="dropdown" aria-expanded="false">
+                            Add Student
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="addStudentDropdownModal">
+                            <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
+                            <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal for mobile search -->
-<div class="modal fade" id="mobile-search-modal" tabindex="-1" aria-labelledby="mobileSearchModalLabel" aria-hidden="true">
+<!-- Search Modal for Mobile View -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mobileSearchModalLabel">Search Students</h5>
+                <h5 class="modal-title" id="searchModalLabel">Search Students</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="mobile-student-search" class="form-control" placeholder="Search students by name...">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="mobile-search-button">Search</button>
+                <input type="text" id="student-search-mobile" class="form-control" placeholder="Search students by name...">
             </div>
         </div>
     </div>
@@ -231,21 +309,12 @@
         }, 500);
     });
 
-    document.getElementById('mobile-search-btn').addEventListener('click', function() {
-        const mobileSearchModal = new bootstrap.Modal(document.getElementById('mobile-search-modal'));
-        mobileSearchModal.show();
-    });
-
-    document.getElementById('mobile-search-button').addEventListener('click', function() {
-        const searchValue = document.getElementById('mobile-student-search').value.toLowerCase();
-        filterStudents(searchValue);
-        const mobileSearchModal = bootstrap.Modal.getInstance(document.getElementById('mobile-search-modal'));
-        mobileSearchModal.hide();
-    });
-
-    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-        const mobileMenuModal = new bootstrap.Modal(document.getElementById('mobile-menu-modal'));
-        mobileMenuModal.show();
+    document.getElementById('student-search-mobile').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchValue = this.value.toLowerCase();
+            filterStudents(searchValue);
+        }, 500);
     });
 
     function filterStudents(searchValue) {
@@ -271,6 +340,10 @@
                 row.style.display = 'none';
             }
         });
+
+        // Update total count of displayed students
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        document.getElementById('total-students').textContent = `Total Students: ${visibleRows.length}`;
     }
 
     document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
