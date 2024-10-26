@@ -81,8 +81,9 @@
                             </div>
                         </div>
                         <div class="flex-grow-1" style="max-width: 400px;">
-                            <input type="text" id="student-search" class="form-control" placeholder="Search students by name...">
-                        </div>
+    <input type="text" id="student-search" class="form-control" placeholder="Search students by name..." value="{{ search_query }}">
+</div>
+
                         <div class="ms-auto" style="flex-shrink: 0;">
                             <div class="dropdown">
                                 <button class="btn btn-primary dropdown-toggle" type="button" id="addStudentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -115,7 +116,7 @@
                             </thead>
                             <tbody>
                                 {% for student in students %}
-                                    <tr class="student-row">
+                                    <tr class="student-row" data-student-id="{{ student.id }}">
                                         <td><input type="checkbox" class="student-checkbox"></td>
                                         <td>
                                             <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px;">
@@ -127,68 +128,192 @@
                                         <td class="student-dept">{% if student.student_class %}{{ student.student_class.department }}{% else %}No class assigned{% endif %}</td>
                                         <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
                                         <td>
-                                            <div class="dropdown">
-                                                <button class="btn  btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                                </svg>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown{{ forloop.counter }}">
+                                                <li><a class="dropdown-item" href="{% url 'edit_student' school.short_code student.id %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
                                                     </svg>
-                                                </button>
-                                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown{{ forloop.counter }}">
-                                                    <li><a class="dropdown-item" href="#">Edit Student</a></li>
-                                                    <li><a class="dropdown-item" href="#">Reset Password</a></li>
-                                                    <li><a class="dropdown-item" href="#">View Details</a></li>
-                                                </ul>
+                                                    Edit Student
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewStudentModal{{ forloop.counter }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                                      </svg>
+                                                    View Details
+                                                </a></li>
+                                            </ul>
+                                            
+                                            <!-- View Student Modal -->
+                                            <div class="modal fade" id="viewStudentModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="viewStudentModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title text-center w-100" id="viewStudentModalLabel{{ forloop.counter }}">Student Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body text-center">
+                                                            <div class="mb-4">
+                                                                <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="img-thumbnail rounded-circle" style="width: 100px; height: 100px;">
+                                                            </div>
+                                                            <p><strong>First Name:</strong> {{ student.first_name }}</p>
+                                                            <p><strong>Last Name:</strong> {{ student.last_name }}</p>
+                                                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                                                            <p><strong>Date of Birth:</strong> {{ student.date_of_birth }}</p>
+                                                            <p><strong>Age:</strong> {{ student.age }} years</p>
+                                                            <p><strong>Blood Group:</strong> {% if student.blood_group %}{{ student.blood_group }}{% else %}Not Provided{% endif %}</p>
+                                                            <p><strong>Peculiar Illnesses:</strong> {% if student.peculiar_illnesses %}{{ student.peculiar_illnesses }}{% else %}None{% endif %}</p>
+                                                            <p><strong>Nationality:</strong> {{ student.get_nationality_display }}</p>
+                                                            <p><strong>Address:</strong> {% if student.address %}{{ student.address }}{% else %}Not Provided{% endif %}</p>
+                                                            <p><strong>Admission Date:</strong> {{ student.admission_date }}</p>
+                                                            <p><strong>Last Admitted Class:</strong> {{ student.last_admitted_class }}</p>
+                                                            <p><strong>Class:</strong> {% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</p>
+                                                            <p><strong>Department:</strong> {% if student.student_class %}{{ student.student_class.department }}{% else %}No department assigned{% endif %}</p>
+                                                            <p><strong>Branch:</strong> {% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</p>
+                                                            <p><strong>Status:</strong> {{ student.get_status_display }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            </td>
+                                            
+                                        </div>
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                        </div>
-                        <!-- Pagination controls -->
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination">
-                                {% if students.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=1" aria-label="First">
-                                            <span aria-hidden="true">&laquo;&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ students.previous_page_number }}" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                {% endif %}
+                       <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+        <span class="badge bg-info" id="total-students">Total Students: {{ total_students }}</span>
 
-                                {% for i in students.paginator.page_range %}
-                                    {% if students.number == i %}
-                                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                                    {% else %}
-                                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                                    {% endif %}
-                                {% endfor %}
+        <!-- Bulk Action Dropdown -->
+<div class="btn-group ms-2">
+    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Bulk Action
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" id="bulk-delete-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+              </svg>
+            Delete Student(s)
+        </a></li>
+        <li><a class="dropdown-item" href="#">Assign Parent</a></li>
+        <li><a class="dropdown-item" href="#">Reset Password</a></li>
+    </ul>
+</div>
 
-                                {% if students.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ students.next_page_number }}" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ students.paginator.num_pages }}" aria-label="Last">
-                                            <span aria-hidden="true">&raquo;&raquo;</span>
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    {% else %}
-                        <p>No students found for this school.</p>
-                    {% endif %}
+        <!-- Bulk Delete Confirmation Modal -->
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete the selected students? This action cannot be undone.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+                    </div>
                 </div>
-                <div class="card-footer text-muted" id="total-students">Total Students: {{ total_students }}</div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('bulk-delete-btn').addEventListener('click', function () {
+                const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+                    .map(checkbox => checkbox.closest('tr').dataset.studentId);
+
+                if (selectedStudents.length > 0) {
+                    const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                    confirmModal.show();
+
+                    document.getElementById('confirm-delete').addEventListener('click', function () {
+                        // Log the request details
+                        console.log('Sending bulk delete request with the following data:', selectedStudents);
+
+                        fetch("{% url 'bulk_delete_students' school.short_code %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ student_ids: selectedStudents })
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Response from server:', data);
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    alert(data.message || 'An error occurred while deleting students.');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There was a problem with the fetch operation:', error);
+                                alert('An error occurred. Please check the console for more details.');
+                            });
+                    });
+                } else {
+                    alert('No students selected.');
+                }
+            });
+
+
+        </script>
+
+    </div>
+</div>
+
+<!-- Pagination controls -->
+<nav aria-label="Page navigation" class="d-flex justify-content-center">
+    <ul class="pagination">
+        {% if students.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ students.previous_page_number }})" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for i in students.paginator.page_range %}
+            {% if students.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+            {% else %}
+                <li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ i }})">{{ i }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if students.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ students.next_page_number }})" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% else %}
+    <p>No students found for this school.</p>
+{% endif %}
+
             </div>
         </div>
     </div>
@@ -294,62 +419,100 @@
     </div>
 </div>
 
+
 <script>
-    document.getElementById('select-all').addEventListener('click', function() {
-        const checkboxes = document.querySelectorAll('.student-checkbox');
-        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-    });
+// Initialize school short code from the template
+const schoolShortCode = "{{ school.short_code }}";
 
-    let searchTimeout;
-    document.getElementById('student-search').addEventListener('input', function() {
+document.getElementById('select-all').addEventListener('click', function() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+});
+
+let searchTimeout;
+
+// Combine the event listener for both desktop and mobile search inputs
+document.querySelectorAll('#student-search, #student-search-mobile').forEach(input => {
+    input.addEventListener('input', function () {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
             const searchValue = this.value.toLowerCase();
             filterStudents(searchValue);
         }, 500);
     });
+});
 
-    document.getElementById('student-search-mobile').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const searchValue = this.value.toLowerCase();
-            filterStudents(searchValue);
-        }, 500);
+// Function to fetch and filter students from the server
+function filterStudents(searchValue = '', page = 1) {
+    const branchFilters = Array.from(document.querySelectorAll('.branch-filter:checked')).map(el => el.value);
+    const classFilters = Array.from(document.querySelectorAll('.class-filter:checked')).map(el => el.value);
+    const departmentFilters = Array.from(document.querySelectorAll('.department-filter:checked')).map(el => el.value);
+
+    // Set up URL parameters for search and filters
+    const urlParams = new URLSearchParams({
+        search: searchValue,
+        page: page // Pass the current page number
     });
 
-    function filterStudents(searchValue) {
-        const rows = document.querySelectorAll('.student-row');
-        rows.forEach(row => {
-            const firstName = row.querySelector('.student-first-name').textContent.toLowerCase();
-            const lastName = row.querySelector('.student-last-name').textContent.toLowerCase();
-            const branchName = row.querySelector('.student-branch').textContent.toLowerCase();
-            const departmentName = row.querySelector('.student-dept').textContent.toLowerCase();
-            const className = row.querySelector('.student-class').textContent.toLowerCase();
-            const branchFilters = Array.from(document.querySelectorAll('.branch-filter:checked')).map(el => el.value.toLowerCase());
-            const classFilters = Array.from(document.querySelectorAll('.class-filter:checked')).map(el => el.value.toLowerCase());
-            const departmentFilters = Array.from(document.querySelectorAll('.department-filter:checked')).map(el => el.value.toLowerCase());
+    // Append branch, class, and department filters to the URL parameters
+    branchFilters.forEach(branch => urlParams.append('branch', branch));
+    classFilters.forEach(cls => urlParams.append('class', cls));
+    departmentFilters.forEach(dept => urlParams.append('department', dept));
 
-            const matchesSearch = firstName.includes(searchValue) || lastName.includes(searchValue);
-            const matchesBranch = branchFilters.length === 0 || branchFilters.includes(branchName);
-            const matchesClass = classFilters.length === 0 || classFilters.includes(className);
-            const matchesDepartment = departmentFilters.length === 0 || departmentFilters.includes(departmentName);
-
-            if (matchesSearch && matchesBranch && matchesClass && matchesDepartment) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+    // Fetch data from the server using the constructed URL
+    fetch(`/students/${schoolShortCode}/student-list/?${urlParams.toString()}`)
+        .then(response => response.text())
+        .then(html => {
+            // Parse the response to update the table content and paginator
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Update the table body with the new data
+            const newTableBody = tempDiv.querySelector('#students-table tbody');
+            if (newTableBody) {
+                document.querySelector('#students-table tbody').innerHTML = newTableBody.innerHTML;
             }
-        });
 
-        // Update total count of displayed students
-        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-        document.getElementById('total-students').textContent = `Total Students: ${visibleRows.length}`;
+            // Update the paginator with the new data
+            const newPaginator = tempDiv.querySelector('nav[aria-label="Page navigation"]');
+            if (newPaginator) {
+                document.querySelector('nav[aria-label="Page navigation"]').innerHTML = newPaginator.innerHTML;
+            }
+
+            // Update the total count of displayed students
+            updateTotalCount();
+        })
+        .catch(error => console.error('Error fetching students:', error));
+}
+
+// Function to update the total number of students displayed
+function updateTotalCount() {
+    const filteredStudentsCount = document.querySelectorAll('.student-row').length;
+    const totalStudentsCount = "{{ total_students }}"; // Total number of students from the server
+
+    // Display the filtered count and total count when filters are applied
+    if (filteredStudentsCount === parseInt(totalStudentsCount, 10)) {
+        document.getElementById('total-students').textContent = `Total Students: ${totalStudentsCount}`;
+    } else {
+        document.getElementById('total-students').textContent = `Showing ${filteredStudentsCount} of ${totalStudentsCount} students`;
     }
+}
 
-    document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
-        filter.addEventListener('change', function() {
-            filterStudents(document.getElementById('student-search').value.toLowerCase());
-        });
+
+// Add event listeners for branch, class, and department filters
+document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
+    filter.addEventListener('change', function () {
+        filterStudents(document.querySelector('#student-search').value.toLowerCase());
     });
-</script>
+});
+
+// Function to handle pagination click events
+function goToPage(pageNumber) {
+    filterStudents(document.querySelector('#student-search').value.toLowerCase(), pageNumber);
+}
+
+// Ensure that the filter function is called initially to handle any pre-existing filters or search
+filterStudents(document.querySelector('#student-search').value.toLowerCase());
+
+</script>   
 {% endblock %}
