@@ -6,11 +6,29 @@ from schools.models import Branch
 from .utils import generate_student_username
 from .tasks import send_student_creation_email
 
+from django import forms
+from django.contrib.auth.models import User
+from .models import Student
+from classes.models import Class
+from schools.models import Branch
+from .utils import generate_student_username
+from .tasks import send_student_creation_email
+
 class StudentCreationForm(forms.ModelForm):
     # Basic user information
-    email = forms.EmailField(required=True)
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter a valid email'}),
+        required=True
+    )
+
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your first name'}),
+        required=True
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your surname'}),
+        required=True
+    )
 
     # Additional student-specific fields
     gender = forms.ChoiceField(choices=Student.GENDER_CHOICES, required=True)
@@ -31,13 +49,16 @@ class StudentCreationForm(forms.ModelForm):
     status = forms.ChoiceField(choices=Student.STATUS_CHOICES, required=True)
 
     class Meta:
-        model = Student  # Use the Student model now to save all details
+        model = Student
         fields = ['first_name', 'last_name', 'email', 'gender', 'date_of_birth', 
                   'branch', 'student_class', 'status', 'profile_picture']
 
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)  # School passed as context
         super().__init__(*args, **kwargs)
+
+        # Update label for last_name to 'Surname'
+        self.fields['last_name'].label = "Surname"
 
         # Set branch queryset based on school if provided
         if school:
@@ -191,15 +212,66 @@ class StudentUpdateForm(forms.ModelForm):
 class ParentGuardianCreationForm(forms.ModelForm):
     class Meta:
         model = ParentGuardian
-        fields = ['first_name', 'last_name', 'phone_number', 'email', 'address']
+        fields = ['title', 'first_name', 'last_name', 'phone_number', 'email', 'address']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Update label for last_name to 'Surname'
+        self.fields['last_name'].label = "Surname"
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
         if not phone_number.isdigit():
             raise forms.ValidationError("Phone number must be numeric.")
+        if len(phone_number) < 10:
+            raise forms.ValidationError("Phone number must be at least 10 digits long.")
         return phone_number
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise forms.ValidationError("Email is required.")
+        if ParentGuardian.objects.filter(email=email).exists():
+            raise forms.ValidationError("A parent with this email already exists.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        first_name = cleaned_data.get('first_name')
+        last_name = cleaned_data.get('last_name')
+        phone_number = cleaned_data.get('phone_number')
+
+        # Check if a parent with the same first name, last name, and phone number already exists
+        if ParentGuardian.objects.filter(first_name=first_name, last_name=last_name, phone_number=phone_number).exists():
+            raise forms.ValidationError("A parent with the same name and phone number already exists.")
+        return cleaned_data
+    
+class ParentAssignmentForm(forms.Form):
+    parent = forms.ModelChoiceField(
+        queryset=ParentGuardian.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True,
+        label="Select Parent"
+    )
+
+    relation_type = forms.ChoiceField(
+        choices=ParentStudentRelationship.RELATION_TYPE_CHOICES,
+        required=True,
+        label="Relation Type"
+    )
 
 class ParentStudentRelationshipForm(forms.ModelForm):
     class Meta:
         model = ParentStudentRelationship
         fields = ['parent_guardian', 'relation_type']
+
+class ParentStudentRelationshipUpdateForm(forms.ModelForm):
+    class Meta:
+        model = ParentStudentRelationship
+        fields = ['parent_guardian', 'relation_type']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customizing the form fields if needed, e.g., setting custom labels or attributes
+        self.fields['parent_guardian'].label = "Select Parent/Guardian"
+        self.fields['relation_type'].label = "Relationship Type"

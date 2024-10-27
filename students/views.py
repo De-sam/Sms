@@ -4,14 +4,17 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Student
-from .forms import StudentCreationForm, ParentStudentRelationshipForm,\
-    ParentGuardianCreationForm, StudentUpdateForm
+from .models import Student,ParentStudentRelationship,ParentGuardian
+from .forms import StudentCreationForm, ParentAssignmentForm,\
+    ParentGuardianCreationForm, StudentUpdateForm,ParentStudentRelationshipUpdateForm
 from landingpage.models import SchoolRegistration
 from schools.models import Branch
 from classes.models import Class,Department
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import json
+from django.contrib.auth.models import User
+
+
 
 @login_required_with_short_code
 @transaction.atomic
@@ -30,25 +33,82 @@ def add_parent_guardian(request, short_code):
         'branches': Branch.objects.filter(school=school),
     })
 
+
 @login_required_with_short_code
 @transaction.atomic
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     form = StudentCreationForm(request.POST or None, request.FILES or None, school=school)
-    parent_student_relationship_form = ParentStudentRelationshipForm(request.POST or None)
+    
+    # Start with a single ParentAssignmentForm instead of multiple
+    parent_assignment_forms = [ParentAssignmentForm(request.POST or None, prefix="0")]
 
-    if request.method == 'POST' and form.is_valid() and parent_student_relationship_form.is_valid():
-        student = form.save()  # Now this returns a Student instance
-        parent_student_relationship = parent_student_relationship_form.save(commit=False)
-        parent_student_relationship.student = student  # Correctly assign the Student instance here
-        parent_student_relationship.save()
-        messages.success(request, "Student added successfully!")
+    if request.method == 'POST' and form.is_valid():
+        # Save the student instance
+        student = form.save()
+
+        # Link each selected parent to the new student with the specified relationship
+        for parent_assignment_form in parent_assignment_forms:
+            if parent_assignment_form.is_valid() and parent_assignment_form.cleaned_data.get('parent'):
+                parent = parent_assignment_form.cleaned_data['parent']
+                relation_type = parent_assignment_form.cleaned_data['relation_type']
+
+                # Create the ParentStudentRelationship
+                ParentStudentRelationship.objects.create(
+                    parent_guardian=parent,
+                    student=student,  # Link the student correctly
+                    relation_type=relation_type
+                )
+
+        # Display a success message
+        messages.success(request, 'Student record has been added successfully.')
+
+        # Redirect to the student list page
         return redirect('student_list', short_code=short_code)
 
     return render(request, 'students/add_student.html', {
         'form': form,
-        'parent_student_relationship_form': parent_student_relationship_form,
+        'parent_assignment_forms': parent_assignment_forms,
         'school': school,
+    })
+
+@login_required_with_short_code
+def list_parent_guardians(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    
+    # Get search query from request to filter parents
+    search_query = request.GET.get('search', '').strip().lower()
+
+    # Fetch all parent guardians
+    all_parents = ParentGuardian.objects.all()
+    
+    # Apply search query filter if provided
+    if search_query:
+        all_parents = all_parents.filter(
+            first_name__icontains=search_query
+        ) | all_parents.filter(
+            last_name__icontains=search_query
+        ) | all_parents.filter(
+            phone_number__icontains=search_query
+        ) | all_parents.filter(
+            email__icontains=search_query
+        )
+    
+    # Set up pagination: 10 parents per page
+    paginator = Paginator(all_parents, 10)
+    page = request.GET.get('page')
+
+    try:
+        parents_paginated = paginator.page(page)
+    except PageNotAnInteger:
+        parents_paginated = paginator.page(1)
+    except EmptyPage:
+        parents_paginated = paginator.page(paginator.num_pages)
+
+    return render(request, 'parents/list_parent_guardians.html', {
+        'school': school,
+        'parents': parents_paginated,
+        'search_query': search_query,
     })
 
 
@@ -58,11 +118,25 @@ def edit_student(request, short_code, student_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     student = get_object_or_404(Student, id=student_id, branch__school=school)
 
+    # Get the existing parent/guardian relationship, if any
+    parent_relationship = ParentStudentRelationship.objects.filter(student=student).first()
+
     if request.method == 'POST':
         form = StudentUpdateForm(request.POST, request.FILES, instance=student, school=school)
-        if form.is_valid():
+        parent_relationship_form = ParentStudentRelationshipUpdateForm(
+            request.POST, instance=parent_relationship
+        )
+
+        if form.is_valid() and parent_relationship_form.is_valid():
+            # Save the student information
             form.save()
-            messages.success(request, 'Student updated successfully!')
+
+            # Save the parent/guardian relationship information
+            parent_relationship = parent_relationship_form.save(commit=False)
+            parent_relationship.student = student  # Set the student
+            parent_relationship.save()
+
+            messages.success(request, 'Student and parent/guardian details updated successfully!')
             return redirect('student_list', short_code=short_code)
     else:
         # Prepopulate the email field with the related User's email
@@ -70,12 +144,15 @@ def edit_student(request, short_code, student_id):
             'email': student.user.email,
         }
         form = StudentUpdateForm(instance=student, school=school, initial=initial_data)
+        parent_relationship_form = ParentStudentRelationshipUpdateForm(instance=parent_relationship)
 
     return render(request, 'students/edit_students.html', {
         'form': form,
+        'parent_relationship_form': parent_relationship_form,
         'school': school,
         'student': student,
     })
+
 
 
 
@@ -150,7 +227,7 @@ def student_list(request, short_code):
     })
 
 
-from django.contrib import messages
+
 
 @login_required_with_short_code
 @csrf_exempt
@@ -167,6 +244,7 @@ def bulk_delete_students(request, short_code):
             if not student_ids or any(id is None for id in student_ids):
                 return JsonResponse({'success': False, 'message': 'No valid students selected.'}, status=400)
 
+            # Fetch students based on IDs and school short code
             students_to_delete = Student.objects.filter(
                 id__in=student_ids, 
                 student_class__branches__school__short_code=short_code
@@ -175,13 +253,19 @@ def bulk_delete_students(request, short_code):
             if not students_to_delete.exists():
                 return JsonResponse({'success': False, 'message': 'No valid students found for deletion.'}, status=404)
 
-            # Perform the deletion
+            # Collect associated user accounts before deleting students
+            user_ids = students_to_delete.values_list('user_id', flat=True)
+
+            # Perform the deletion of student records
             students_to_delete.delete()
+
+            # Explicitly delete the associated User objects
+            User.objects.filter(id__in=user_ids).delete()
             
             # Set a success message to be displayed on the next page load
-            messages.success(request, 'Selected students have been deleted successfully.')
+            messages.success(request, 'Selected students and their associated user accounts have been deleted successfully.')
             
-            return JsonResponse({'success': True, 'message': 'Selected students have been deleted successfully.'})
+            return JsonResponse({'success': True, 'message': 'Selected students and their associated user accounts have been deleted successfully.'})
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
         except Exception as e:
@@ -190,7 +274,6 @@ def bulk_delete_students(request, short_code):
     else:
         print("Invalid request method received.")
         return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
-
     
 
 def get_classes(request, short_code, branch_id):

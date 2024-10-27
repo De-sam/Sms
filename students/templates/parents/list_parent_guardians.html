@@ -1,0 +1,81 @@
+{% extends "adminlte/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-header">
+        Parent/Guardian List
+        <form method="get" class="float-end">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder="Search" value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Related Students</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for parent in parents %}
+                    <tr>
+                        <td>{{ parent.get_title_display }}</td>
+                        <td>{{ parent.first_name }}</td>
+                        <td>{{ parent.last_name }}</td>
+                        <td>{{ parent.phone_number }}</td>
+                        <td>{{ parent.email }}</td>
+                        <td>{{ parent.address }}</td>
+                        <td>
+                            <ul>
+                                {% for relationship in parent.relationships.all %}
+                                    <li>{{ relationship.student.first_name }} {{ relationship.student.last_name }} - {{ relationship.get_relation_type_display }}</li>
+                                {% empty %}
+                                    <li>No students linked</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No parents found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if parents.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">{{ parents.number }}</span>
+                </li>
+                {% if parents.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ parents.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

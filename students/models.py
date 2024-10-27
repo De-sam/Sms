@@ -6,7 +6,19 @@ from classes.models import Class
 from schools.models import Branch
 
 class ParentGuardian(models.Model):
+    TITLE_CHOICES = [
+        ('mr', 'Mr'),
+        ('mrs', 'Mrs'),
+        ('ms', 'Ms'),
+        ('dr', 'Dr'),
+        ('prof', 'Prof'),
+        ('rev', 'Rev'),
+        ('sir', 'Sir'),
+        ('lady', 'Lady'),
+    ]
+
     # Personal details for the parent or guardian
+    title = models.CharField(max_length=10, choices=TITLE_CHOICES, blank=True, null=True)  # New title field
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
@@ -14,7 +26,8 @@ class ParentGuardian(models.Model):
     address = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} - {self.phone_number}"
+        title_display = f"{self.get_title_display()} " if self.title else ""
+        return f"{title_display}{self.first_name} {self.last_name} - {self.phone_number}"
 
 class ParentStudentRelationship(models.Model):
     RELATION_TYPE_CHOICES = [
@@ -28,11 +41,10 @@ class ParentStudentRelationship(models.Model):
         ('sibling', 'Sibling'),
         ('other', 'Other'),
     ]
-    
-    parent_guardian = models.ForeignKey(ParentGuardian, on_delete=models.CASCADE, related_name='parent_relationships')
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='student_relationships')
+
+    parent_guardian = models.ForeignKey(ParentGuardian, on_delete=models.CASCADE, related_name='relationships')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='relationships')
     relation_type = models.CharField(max_length=20, choices=RELATION_TYPE_CHOICES)
-    
     def __str__(self):
         return f"{self.parent_guardian} is {self.get_relation_type_display()} of {self.student}"
 
@@ -71,6 +83,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    guardians = models.ManyToManyField(ParentGuardian, through='ParentStudentRelationship', related_name='students')
     date_of_birth = models.DateField()
     student_id = models.CharField(max_length=20, unique=True, editable=False)  # Generated on save
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, blank=True, null=True)
@@ -116,10 +129,8 @@ class Student(models.Model):
             models.Index(fields=['status']),  # Index on status (active/inactive)
         ]
 
-# Log to track student transfers between branches
 class StudentTransferLog(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='transfer_logs')
-    # school = models.ForeignKey(SchoolRegistration, on_delete=models.CASCADE, related_name='school_transfers')
     old_branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, related_name='old_transfers')
     new_branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, related_name='new_transfers')
     transfer_date = models.DateTimeField(auto_now_add=True)

@@ -139,24 +139,44 @@
     <div class="card mb-3">
         <div class="card-header">Parent/Guardian Relationship</div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
+            <div id="parent-relationship-container">
+                {% for parent_form in parent_assignment_forms %}
+                <div class="parent-relationship-item mb-3">
                     <div class="form-group">
-                        {{ parent_student_relationship_form|crispy }}
+                        {{ parent_form.parent.label_tag }} {{ parent_form.parent }}
+                        {{ parent_form.parent.errors }}
+                    </div>
+                    <div class="form-group">
+                        {{ parent_form.relation_type.label_tag }} {{ parent_form.relation_type }}
+                        {{ parent_form.relation_type.errors }}
                     </div>
                 </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-start mt-3">
+                <button type="button" class="btn btn-secondary me-2" id="add-parent-relationship">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus" viewBox="0 0 16 16">
+                        <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                      </svg>
+                    Add Another Parent
+                </button>
+                <button type="button" class="btn btn-danger" id="remove-parent-relationship">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                        <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                      </svg>
+                </button>
             </div>
         </div>
     </div>
-    
-    <button type="submit" class="btn btn-primary">Add Student</button>
+
+    <button type="submit" class="btn btn-primary mt-3">Add Student</button>
 </form>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the short_code from the template context
         const shortCode = "{{ school.short_code }}";
 
-        // Function to load classes based on selected branch
         function loadClasses(branchId) {
             if (branchId) {
                 fetch(`/students/${shortCode}/get-classes/${branchId}/`)
@@ -182,16 +202,36 @@
             }
         }
 
-        // Check if a branch is selected on page load, load corresponding classes if present
         const selectedBranch = "{{ selected_branch }}";
         if (selectedBranch) {
             loadClasses(selectedBranch);
         }
 
-        // Event listener for the branch selection change
         document.getElementById('id_branch').addEventListener('change', function() {
             const branchId = this.value;
             loadClasses(branchId);
+        });
+
+        let parentCount = 1;
+        document.getElementById('add-parent-relationship').addEventListener('click', function() {
+            const container = document.getElementById('parent-relationship-container');
+            const newParentItem = document.querySelector('.parent-relationship-item').cloneNode(true);
+            newParentItem.querySelectorAll('select, input').forEach((field) => {
+                const nameAttr = field.getAttribute('name');
+                const newName = nameAttr.replace(/\d+/, parentCount);
+                field.setAttribute('name', newName);
+                field.value = ''; // Clear the field value
+            });
+            container.appendChild(newParentItem);
+            parentCount++;
+        });
+
+        // Remove the last added parent field
+        document.getElementById('remove-parent-relationship').addEventListener('click', function() {
+            const container = document.getElementById('parent-relationship-container');
+            if (container.children.length > 1) { // Ensure there's at least one item left
+                container.lastElementChild.remove();
+            }
         });
     });
 </script>
