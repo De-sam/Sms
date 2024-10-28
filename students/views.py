@@ -39,26 +39,28 @@ def add_parent_guardian(request, short_code):
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     form = StudentCreationForm(request.POST or None, request.FILES or None, school=school)
-    
-    # Start with a single ParentAssignmentForm instead of multiple
-    parent_assignment_forms = [ParentAssignmentForm(request.POST or None, prefix="0")]
 
+    # Check if the request is POST and the student form is valid
     if request.method == 'POST' and form.is_valid():
         # Save the student instance
         student = form.save()
 
-        # Link each selected parent to the new student with the specified relationship
-        for parent_assignment_form in parent_assignment_forms:
-            if parent_assignment_form.is_valid() and parent_assignment_form.cleaned_data.get('parent'):
-                parent = parent_assignment_form.cleaned_data['parent']
-                relation_type = parent_assignment_form.cleaned_data['relation_type']
+        # Process each parent form
+        parent_count = 0
+        while f'{parent_count}-parent' in request.POST:
+            parent_form = ParentAssignmentForm(request.POST, prefix=str(parent_count))
+
+            if parent_form.is_valid() and parent_form.cleaned_data.get('parent'):
+                parent = parent_form.cleaned_data['parent']
+                relation_type = parent_form.cleaned_data['relation_type']
 
                 # Create the ParentStudentRelationship
                 ParentStudentRelationship.objects.create(
                     parent_guardian=parent,
-                    student=student,  # Link the student correctly
+                    student=student,
                     relation_type=relation_type
                 )
+            parent_count += 1
 
         # Display a success message
         messages.success(request, 'Student record has been added successfully.')
@@ -68,7 +70,7 @@ def add_student(request, short_code):
 
     return render(request, 'students/add_student.html', {
         'form': form,
-        'parent_assignment_forms': parent_assignment_forms,
+        'parent_assignment_forms': [ParentAssignmentForm(prefix='0')],  # Start with one form
         'school': school,
     })
 

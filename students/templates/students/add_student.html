@@ -175,64 +175,65 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const shortCode = "{{ school.short_code }}";
+    const shortCode = "{{ school.short_code }}";
 
-        function loadClasses(branchId) {
-            if (branchId) {
-                fetch(`/students/${shortCode}/get-classes/${branchId}/`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        const classSelect = document.getElementById('id_student_class');
-                        classSelect.innerHTML = ''; // Clear existing options
-                        classSelect.insertAdjacentHTML('beforeend', '<option value="">Select class</option>'); // Default option
-                        data.classes.forEach(cls => {
-                            classSelect.insertAdjacentHTML('beforeend', `<option value="${cls.id}">${cls.name}</option>`);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error fetching classes:', error);
+    function loadClasses(branchId) {
+        if (branchId) {
+            fetch(`/students/${shortCode}/get-classes/${branchId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const classSelect = document.getElementById('id_student_class');
+                    classSelect.innerHTML = ''; // Clear existing options
+                    classSelect.insertAdjacentHTML('beforeend', '<option value="">Select class</option>'); // Default option
+                    data.classes.forEach(cls => {
+                        classSelect.insertAdjacentHTML('beforeend', `<option value="${cls.id}">${cls.name}</option>`);
                     });
-            } else {
-                document.getElementById('id_student_class').innerHTML = '<option value="">Select class</option>';
-            }
+                })
+                .catch(error => {
+                    console.error('Error fetching classes:', error);
+                });
+        } else {
+            document.getElementById('id_student_class').innerHTML = '<option value="">Select class</option>';
         }
+    }
 
-        const selectedBranch = "{{ selected_branch }}";
-        if (selectedBranch) {
-            loadClasses(selectedBranch);
-        }
+    const selectedBranch = "{{ selected_branch }}";
+    if (selectedBranch) {
+        loadClasses(selectedBranch);
+    }
 
-        document.getElementById('id_branch').addEventListener('change', function() {
-            const branchId = this.value;
-            loadClasses(branchId);
-        });
-
-        let parentCount = 1;
-        document.getElementById('add-parent-relationship').addEventListener('click', function() {
-            const container = document.getElementById('parent-relationship-container');
-            const newParentItem = document.querySelector('.parent-relationship-item').cloneNode(true);
-            newParentItem.querySelectorAll('select, input').forEach((field) => {
-                const nameAttr = field.getAttribute('name');
-                const newName = nameAttr.replace(/\d+/, parentCount);
-                field.setAttribute('name', newName);
-                field.value = ''; // Clear the field value
-            });
-            container.appendChild(newParentItem);
-            parentCount++;
-        });
-
-        // Remove the last added parent field
-        document.getElementById('remove-parent-relationship').addEventListener('click', function() {
-            const container = document.getElementById('parent-relationship-container');
-            if (container.children.length > 1) { // Ensure there's at least one item left
-                container.lastElementChild.remove();
-            }
-        });
+    document.getElementById('id_branch').addEventListener('change', function() {
+        const branchId = this.value;
+        loadClasses(branchId);
     });
+
+    let parentCount = 1;
+    document.getElementById('add-parent-relationship').addEventListener('click', function() {
+        const container = document.getElementById('parent-relationship-container');
+        const newParentItem = document.querySelector('.parent-relationship-item').cloneNode(true);
+        newParentItem.querySelectorAll('select, input').forEach((field) => {
+            const nameAttr = field.getAttribute('name');
+            const newName = nameAttr.replace(/\d+/, parentCount);
+            field.setAttribute('name', newName);
+            field.id = newName;
+            field.value = ''; // Clear the field value
+        });
+        container.appendChild(newParentItem);
+        parentCount++;
+    });
+
+    // Remove the last added parent field
+    document.getElementById('remove-parent-relationship').addEventListener('click', function() {
+        const container = document.getElementById('parent-relationship-container');
+        if (container.children.length > 1) { // Ensure there's at least one item left
+            container.lastElementChild.remove();
+        }
+    });
+});
 </script>
 {% endblock %}
