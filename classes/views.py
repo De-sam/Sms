@@ -78,7 +78,7 @@ def add_class_primary(request, short_code):
                     branch.classes.add(classes)
             
             messages.success(request, 'Class created successfully!')
-            return redirect('primary_branch_list', short_code=short_code)
+            return redirect('add_class_primary', short_code=short_code)
     else:
         form = ClassCreationForm(branches_queryset=primary_branches)
     

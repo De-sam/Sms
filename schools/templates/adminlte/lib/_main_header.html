@@ -57,28 +57,28 @@
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
                     <img src="{% avatar_url 128 %}" class="user-image img-circle elevation-2" alt="User Image">
                     <span class="d-none d-md-inline">
-                        {% with request.user.student_profile as student %}
-                            {% if student %}
-                                {{ student.last_name }}
-                            {% else %}
-                                {{ request.user.last_name }}
-                            {% endif %}
-                        {% endwith %}
+                        {% if request.user.student_profile %}
+                            {{ request.user.student_profile.last_name }}
+                        {% elif request.user.parent_profile %}
+                            {{ request.user.parent_profile.last_name }}
+                        {% else %}
+                            {{ request.user.last_name }}
+                        {% endif %}
                     </span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <!-- User image -->
                     <li class="user-header bg-primary">
                         <img src="{% avatar_url size=160 %}" class="img-circle elevation-2" alt="User Image">
-
+        
                         <p>
-                            {% with request.user.student_profile as student %}
-                                {% if student %}
-                                    {{ student.last_name }}
-                                {% else %}
-                                    {{ request.user.last_name }}
-                                {% endif %}
-                            {% endwith %} - {% firstof request.user.get_role %}
+                            {% if request.user.student_profile %}
+                                {{ request.user.student_profile.last_name }}
+                            {% elif request.user.parent_profile %}
+                                {{ request.user.parent_profile.last_name }}
+                            {% else %}
+                                {{ request.user.last_name }}
+                            {% endif %} - {% firstof request.user.get_role %}
                             <small>Member since: {{ request.user.date_joined }}</small>
                         </p>
                     </li>

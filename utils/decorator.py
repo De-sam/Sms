@@ -32,10 +32,10 @@ def login_required_with_short_code(view_func):
             return view_func(request, *args, **kwargs)
 
         # Check if the user is a parent and has children in the school
-        if hasattr(request.user, 'parent_guardian'):
+        if hasattr(request.user, 'parent_profile'):
             # Check if any of the parent's children are in the school
             if ParentStudentRelationship.objects.filter(
-                parent_guardian=request.user.parent_guardian,
+                parent_guardian=request.user.parent_profile,
                 student__branch__school=school
             ).exists():
                 return view_func(request, *args, **kwargs)

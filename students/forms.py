@@ -4,8 +4,7 @@ from .models import Student, ParentGuardian, ParentStudentRelationship
 from classes.models import Class
 from schools.models import Branch
 from .utils import generate_student_username
-from .tasks import send_student_creation_email
-
+from .tasks import send_student_creation_email,send_parent_creation_email
 from django import forms
 from django.contrib.auth.models import User
 from .models import Student
@@ -210,14 +209,22 @@ class StudentUpdateForm(forms.ModelForm):
 
 
 class ParentGuardianCreationForm(forms.ModelForm):
+    email = forms.EmailField(required=True, help_text="Required. Will be used for login.")
+
     class Meta:
         model = ParentGuardian
         fields = ['title', 'first_name', 'last_name', 'phone_number', 'email', 'address']
+        labels = {'last_name': 'Surname'}
 
     def __init__(self, *args, **kwargs):
+        self.school = kwargs.pop('school', None)  # Extract school if passed
         super().__init__(*args, **kwargs)
-        # Update label for last_name to 'Surname'
-        self.fields['last_name'].label = "Surname"
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
@@ -227,24 +234,48 @@ class ParentGuardianCreationForm(forms.ModelForm):
             raise forms.ValidationError("Phone number must be at least 10 digits long.")
         return phone_number
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email:
-            raise forms.ValidationError("Email is required.")
-        if ParentGuardian.objects.filter(email=email).exists():
-            raise forms.ValidationError("A parent with this email already exists.")
-        return email
+    def generate_unique_username(self, first_name, last_name):
+        base_username = f"{first_name.lower()}.{last_name.lower()}"
+        username = base_username
+        counter = 1
 
-    def clean(self):
-        cleaned_data = super().clean()
-        first_name = cleaned_data.get('first_name')
-        last_name = cleaned_data.get('last_name')
-        phone_number = cleaned_data.get('phone_number')
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
 
-        # Check if a parent with the same first name, last name, and phone number already exists
-        if ParentGuardian.objects.filter(first_name=first_name, last_name=last_name, phone_number=phone_number).exists():
-            raise forms.ValidationError("A parent with the same name and phone number already exists.")
-        return cleaned_data
+        return username
+
+    def save(self, commit=True):
+        print(f"School context in save: {self.school}")  # Debug line
+        first_name = self.cleaned_data['first_name']
+        last_name = self.cleaned_data['last_name']
+        email = self.cleaned_data['email']
+
+        username = self.generate_unique_username(first_name, last_name)
+        user = User(username=username, email=email)
+        default_password = "parent"
+        user.set_password(default_password)
+
+        parent = super().save(commit=False)
+        parent.user = user  # Link User to ParentGuardian
+
+        if commit:
+            user.save()
+            parent.save()
+
+            # Use the short_code from the school context if available
+            short_code = self.school.short_code if self.school else 'default'
+            print(short_code)
+            send_parent_creation_email.delay(
+                email=email,
+                username=username,
+                short_code=short_code,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+        return parent
+
     
 class ParentAssignmentForm(forms.Form):
     parent = forms.ModelChoiceField(

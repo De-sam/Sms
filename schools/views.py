@@ -45,9 +45,10 @@ def login(request, short_code):
                     return redirect(next_url)
 
                 # Parent
-                elif hasattr(user, 'parent_guardian'):
+                elif hasattr(user, 'parent_profile'):  # Using `parent_profile` based on the related_name
+                    # Verify parent has students in the specific school
                     if ParentStudentRelationship.objects.filter(
-                        parent_guardian=user.parent_guardian, 
+                        parent_guardian=user.parent_profile, 
                         student__branch__school=school
                     ).exists():
                         django_login(request, user)
@@ -55,7 +56,6 @@ def login(request, short_code):
                         return redirect(next_url)
                     else:
                         messages.error(request, 'No students associated with your account in this school.')
-
                 else:
                     messages.error(request, 'You are not authorized to log in for this school.')
             else:
@@ -70,6 +70,7 @@ def login(request, short_code):
     }
 
     return render(request, 'schools/login.html', context)
+
 def loader(request, short_code):
     return render(request, 'schools/loader.html', {'short_code': short_code})
 

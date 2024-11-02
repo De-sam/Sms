@@ -1,7 +1,6 @@
 # students/models.py
 from django.db import models
 from django.contrib.auth.models import User  # Use the built-in User model for authentication
-from landingpage.models import SchoolRegistration
 from classes.models import Class
 from schools.models import Branch
 
@@ -17,22 +16,28 @@ class ParentGuardian(models.Model):
         ('lady', 'Lady'),
     ]
 
-    # Personal details for the parent or guardian
-    title = models.CharField(max_length=10, choices=TITLE_CHOICES, blank=True, null=True)  # New title field
+    # Linking to the User model for authentication
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name="parent_profile"  # Add related_name for reverse access
+    )    
+    title = models.CharField(max_length=10, choices=TITLE_CHOICES, blank=True, null=True)  # Title field
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(unique=True)  # Required for login
     address = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         title_display = f"{self.get_title_display()} " if self.title else ""
         return f"{title_display}{self.first_name} {self.last_name} - {self.phone_number}"
+    
 
 class ParentStudentRelationship(models.Model):
     RELATION_TYPE_CHOICES = [
         ('father', 'Father'),
-        ('mother', 'Mother'),
+        ('mother', 'Mother'), 
         ('guardian', 'Guardian'),
         ('grandfather', 'Grandfather'),
         ('grandmother', 'Grandmother'),
