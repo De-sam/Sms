@@ -139,22 +139,46 @@
     <div class="card mb-3">
         <div class="card-header">Parent/Guardian Relationship</div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        {{ parent_relationship_form|crispy }}
+            <div id="parent-relationship-container">
+                {% for parent_form in parent_assignment_forms %}
+                    <div class="row parent-relationship-item mb-3" data-index="{{ forloop.counter0 }}">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                {{ parent_form.parent.label_tag }} {{ parent_form.parent }}
+                                {{ parent_form.parent.errors }}
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                {{ parent_form.relation_type.label_tag }} {{ parent_form.relation_type }}
+                                {{ parent_form.relation_type.errors }}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger remove-parent" data-index="{{ forloop.counter0 }}">
+                                Remove
+                            </button>
+                            <input type="hidden" name="delete-{{ forloop.counter0 }}" value="false" id="delete-{{ forloop.counter0 }}">
+                        </div>
                     </div>
-                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Buttons for adding/removing parents -->
+            <div class="d-flex justify-content-start mt-3">
+                <button type="button" class="btn btn-secondary me-2" id="add-parent-relationship">
+                    Add Another Parent
+                </button>
             </div>
         </div>
     </div>
-    
-    <button type="submit" class="btn btn-primary">Update Student</button>
+
+    <!-- Update Student Button -->
+    <button type="submit" class="btn btn-primary mt-3">Update Student</button>
 </form>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the short_code from the template context
         const shortCode = "{{ school.short_code }}";
 
         // Function to load classes based on selected branch
@@ -162,38 +186,73 @@
             if (branchId) {
                 fetch(`/students/${shortCode}/get-classes/${branchId}/`)
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
+                        if (!response.ok) throw new Error('Network response was not ok');
                         return response.json();
                     })
                     .then(data => {
                         const classSelect = document.getElementById('id_student_class');
-                        classSelect.innerHTML = ''; // Clear existing options
-                        classSelect.insertAdjacentHTML('beforeend', '<option value="">Select class</option>'); // Default option
+                        classSelect.innerHTML = '';
+                        classSelect.insertAdjacentHTML('beforeend', '<option value="">Select class</option>');
                         data.classes.forEach(cls => {
                             classSelect.insertAdjacentHTML('beforeend', `<option value="${cls.id}">${cls.name}</option>`);
                         });
+                        if (classSelect.dataset.initialClass) classSelect.value = classSelect.dataset.initialClass;
                     })
-                    .catch(error => {
-                        console.error('Error fetching classes:', error);
-                    });
+                    .catch(error => console.error('Error fetching classes:', error));
             } else {
                 document.getElementById('id_student_class').innerHTML = '<option value="">Select class</option>';
             }
         }
 
-        // Check if a branch is selected on page load, load corresponding classes if present
-        const selectedBranch = "{{ form.instance.branch.id }}";
-        if (selectedBranch) {
-            loadClasses(selectedBranch);
+        {% if form.instance.branch %}
+            const initialBranch = "{{ form.instance.branch.id }}";
+            document.getElementById('id_branch').value = initialBranch;
+            document.getElementById('id_student_class').dataset.initialClass = "{{ form.instance.student_class.id }}";
+            loadClasses(initialBranch);
+        {% endif %}
+
+        document.getElementById('id_branch').addEventListener('change', function() {
+            loadClasses(this.value);
+        });
+
+        let parentCount = {{ parent_assignment_forms|length }};
+
+        // Add a new parent relationship form
+        document.getElementById('add-parent-relationship').addEventListener('click', function() {
+            const container = document.getElementById('parent-relationship-container');
+            const newParentItem = document.querySelector('.parent-relationship-item').cloneNode(true);
+
+            newParentItem.querySelectorAll('select, input').forEach(field => {
+                const nameAttr = field.getAttribute('name');
+                const newName = nameAttr.replace(/\d+/, parentCount);
+                field.setAttribute('name', newName);
+                field.id = newName;
+                field.value = '';
+            });
+
+            newParentItem.querySelector('.remove-parent').dataset.index = parentCount;
+            newParentItem.querySelector('.remove-parent').addEventListener('click', function() {
+                markForDeletion(this.dataset.index);
+            });
+
+            newParentItem.setAttribute('data-index', parentCount);
+            container.appendChild(newParentItem);
+            parentCount++;
+        });
+
+        // Function to mark a parent form for deletion
+        function markForDeletion(index) {
+            document.getElementById(`delete-${index}`).value = "true";
+            document.querySelector(`[data-index="${index}"]`).style.display = "none";
         }
 
-        // Event listener for the branch selection change
-        document.getElementById('id_branch').addEventListener('change', function() {
-            const branchId = this.value;
-            loadClasses(branchId);
+        // Attach delete functionality to existing delete buttons
+        document.querySelectorAll('.remove-parent').forEach(button => {
+            button.addEventListener('click', function() {
+                markForDeletion(button.dataset.index);
+            });
         });
     });
 </script>
+
 {% endblock %}
