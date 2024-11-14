@@ -115,8 +115,8 @@ def edit_student(request, short_code, student_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     student = get_object_or_404(Student, id=student_id)
     form = StudentCreationForm(request.POST or None, request.FILES or None, instance=student, school=school)
-    
-    # Fetch existing relationships
+
+    # Fetch current relationships for the student
     existing_relationships = ParentStudentRelationship.objects.filter(student=student)
     parent_assignment_forms = [
         ParentAssignmentForm(
@@ -130,7 +130,7 @@ def edit_student(request, short_code, student_id):
         for i, rel in enumerate(existing_relationships)
     ]
 
-    # Append an empty form for adding new parents
+    # Add an empty form for adding new parents if not a POST request
     if request.method != 'POST':
         parent_assignment_forms.append(ParentAssignmentForm(prefix=str(len(existing_relationships))))
 
@@ -140,28 +140,40 @@ def edit_student(request, short_code, student_id):
 
         # Track relationships to keep
         new_relationships = []
+
+        # Process existing forms
         for i, parent_form in enumerate(parent_assignment_forms):
+            delete_field = request.POST.get(f'delete-{i}', 'false')
+            if delete_field == 'true':
+                # If marked for deletion, delete the relationship
+                relationship_to_delete = existing_relationships[i]
+                relationship_to_delete.delete()
+                continue
+            
             if parent_form.is_valid() and parent_form.cleaned_data.get('parent'):
                 parent = parent_form.cleaned_data['parent']
                 relation_type = parent_form.cleaned_data['relation_type']
-                
-                # Save or update each parent relationship
-                relationship, created = ParentStudentRelationship.objects.update_or_create(
+
+                # Update or create the relationship
+                relationship, created = ParentStudentRelationship.objects.get_or_create(
                     student=student,
                     parent_guardian=parent,
                     defaults={'relation_type': relation_type}
                 )
+                if not created and relationship.relation_type != relation_type:
+                    relationship.relation_type = relation_type
+                    relationship.save()
+
                 new_relationships.append(relationship.id)
 
-        # Process any new parent forms that may have been added dynamically
+        # Handle any additional parent forms added dynamically
         parent_count = len(existing_relationships)
         while f'{parent_count}-parent' in request.POST:
             new_parent_form = ParentAssignmentForm(request.POST, prefix=str(parent_count))
             if new_parent_form.is_valid() and new_parent_form.cleaned_data.get('parent'):
                 parent = new_parent_form.cleaned_data['parent']
                 relation_type = new_parent_form.cleaned_data['relation_type']
-                
-                # Create a new ParentStudentRelationship for the newly added parent
+
                 relationship = ParentStudentRelationship.objects.create(
                     student=student,
                     parent_guardian=parent,
@@ -170,10 +182,9 @@ def edit_student(request, short_code, student_id):
                 new_relationships.append(relationship.id)
             parent_count += 1
 
-        # Delete any relationships that are not in the list of new relationships
+        # Delete any relationships that were not retained
         existing_relationships.exclude(id__in=new_relationships).delete()
 
-        # Display success message
         messages.success(request, 'Student record has been updated successfully.')
         return redirect('student_list', short_code=short_code)
 
@@ -183,6 +194,7 @@ def edit_student(request, short_code, student_id):
         'school': school,
         'student': student,
     })
+
 
 
 @login_required_with_short_code

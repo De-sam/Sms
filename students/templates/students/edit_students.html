@@ -141,62 +141,71 @@
         <div class="card-body">
             <div id="parent-relationship-container">
                 {% for parent_form in parent_assignment_forms %}
-                    <div class="row parent-relationship-item mb-3" data-index="{{ forloop.counter0 }}">
-                        <div class="col-md-5">
-                            <div class="form-group">
-                                {{ parent_form.parent.label_tag }} {{ parent_form.parent }}
+                    <div class="row align-items-center parent-relationship-item mb-2" data-index="{{ forloop.counter0 }}">
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="me-2">{{ parent_form.parent.label }}</label>
+                            <div class="flex-grow-1">
+                                {{ parent_form.parent }}
                                 {{ parent_form.parent.errors }}
                             </div>
                         </div>
-                        <div class="col-md-5">
-                            <div class="form-group">
-                                {{ parent_form.relation_type.label_tag }} {{ parent_form.relation_type }}
-                                {{ parent_form.relation_type.errors }}
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="me-2">{{ parent_form.relation_type.label }}</label>
+                            <div class="d-flex flex-grow-1 align-items-center">
+                                <div>
+                                    {{ parent_form.relation_type }}
+                                    {{ parent_form.relation_type.errors }}
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm remove-parent ms-2" data-index="{{ forloop.counter0 }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash2" viewBox="0 0 16 16">
+                                        <path d="M14 3a.7.7 0 0 1-.037.225l-1.684 10.104A2 2 0 0 1 10.305 15H5.694a2 2 0 0 1-1.973-1.671L2.037 3.225A.7.7 0 0 1 2 3c0-1.105 2.686-2 6-2s6 .895 6 2M3.215 4.207l1.493 8.957a1 1 0 0 0 .986.836h4.612a1 1 0 0 0 .986-.836l1.493-8.957C11.69 4.689 9.954 5 8 5s-3.69-.311-4.785-.793"/>
+                                    </svg>
+                                </button>
+                                <input type="hidden" name="delete-{{ forloop.counter0 }}" value="false" id="delete-{{ forloop.counter0 }}">
                             </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-danger remove-parent" data-index="{{ forloop.counter0 }}">
-                                Remove
-                            </button>
-                            <input type="hidden" name="delete-{{ forloop.counter0 }}" value="false" id="delete-{{ forloop.counter0 }}">
                         </div>
                     </div>
                 {% endfor %}
             </div>
             
-            <!-- Buttons for adding/removing parents -->
+            <!-- Button for adding new parent -->
             <div class="d-flex justify-content-start mt-3">
-                <button type="button" class="btn btn-secondary me-2" id="add-parent-relationship">
-                    Add Another Parent
+                <button type="button" class="btn btn-sm btn-secondary me-2" id="add-parent-relationship">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                      </svg>
+                    Add more
                 </button>
             </div>
         </div>
     </div>
+    
 
-    <!-- Update Student Button -->
-    <button type="submit" class="btn btn-primary mt-3">Update Student</button>
-</form>
+<!-- Update Student Button -->
+<div class="d-flex justify-content-start mt-3">
+    <button type="submit" class="btn btn-primary">Update Student</button>
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const shortCode = "{{ school.short_code }}";
 
-        // Function to load classes based on selected branch
+        // Load classes based on selected branch
         function loadClasses(branchId) {
             if (branchId) {
                 fetch(`/students/${shortCode}/get-classes/${branchId}/`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         const classSelect = document.getElementById('id_student_class');
-                        classSelect.innerHTML = '';
-                        classSelect.insertAdjacentHTML('beforeend', '<option value="">Select class</option>');
+                        classSelect.innerHTML = '<option value="">Select class</option>';
                         data.classes.forEach(cls => {
                             classSelect.insertAdjacentHTML('beforeend', `<option value="${cls.id}">${cls.name}</option>`);
                         });
-                        if (classSelect.dataset.initialClass) classSelect.value = classSelect.dataset.initialClass;
+                        if (classSelect.dataset.initialClass) {
+                            classSelect.value = classSelect.dataset.initialClass;
+                        }
                     })
                     .catch(error => console.error('Error fetching classes:', error));
             } else {
@@ -204,6 +213,7 @@
             }
         }
 
+        // Set initial branch and classes if editing
         {% if form.instance.branch %}
             const initialBranch = "{{ form.instance.branch.id }}";
             document.getElementById('id_branch').value = initialBranch;
@@ -240,7 +250,7 @@
             parentCount++;
         });
 
-        // Function to mark a parent form for deletion
+        // Mark a parent form for deletion
         function markForDeletion(index) {
             document.getElementById(`delete-${index}`).value = "true";
             document.querySelector(`[data-index="${index}"]`).style.display = "none";

@@ -115,73 +115,6 @@ class StudentCreationForm(forms.ModelForm):
 
         return student # Return student instead of user to avoid confusion
 
-# class StudentUpdateForm(forms.ModelForm):
-#     # Update form for existing student details
-#     email = forms.EmailField(required=True)
-#     first_name = forms.CharField(required=True)
-#     last_name = forms.CharField(required=True)
-
-#     # Additional student-specific fields
-#     gender = forms.ChoiceField(choices=Student.GENDER_CHOICES, required=True)
-#     date_of_birth = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
-#     blood_group = forms.ChoiceField(choices=Student.BLOOD_GROUP_CHOICES, required=False)
-#     peculiar_illnesses = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
-#     nationality = forms.ChoiceField(choices=Student.NATIONALITY_CHOICES, required=True)
-#     address = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=True)
-#     profile_picture = forms.ImageField(required=False)
-
-#     # Academic details
-#     branch = forms.ModelChoiceField(queryset=Branch.objects.none(), required=True, label="Branch")
-#     admission_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
-#     last_admitted_class = forms.CharField(max_length=100, required=True)
-#     student_class = forms.ModelChoiceField(queryset=Class.objects.none(), required=False)
-
-#     # Status tracking
-#     status = forms.ChoiceField(choices=Student.STATUS_CHOICES, required=True)
-
-#     class Meta:
-#         model = Student
-#         fields = ['first_name', 'last_name', 'email', 'gender', 'date_of_birth', 
-#                   'branch', 'student_class', 'status', 'profile_picture', 'blood_group', 
-#                   'peculiar_illnesses', 'nationality', 'address', 'admission_date', 'last_admitted_class']
-
-#     def __init__(self, *args, **kwargs):
-#         school = kwargs.pop('school', None)
-#         super().__init__(*args, **kwargs)
-
-#         # Set branch queryset based on school if provided
-#         if school:
-#             self.school = school
-#             self.fields['branch'].queryset = Branch.objects.filter(school=school)
-#         else:
-#             self.fields['branch'].queryset = Branch.objects.none()
-
-#         # Initially, no classes are selected
-#         self.fields['student_class'].queryset = Class.objects.none()
-
-#         # Dynamically load classes when a branch is selected
-#         if 'branch' in self.data:
-#             try:
-#                 branch_id = int(self.data.get('branch'))
-#                 self.fields['student_class'].queryset = Class.objects.filter(branches__id=branch_id)
-#             except (ValueError, TypeError):
-#                 self.fields['student_class'].queryset = Class.objects.none()
-#         elif self.instance.pk and self.instance.student_class:
-#             self.fields['student_class'].queryset = Class.objects.filter(branches=self.instance.branch)
-
-#     def save(self, commit=True):
-#         # Save the Student object
-#         student = super().save(commit=False)
-#         user = student.user  # Access the related User object
-
-#         # Update the User's email with the cleaned data from the form
-#         user.email = self.cleaned_data['email']
-
-#         if commit:
-#             user.save()  # Save User changes
-#             student.save()  # Save Student changes
-
-#         return student
 
 
 class ParentGuardianCreationForm(forms.ModelForm):
@@ -257,13 +190,13 @@ class ParentAssignmentForm(forms.Form):
     parent = forms.ModelChoiceField(
         queryset=ParentGuardian.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True,
+        required=False,
         label="Select Parent"
     )
 
     relation_type = forms.ChoiceField(
         choices=ParentStudentRelationship.RELATION_TYPE_CHOICES,
-        required=True,
+        required=False,
         label="Relation Type"
     )
 

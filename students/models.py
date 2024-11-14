@@ -37,7 +37,9 @@ class ParentGuardian(models.Model):
 class ParentStudentRelationship(models.Model):
     RELATION_TYPE_CHOICES = [
         ('father', 'Father'),
-        ('mother', 'Mother'), 
+        ('mother', 'Mother'),
+        ('brother', 'Brother'),
+        ('sister', 'Sister'),   
         ('guardian', 'Guardian'),
         ('grandfather', 'Grandfather'),
         ('grandmother', 'Grandmother'),
@@ -50,6 +52,11 @@ class ParentStudentRelationship(models.Model):
     parent_guardian = models.ForeignKey(ParentGuardian, on_delete=models.CASCADE, related_name='relationships')
     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='relationships')
     relation_type = models.CharField(max_length=20, choices=RELATION_TYPE_CHOICES)
+
+    class Meta:
+        # This constraint prevents the same parent from being linked to the same student more than once
+        unique_together = ('student', 'parent_guardian')
+        
     def __str__(self):
         return f"{self.parent_guardian} is {self.get_relation_type_display()} of {self.student}"
 
