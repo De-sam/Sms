@@ -135,7 +135,7 @@ class StudentCreationForm(forms.ModelForm):
 
 
 class ParentGuardianCreationForm(forms.ModelForm):
-    email = forms.EmailField(required=True, help_text="Required. Will be used for login.")
+    email = forms.EmailField(required=False)
 
     class Meta:
         model = ParentGuardian
@@ -148,9 +148,16 @@ class ParentGuardianCreationForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and User.objects.filter(email=email).exists():
-            raise forms.ValidationError("A user with this email already exists.")
+        if email:
+            # Exclude the current user's email from the uniqueness check
+            if self.instance.pk:  # Check if this is an edit
+                if User.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
+                    raise forms.ValidationError("A user with this email already exists.")
+            else:  # For new records
+                if User.objects.filter(email=email).exists():
+                    raise forms.ValidationError("A user with this email already exists.")
         return email
+
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
@@ -172,35 +179,49 @@ class ParentGuardianCreationForm(forms.ModelForm):
         return username
 
     def save(self, commit=True):
-        print(f"School context in save: {self.school}")  # Debug line
         first_name = self.cleaned_data['first_name']
         last_name = self.cleaned_data['last_name']
         email = self.cleaned_data['email']
 
-        username = self.generate_unique_username(first_name, last_name)
-        user = User(username=username, email=email)
-        default_password = "parent"
-        user.set_password(default_password)
+        # Check if this is a new record or an edit
+        is_new = self.instance.pk is None
 
+        # Generate or update the User instance
+        if is_new:
+            username = self.generate_unique_username(first_name, last_name)
+            user = User(username=username, email=email)
+            user.set_password("parent")  # Set a default password for new users
+        else:
+            user = self.instance.user  # Get the associated User for existing ParentGuardian
+            user.email = email  # Update the user's email if it's an edit
+
+        # Save the User instance
+        user.save()
+
+        # Link the user and save the ParentGuardian instance
         parent = super().save(commit=False)
-        parent.user = user  # Link User to ParentGuardian
+        parent.user = user
+
+        # Link the parent to the school if provided
+        if self.school:
+            parent.school = self.school
 
         if commit:
-            user.save()
             parent.save()
 
-            # Use the short_code from the school context if available
-            short_code = self.school.short_code if self.school else 'default'
-            print(short_code)
-            send_parent_creation_email.delay(
-                email=email,
-                username=username,
-                short_code=short_code,
-                first_name=first_name,
-                last_name=last_name
-            )
+            # Send creation email only for new parents
+            if is_new:
+                short_code = self.school.short_code if self.school else 'default'
+                send_parent_creation_email.delay(
+                    email=email,
+                    username=user.username,
+                    short_code=short_code,
+                    first_name=first_name,
+                    last_name=last_name
+                )
 
         return parent
+
 
 class ParentGuardianWidget(ModelSelect2Widget):
     model = ParentGuardian
@@ -219,8 +240,8 @@ class ParentGuardianWidget(ModelSelect2Widget):
 
 class ParentAssignmentForm(forms.Form):
     parent = forms.ModelChoiceField(
-        queryset=ParentGuardian.objects.all(),
-        widget=Select2Widget(attrs={'class': 'form-control', 'data-placeholder': 'Search for a parent...'}),
+        queryset=ParentGuardian.objects.none(),  # Default to no queryset
+        widget=forms.Select(attrs={'class': 'form-control', 'data-placeholder': 'Search for a parent...'}),
         required=False,
         label="Select Parent"
     )
@@ -230,6 +251,15 @@ class ParentAssignmentForm(forms.Form):
         required=False,
         label="Relation Type"
     )
+
+    def __init__(self, *args, **kwargs):
+        school = kwargs.pop('school', None)  # Extract school context
+        super().__init__(*args, **kwargs)
+
+        if school:
+            # Filter parents linked to the given school
+            self.fields['parent'].queryset = ParentGuardian.objects.filter(school=school)
+
 
 class ParentStudentRelationshipForm(forms.ModelForm):
     class Meta:

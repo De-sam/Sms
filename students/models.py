@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User  # Use the built-in User model for authentication
 from classes.models import Class
 from schools.models import Branch
+from landingpage.models import SchoolRegistration
+
 
 class ParentGuardian(models.Model):
     TITLE_CHOICES = [
@@ -16,22 +18,40 @@ class ParentGuardian(models.Model):
         ('lady', 'Lady'),
     ]
 
-    # Linking to the User model for authentication
+    parent_id = models.CharField(max_length=10, unique=True, editable=False)
+    school = models.ForeignKey(
+        SchoolRegistration, 
+        on_delete=models.CASCADE, 
+        related_name='parents'
+    )  # Directly link parents to schools
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
-        related_name="parent_profile"  # Add related_name for reverse access
-    )    
-    title = models.CharField(max_length=10, choices=TITLE_CHOICES, blank=True, null=True)  # Title field
+        related_name="parent_profile"
+    )
+    title = models.CharField(max_length=10, choices=TITLE_CHOICES, blank=True, null=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)  # Required for login
+    email = models.EmailField(unique=True)
     address = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         title_display = f"{self.get_title_display()} " if self.title else ""
-        return f"{self.last_name} {self.first_name} ( {title_display}) - {self.phone_number}"
+        return f"{self.last_name} {self.first_name} ({title_display}) - {self.phone_number}"
+
+    def save(self, *args, **kwargs):
+        if not self.parent_id:
+            latest_parent = ParentGuardian.objects.order_by('-id').first()
+            if latest_parent and latest_parent.parent_id:
+                latest_id = int(latest_parent.parent_id[1:])
+                new_id = f"P{str(latest_id + 1).zfill(3)}"
+            else:
+                new_id = "P001"
+            self.parent_id = new_id
+        super().save(*args, **kwargs)
+
+
     
 
 class ParentStudentRelationship(models.Model):

@@ -10,4 +10,7 @@ urlpatterns = [
     path('<str:short_code>/get-classes/<int:branch_id>/', views.get_classes, name='get-classes'),
     path('<str:short_code>/bulk-delete-students/', views.bulk_delete_students, name='bulk_delete_students'),
     path('<str:short_code>/parent-list/', views.list_parent_guardians, name='parent_guardian_list'),
+    path('<str:short_code>/edit-parent/<int:parent_id>/', views.edit_parent, name='edit_parent_guardian'),
+    path('<str:short_code>/delete-parent/<int:parent_id>/', views.delete_parent, name='delete_parent_guardian'),
+
 ]
