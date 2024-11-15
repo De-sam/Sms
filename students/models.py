@@ -31,7 +31,7 @@ class ParentGuardian(models.Model):
 
     def __str__(self):
         title_display = f"{self.get_title_display()} " if self.title else ""
-        return f"{title_display}{self.first_name} {self.last_name} - {self.phone_number}"
+        return f"{self.last_name} {self.first_name} ( {title_display}) - {self.phone_number}"
     
 
 class ParentStudentRelationship(models.Model):

@@ -12,6 +12,8 @@ from classes.models import Class
 from schools.models import Branch
 from .utils import generate_student_username
 from .tasks import send_student_creation_email
+from django_select2.forms import Select2Widget
+from django_select2.forms import ModelSelect2Widget
 
 class StudentCreationForm(forms.ModelForm):
     # Additional fields
@@ -80,30 +82,45 @@ class StudentCreationForm(forms.ModelForm):
                 self.fields['student_class'].queryset = Class.objects.none()
 
     def save(self, commit=True):
+        # Determine if this is a new student record
+        new_record = self.instance.pk is None
+        
         # Handle user instance for Student
+        email = self.cleaned_data['email']
+        
+        # Check if editing an existing student with a linked user
         if self.instance.pk and self.instance.user:
             user = self.instance.user
         else:
-            email = self.cleaned_data['email']
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={'username': email, 'email': email}
-            )
-            if created:
-                user.set_password("student")
+            # Create a new User instance
+            user = User(email=email)
+            user.set_password("student")  # Set a default password for the student
 
-        user.email = self.cleaned_data['email']
-        user.save()
+        # Update or set the user's email
+        user.email = email
+        user.save()  # Save user to assign a user ID if new
 
+        # Link user to the student instance
         self.instance.user = user
         student = super().save(commit=False)
         student.branch = self.cleaned_data['branch']
         student.student_class = self.cleaned_data['student_class']
 
+        # Commit to save the student record and generate a unique ID if new
         if commit:
             student.save()
 
-        if not self.instance.pk:
+        # Generate username if not set (e.g., for new users)
+        if not user.username:
+            last_initial = self.cleaned_data['last_name'][0].upper()
+            first_name = self.cleaned_data['first_name'].capitalize()
+            student_id = student.id
+            user.username = f"{last_initial}{first_name}-{student_id}"
+            user.save()
+
+        # Only send the creation email if it's a new student record
+        if new_record:
+            print(f"Sending creation email to: {user.email}, username: {user.username}")
             school_shortcode = self.school.short_code if hasattr(self, 'school') else None
             send_student_creation_email.delay(
                 user.email,
@@ -113,7 +130,7 @@ class StudentCreationForm(forms.ModelForm):
                 self.cleaned_data['last_name']
             )
 
-        return student # Return student instead of user to avoid confusion
+        return student
 
 
 
@@ -185,11 +202,25 @@ class ParentGuardianCreationForm(forms.ModelForm):
 
         return parent
 
-    
+class ParentGuardianWidget(ModelSelect2Widget):
+    model = ParentGuardian
+    search_fields = [
+        'title__icontains',
+        'first_name__icontains',
+        'last_name__icontains',
+    ]
+    # Optionally, set a queryset limit
+    queryset = ParentGuardian.objects.all()
+
+    def label_from_instance(self, obj):
+        title_display = f"{obj.get_title_display()} " if obj.title else ""
+        return f"{title_display}{obj.first_name} {obj.last_name}"
+
+
 class ParentAssignmentForm(forms.Form):
     parent = forms.ModelChoiceField(
         queryset=ParentGuardian.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=Select2Widget(attrs={'class': 'form-control', 'data-placeholder': 'Search for a parent...'}),
         required=False,
         label="Select Parent"
     )

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'landingpage.apps.LandingpageConfig',
     'adminlte3',
     'adminlte3_theme',
+     'django_select2',
     'django.contrib.admin',
     'django.contrib.auth',
      'django.contrib.humanize',
