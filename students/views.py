@@ -12,7 +12,7 @@ from classes.models import Class, Department
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import json
 from django.contrib.auth.models import User
-
+from django.views.decorators.csrf import csrf_protect
 
 @login_required_with_short_code
 @transaction.atomic
@@ -254,35 +254,51 @@ def student_list(request, short_code):
     })
 
 
-@login_required_with_short_code
-@csrf_exempt
+@csrf_protect
 @transaction.atomic
 def bulk_delete_students(request, short_code):
+    """
+    Deletes selected students and their associated user accounts.
+    """
     if request.method == 'POST':
         try:
+            # Parse request data
             data = json.loads(request.body)
             student_ids = data.get('student_ids', [])
 
-            if not student_ids or any(id is None for id in student_ids):
-                return JsonResponse({'success': False, 'message': 'No valid students selected.'}, status=400)
+            if not student_ids:
+                return JsonResponse({'success': False, 'message': 'No students selected for deletion.'}, status=400)
 
-            students_to_delete = Student.objects.filter(id__in=student_ids, student_class__branches__school__short_code=short_code)
+            # Validate the school
+            school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+            # Fetch students to delete
+            students_to_delete = Student.objects.filter(
+                id__in=student_ids,
+                student_class__branches__school=school
+            ).distinct()
 
             if not students_to_delete.exists():
                 return JsonResponse({'success': False, 'message': 'No valid students found for deletion.'}, status=404)
 
+            # Collect associated user IDs
             user_ids = students_to_delete.values_list('user_id', flat=True)
-            students_to_delete.delete()
+
+            # Delete users first to ensure cascading relationships
             User.objects.filter(id__in=user_ids).delete()
-            
-            messages.success(request, 'Selected students and their associated user accounts have been deleted successfully.')
+
+            # Explicitly delete students to ensure related signals or custom logic is applied
+            for student in students_to_delete:
+                student.delete()
+
+            messages.success(request, 'Student record has been deleted successfully.')
             return JsonResponse({'success': True, 'message': 'Selected students and their associated user accounts have been deleted successfully.'})
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Invalid JSON data provided.'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'An error occurred: {str(e)}'}, status=500)
     else:
-        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Invalid request method. Only POST requests are allowed.'}, status=405)
     
 
 def get_classes(request, short_code, branch_id):
