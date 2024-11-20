@@ -35,43 +35,98 @@
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 col-sm-12">
+            <!-- Number of Branches Info Box -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 {% include 'adminlte/components/info_box.html' with color='primary' icon='fas fa-building' title='Number of Branches' number=number_of_branches %}
             </div>
 
             <!-- Number of Students Info Box -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 {% include 'adminlte/components/info_box.html' with color='secondary' icon='fas fa-user-graduate' title='Number of Students' number=number_of_students %}
             </div>
 
-            <!-- Number of Teachers Info Box -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                {% include 'adminlte/components/info_box.html' with color='success' icon='fas fa-chalkboard-teacher' title='Number of Teachers' number=number_of_teachers %}
+            <!-- Number of Staff Info Box -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='success' icon='fas fa-user-tie' title='Number of Staff' number=number_of_staff %}
             </div>
 
-            <!-- Total Attendance Info Box -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                {% include 'adminlte/components/info_box.html' with color='info' icon='fas fa-calendar-check' title='Total Attendance' number=total_attendance %}
+            <!-- Number of Parents Info Box -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                {% include 'adminlte/components/info_box.html' with color='info' icon='fas fa-users' title='Number of Parents' number=number_of_parents %}
             </div>
 
-            <!-- Placeholder Info Box 1 -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                {% include 'adminlte/components/info_box.html' with color='warning' icon='fas fa-cog' title='Placeholder Title' number=Placeholder_title  %}
+            <!-- White Cards Section -->
+            <div class="col-lg-6 col-md-12 col-sm-12">
+                <div class="card bg-white shadow">
+                    <div class="card-header">
+                        <h5 class="card-title">Student Distribution Across Branches</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="branchDoughnutChart"></canvas>
+                    </div>
+                </div>
             </div>
-
-            <!-- Placeholder Info Box 2 -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                {% include 'adminlte/components/info_box.html' with color='danger' icon='fas fa-exclamation-triangle' title='Placeholder Title' number='Content for this box goes here.' %}
-            </div>
-
-            <!-- Placeholder Info Box 3 -->
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                {% include 'adminlte/components/info_box.html' with color='dark' icon='fas fa-info-circle' title='Placeholder Title' number='Content for this box goes here.' %}
-            </div>
-
-
-
-
         </div>
     </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Pass branch data as JSON -->
+<script type="application/json" id="branch_labels">{{ branch_labels|default:"[]"|json_script }}</script>
+<script type="application/json" id="branch_data">{{ branch_data|default:"[]"|json_script }}</script>
+
+<script>
+    // Fetch the chart context
+    const branchDoughnutCtx = document.getElementById('branchDoughnutChart').getContext('2d');
+
+    // Safely load branch data from JSON script tags
+    const branchLabels = JSON.parse(document.getElementById('branch_labels').textContent);
+    const branchData = JSON.parse(document.getElementById('branch_data').textContent);
+
+    // Create the doughnut chart
+    new Chart(branchDoughnutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: branchLabels,
+            datasets: [{
+                label: 'Number of Students',
+                data: branchData,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            let label = tooltipItem.label || '';
+                            if (label) label += ': ';
+                            label += tooltipItem.raw + ' students';
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

@@ -2,15 +2,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as django_login, logout
 from django.contrib import messages
 from landingpage.models import SchoolRegistration
-from schools.models import PrimarySchool,Branch
-from .forms import LoginForm,\
-SchoolProfileUpdateForm, BranchForm,\
-PrimarySchoolForm,PrimaryBranchForm,UpdatePrimarySchoolForm
+from schools.models import PrimarySchool, Branch
+from .forms import (
+    LoginForm,
+    SchoolProfileUpdateForm,
+    BranchForm,
+    PrimarySchoolForm,
+    PrimaryBranchForm,
+    UpdatePrimarySchoolForm,
+)
 from django.urls import reverse
 from django.db import IntegrityError
 from utils.decorator import login_required_with_short_code
-from students.models import ParentStudentRelationship
-
+from students.models import ParentStudentRelationship, Student, ParentGuardian
+from staff.models import Staff
+from django.db.models import Case, When, Value, CharField, Count, Subquery, OuterRef  # Corrected this import
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -82,33 +90,60 @@ def logout_view(request, short_code):
 @login_required_with_short_code
 def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    
-   # Count branches directly associated with the school (secondary branches)
-    secondary_school_branches_count = Branch.objects.filter(school=school).count()
 
-    # Fetch branches associated with the secondary school
-    secondary_school_branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
-    secondary_school_branches_count = secondary_school_branches.count()
+    # Number of branches
+    number_of_branches = Branch.objects.filter(school=school).count()
+    print(f"Number of Branches: {number_of_branches}")
 
-    # Fetch primary schools associated with the secondary school
-    primary_schools = PrimarySchool.objects.filter(parent_school=school)
+    # Number of students
+    number_of_students = Student.objects.filter(branch__school=school).count()
+    print(f"Number of Students: {number_of_students}")
 
-    # Fetch branches associated with all primary schools
-    primary_school_branches = Branch.objects.filter(primary_school__in=primary_schools)
-    primary_school_branches_count = primary_school_branches.count()
+    # Number of staff
+    number_of_staff = Staff.objects.filter(branches__school=school).distinct().count()
+    print(f"Number of Staff: {number_of_staff}")
 
-    # Total branches
-    total_branches = secondary_school_branches_count + primary_school_branches_count
-    
+    # Number of parents
+    number_of_parents = ParentGuardian.objects.filter(school=school).count()
+    print(f"Number of Parents: {number_of_parents}")
+
+    # Data for branch distribution chart
+    branch_distribution = (
+        Branch.objects.filter(school=school)
+        .annotate(
+            branch_type=Case(
+                When(primary_school__isnull=True, then=Value("College")),
+                When(primary_school__isnull=False, then=Value("Primary")),
+                output_field=CharField(),
+            ),
+            student_count=Subquery(
+                Student.objects.filter(branch_id=OuterRef('id'))
+                .values('branch_id')
+                .annotate(count=Count('id'))
+                .values('count')[:1]
+            )
+        )
+        .values('branch_name', 'branch_type', 'student_count')
+    )
+
+    branch_labels = [
+        f"{branch['branch_name']} ({branch['branch_type']})" for branch in branch_distribution
+    ]
+    branch_data = [int(branch['student_count'] or 0) for branch in branch_distribution]
+
+    print(f"Branch Labels: {branch_labels}")
+    print(f"Branch Data: {branch_data}")
+
     context = {
-        'number_of_branches': total_branches,
-        'number_of_students': 5900,
-        'number_of_teachers': 25,
-        'total_attendance': 4500,
-        'Placeholder_title': 'Sample Title',
-        'school':school
-        # Add other context variables as needed
+        'school': school,
+        'number_of_branches': number_of_branches,
+        'number_of_students': number_of_students,
+        'number_of_staff': number_of_staff,
+        'number_of_parents': number_of_parents,
+        'branch_labels_json': json.dumps(branch_labels, cls=DjangoJSONEncoder),
+        'branch_data_json': json.dumps(branch_data, cls=DjangoJSONEncoder),
     }
+
     return render(request, 'schools/base_dash.html', context)
 
 @login_required_with_short_code
