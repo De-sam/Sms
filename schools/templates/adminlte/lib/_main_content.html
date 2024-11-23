@@ -1,0 +1,77 @@
+<div class="container-fluid">
+    <div class="row">
+        <!-- Welcome and Setup Card -->
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Welcome to the Dashboard!</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Welcome to your new dashboard, {{ user.first_name }}! Please set up your school by filling out the necessary information. If you need assistance, consult the setup guide or contact support.
+                    </p>
+                    <a href="" class="btn btn-primary">Set Up Your School</a>
+                </div>
+            </div>
+        </div>
+        <!-- Info Boxes Section -->
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="info-box bg-primary text-white shadow">
+                <span class="info-box-icon">
+                    <i class="fas fa-building"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Branches</span>
+                    <span class="info-box-number">{{ number_of_branches }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="info-box bg-secondary text-white shadow">
+                <span class="info-box-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Students</span>
+                    <span class="info-box-number">{{ number_of_students }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="info-box bg-success text-white shadow">
+                <span class="info-box-icon">
+                    <i class="fas fa-user-tie"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Staff</span>
+                    <span class="info-box-number">{{ number_of_staff }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="info-box bg-info text-white shadow">
+                <span class="info-box-icon">
+                    <i class="fas fa-users"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Parents</span>
+                    <span class="info-box-number">{{ number_of_parents }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

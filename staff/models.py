@@ -45,7 +45,7 @@ class Staff(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     branches = models.ManyToManyField(Branch, related_name='staff')
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    gender   = models.CharField(max_length=10, choices=GENDER_CHOICES)
     marital_status = models.CharField(max_length=10, choices=MARITAL_STATUS_CHOICES)
     date_of_birth = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=15)
