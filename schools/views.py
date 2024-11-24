@@ -92,14 +92,27 @@ def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user = request.user
 
-     # Determine user roles
+    # Determine user roles exclusively
     is_school_admin = user == school.admin_user
-    is_teacher = hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher'
-    is_student = hasattr(user, 'student_profile') and user.student_profile.branch.school == school
-    is_parent = hasattr(user, 'parent_profile') and ParentStudentRelationship.objects.filter(
-        parent_guardian=user.parent_profile,
-        student__branch__school=school
-    ).exists()
+    is_teacher = False
+    is_student = False
+    is_parent = False
+
+    if not is_school_admin:
+        if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
+            is_teacher = True
+        elif hasattr(user, 'student_profile') and user.student_profile.branch.school == school:
+            is_student = True
+        elif hasattr(user, 'parent_profile') and ParentStudentRelationship.objects.filter(
+            parent_guardian=user.parent_profile,
+            student__branch__school=school
+        ).exists():
+            is_parent = True
+
+    print(f"Is Admin: {is_school_admin}")
+    print(f"Is Teacher: {is_teacher}")
+    print(f"Is Student: {is_student}")
+    print(f"Is Parent: {is_parent}")
 
     # Number of branches
     number_of_branches = Branch.objects.filter(school=school).count()

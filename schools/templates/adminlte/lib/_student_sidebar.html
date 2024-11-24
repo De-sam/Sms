@@ -1,7 +1,7 @@
 {% load adminlte_helpers %}
-{%load static %}
+{% load static %}
 <!-- Left side column. contains the sidebar -->
-<aside class="main-sidebar sidebar-dark-primary  elevation-4">
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
      <!-- Brand Logo -->
     {% block logo %}
     {% if school.short_code %}
@@ -15,213 +15,192 @@
             
             {% block logo_text %}<span style="font-size: x-small;" class="brand-text font-weight-light">{{ school.school_name }}</span>{% endblock %}
         </a>
-        {% endif %}
+    {% endif %}
     {% endblock %}
     <!-- sidebar: style can be found in sidebar.less -->
     <div class="sidebar">
         <!-- Sidebar user panel -->
         {% block user_panel %}
-        <!-- Sidebar user panel (optional) -->
-      <!-- <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="{% avatar_url size=90 %}" class="img-circle elevation-2" alt="User Image">
-        </div>
-        <div class="info">
-          <a href="#" class="d-block">{% firstof request.user.get_full_name request.user.username %}</a>
-        </div>
-      </div> -->
+        <!-- Removed the profile image and user panel -->
         {% endblock %}
 
         {% block form %}{% endblock %}
 
-        <!-- sidebar menu: : style can be found in sidebar.less -->
+        <!-- sidebar menu: style can be found in sidebar.less -->
         {% block nav_links_ul %}
         <nav class="mt-2 overflow-auto">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             {% block nav_links_outer %}
-            <li class="nav-header">{% block nav_heading %}MAIN NAVIGATION{% endblock %}</li>
+            <li class="nav-header">{% block nav_heading %}STUDENT NAVIGATION{% endblock %}</li>
 
             {% block nav_links %}
-            <li class="nav-item">
+            <li class="nav-item has-treeview">
                 <a href="{% url 'schools_dashboard' school.short_code %}" class="nav-link">
                     <i class="nav-icon fas fa-tachometer-alt"></i> 
-                    <p>Dashboard</p>
+                    <p>Dashboard <i class="right fas fa-angle-left"></i></p>
                 </a>
-            </li>
-            
-            <li class="nav-item has-tree-view">
-                <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-school"></i>
-                    <p>School profile/Setup    </p>
-                    <i class="right fas fa-angle-left"></i>
-                </a>
-                <ul class="nav nav-treeview menu-open">
+                <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="{% url 'school_profile' school.short_code %}" class="nav-link">
+                        <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                           School setup
-                        </a>
-                       
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'branch_list' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
-                            Branch setup
-                        </a>
-                    </li>   
-                </ul>
-            </li>
-            
-            <li class="nav-item has-tree-view">
-                <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-user-graduate"></i>  
-                    <p>Students</p>
-                    <i class="right fas fa-angle-left"></i>
-                </a>
-                <ul class="nav nav-treeview">
-                    <li class="nav-item">
-                        <a href="{% url 'add-student' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>Add New Student Record
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'student_list' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>Students Records
+                            Overview
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Reset Credentials
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Deactivation
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Transfer
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Students Misconduct
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Misconduct Records
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Statistics
                         </a>
                     </li>
                 </ul>
             </li>
             
-            <li class="nav-item has-tree-view">
+            <li class="nav-item has-treeview">
                 <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-users"></i> 
-                    <p>Parents</p>
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="nav-icon fas fa-book"></i>
+                    <p>My Courses <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="{% url 'add-parent' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add Parents Record
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'parent_guardian_list' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> All Parents Records
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Current Courses
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Parents Profile
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Completed Courses
                         </a>
                     </li>
                 </ul>
             </li>
             
-            <li class="nav-item has-tree-view">
+            <li class="nav-item has-treeview">
                 <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-users"></i> 
-                    <p>Staff and Teachers</p>
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="nav-icon fas fa-user-graduate"></i>
+                    <p>My Grades <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="{% url 'pre_add_staff' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add New Staff
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Latest Grades
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'staff_list' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> View Staff
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'teacher_assignments' school.short_code %}" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> View Staff Assignments
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Grade History
                         </a>
                     </li>
                 </ul>
             </li>
             
-            <li class="nav-item has-tree-view">
+            <li class="nav-item has-treeview">
                 <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-book"></i> 
-                    <p>Academic Reports</p>
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="nav-icon fas fa-calendar-alt"></i>
+                    <p>Class Schedule <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (KG)
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Weekly Schedule
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Nur)
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Sec)
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Exam Schedule
                         </a>
                     </li>
                 </ul>
             </li>
             
-            <li class="nav-item has-tree-view">
+            <li class="nav-item has-treeview">
                 <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-dollar-sign"></i> 
-                    <p>Accounts & Finance</p>
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="nav-icon fas fa-bullhorn"></i>
+                    <p>Announcements <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Add Menu for Accounts
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            General Announcements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Course Announcements
                         </a>
                     </li>
                 </ul>
             </li>
             
-            <li class="nav-item has-tree-view">
+            <li class="nav-item has-treeview">
                 <a href="#" class="nav-link">
-                    <i class="nav-icon fas fa-briefcase"></i> 
-                    <p>Job Applicants</p>
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="nav-icon fas fa-comments"></i>
+                    <p>Messages <i class="right fas fa-angle-left"></i></p>
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Application
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Inbox
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Sent Messages
                         </a>
                     </li>
                 </ul>
-            </li>            
-                
+            </li>
+            
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-alt"></i>
+                    <p>Assignments <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Current Assignments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Submitted Assignments
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-signature"></i>
+                    <p>Attendance <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            View Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Attendance Reports
+                        </a>
+                    </li>
+                </ul>
+            </li>
             {% endblock nav_links %}
             {% endblock nav_links_outer %}
             </ul>

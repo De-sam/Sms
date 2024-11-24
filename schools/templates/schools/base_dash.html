@@ -2,42 +2,31 @@
 
 {% block title %}Dashboard - {{ school.school_name }}{% endblock %}
 
-{% block sidebar %}
+{% block nav_sidebar %}
     {% if is_school_admin %}
         {% include 'adminlte/lib/_main_sidebar.html' %}
-    {% endif %}
-    
-    {% if is_parent %}
+    {% elif is_teacher %}
+        {% include 'adminlte/lib/_teacher_sidebar.html' %}
+    {% elif is_student %}
+        {% include 'adminlte/lib/_student_sidebar.html' %}
+    {% elif is_parent %}
         {% include 'adminlte/lib/_parent_sidebar.html' %}
     {% endif %}
-    
-    {% if is_student %}
-        {% include 'adminlte/lib/_student_sidebar.html' %}
-    {% endif %}
+{% endblock nav_sidebar %}
 
-    {% if is_teacher %}
-        {% include 'adminlte/lib/_teacher_sidebar.html' %}
-    {% endif %}
-
-{% endblock %}
 
 {% block content %}
+
+
     {% if is_school_admin %}
         {% include 'adminlte/lib/_main_content.html' %}
-    {% endif %}
-    
-    {% if is_parent %}
+    {% elif is_teacher %}
+        {% include 'adminlte/lib/_teacher_content.html' %}
+    {% elif is_student %}
+        {% include 'adminlte/lib/_student_content.html' %}
+    {% elif is_parent %}
         {% include 'adminlte/lib/_parent_content.html' %}
     {% endif %}
-    
-    {% if is_student %}
-        {% include 'adminlte/lib/_student_content.html' %}
-    {% endif %}
-
-    {% if is_teacher %}
-        {% include 'adminlte/lib/_teacher_content.html' %}
-    {% endif %}
-
 {% endblock %}
 
 {% block extra_scripts %}
