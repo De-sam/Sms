@@ -68,7 +68,19 @@
                                 <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
                                 Branch setup
                             </a>
-                        </li>   
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'create_session' short_code=school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
+                                Add New Session
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'list_sessions' short_code=school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
+                                List Sessions
+                            </a>
+                        </li> 
                     </ul>
                 </li>
                 

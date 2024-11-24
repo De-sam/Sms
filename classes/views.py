@@ -5,10 +5,13 @@ from django.core.paginator import Paginator
 from schools.models import Branch, PrimarySchool
 from landingpage.models import SchoolRegistration
 from classes.models import Class,Subject
-from schools.views import login_required_with_short_code
+from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_required
+
 
 
 @login_required_with_short_code
+@admin_required
 def assign_classes_primary(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     primary_school = get_object_or_404(PrimarySchool, parent_school=school)
@@ -34,6 +37,7 @@ def assign_classes_primary(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def assign_classes_secondary(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     secondary_branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
@@ -56,6 +60,7 @@ def assign_classes_secondary(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def add_class_primary(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     primary_branches = Branch.objects.filter(primary_school__parent_school=school)
@@ -90,6 +95,7 @@ def add_class_primary(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def add_class_secondary(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     secondary_branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
@@ -122,6 +128,7 @@ def add_class_secondary(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def primary_school_classes(request, short_code):
     # Get the school associated with the short_code
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -169,6 +176,7 @@ def primary_school_classes(request, short_code):
     return render(request, 'classes/primary_school_classes.html', context)
 
 @login_required_with_short_code
+@admin_required
 def secondary_school_classes(request, short_code):
     # Get the school associated with the short_code
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -211,6 +219,7 @@ def secondary_school_classes(request, short_code):
 from django.core.paginator import Paginator
 
 @login_required_with_short_code
+@admin_required
 def sec_subjects_by_branch(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school).exclude(primary_school__isnull=False)
@@ -248,6 +257,7 @@ def sec_subjects_by_branch(request, short_code):
     return render(request, 'classes/subjects_by_branch.html', context)
 
 @login_required_with_short_code
+@admin_required
 def pry_subjects_by_branch(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     primary_school = get_object_or_404(PrimarySchool, parent_school=school)
@@ -285,7 +295,9 @@ def pry_subjects_by_branch(request, short_code):
     }
 
     return render(request, 'classes/subjects_by_branch.html', context)
+
 @login_required_with_short_code
+@admin_required
 def add_subject_pry(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)
@@ -302,6 +314,7 @@ def add_subject_pry(request, short_code):
     return render(request, 'classes/add_subject.html', {'form': form, 'school': school, 'branch': branches})
 
 @login_required_with_short_code
+@admin_required
 def add_subject_sec(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)

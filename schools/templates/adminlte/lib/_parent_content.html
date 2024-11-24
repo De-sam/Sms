@@ -19,7 +19,12 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text">
-                        Welcome to your new parent dashboard, {{ user.first_name }}! Please set up your school by filling out the necessary information. If you need assistance, consult the setup guide or contact support.
+                        Welcome to your new parent dashboard, {{ user.first_name }}!
+                        <ol>
+                            <li>
+                                {{parent_students   }}
+                            </li>
+                        </ol>
                     </p>
                     <a href="" class="btn btn-primary">Set Up Your School</a>
                 </div>

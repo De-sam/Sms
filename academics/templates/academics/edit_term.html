@@ -1,0 +1,21 @@
+{% extends "adminlte/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header bg-warning text-white">
+            <h3>Edit Term: {{ term.term_name }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-success">Update Term</button>
+                    <!-- Use term.session.id to get the correct session ID -->
+                    <a href="{% url 'list_terms' short_code=school.short_code session_id=term.session.id %}" class="btn btn-secondary">Back to Terms</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

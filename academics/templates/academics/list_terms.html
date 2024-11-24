@@ -1,0 +1,53 @@
+{% extends "adminlte/base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h3>Terms for Session: {{ session.session_name }}</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Term Name</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for term in terms %}
+                    <tr>
+                        <td>{{ term.term_name }}</td>
+                        <td>{{ term.start_date }}</td>
+                        <td>{{ term.end_date }}</td>
+                        <td>
+                            <a href="{% url 'edit_term' short_code=school.short_code pk=term.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination Links -->
+            <div class="pagination mt-3">
+                <span class="step-links">
+                    {% if terms.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ terms.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ terms.number }} of {{ terms.paginator.num_pages }}
+                    </span>
+
+                    {% if terms.has_next %}
+                        <a href="?page={{ terms.next_page_number }}">next</a>
+                        <a href="?page={{ terms.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

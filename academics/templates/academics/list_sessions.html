@@ -1,0 +1,62 @@
+{% extends "adminlte/base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h3>Sessions for {{ school.school_name }}</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Session Name</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Is Active?</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td>{{ session.session_name }}</td>
+                        <td>{{ session.start_date }}</td>
+                        <td>{{ session.end_date }}</td>
+                        <td>
+                            {% if session.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'edit_session' short_code=school.short_code pk=session.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="{% url 'list_terms' short_code=school.short_code session_id=session.pk %}" class="btn btn-primary btn-sm">View Terms</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination Links -->
+            <div class="pagination mt-3">
+                <span class="step-links">
+                    {% if sessions.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ sessions.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ sessions.number }} of {{ sessions.paginator.num_pages }}
+                    </span>
+
+                    {% if sessions.has_next %}
+                        <a href="?page={{ sessions.next_page_number }}">next</a>
+                        <a href="?page={{ sessions.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

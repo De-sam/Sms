@@ -11,6 +11,7 @@ from django.core.paginator import Paginator, EmptyPage,PageNotAnInteger
 from django.db.models import Q
 from .models import Staff
 from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_required
 from django.db import transaction
 from django.http import HttpResponse
 import zipfile
@@ -39,6 +40,7 @@ def save_temp_file(uploaded_file):
 
 
 @login_required_with_short_code
+@admin_required
 @transaction.atomic
 def upload_staff(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -75,6 +77,7 @@ def upload_staff(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def download_staff_template(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)
@@ -157,6 +160,7 @@ def download_staff_template(request, short_code):
     return response
 
 @login_required_with_short_code
+@admin_required
 def pre_add_staff(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)
@@ -167,6 +171,7 @@ def pre_add_staff(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 @transaction.atomic
 def add_staff(request, short_code):
     # Fetch the school object and its branches
@@ -204,6 +209,7 @@ def add_staff(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def staff_list(request, short_code):
     # Generate a unique cache key based on the school and query parameters
     cache_key = f"staff_list_{short_code}_{request.GET.get('q', '')}_{request.GET.get('page', 1)}_{request.GET.get('status', '').lower()}"
@@ -263,6 +269,7 @@ def staff_list(request, short_code):
     return response
 
 @login_required_with_short_code
+@admin_required
 def edit_staff(request, short_code, staff_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     staff = get_object_or_404(Staff, id=staff_id)
@@ -297,6 +304,7 @@ def edit_staff(request, short_code, staff_id):
     })
 
 @login_required_with_short_code
+@admin_required
 def delete_staff(request, short_code, staff_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -325,6 +333,7 @@ def delete_staff(request, short_code, staff_id):
 
 
 @transaction.atomic
+@admin_required
 @login_required_with_short_code
 def assign_subjects_to_staff(request, short_code, staff_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -381,6 +390,7 @@ def assign_subjects_to_staff(request, short_code, staff_id):
 
 
 @login_required_with_short_code
+@admin_required
 def teacher_assignments_view(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     

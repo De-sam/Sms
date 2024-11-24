@@ -13,8 +13,6 @@
         {% include 'adminlte/lib/_parent_sidebar.html' %}
     {% elif is_accountant %}
         {% include 'adminlte/lib/_accounts_sidebar.html' %}
-    {% else %}
-        <p>Invalid role detected. Please contact your administrator.</p>
     {% endif %}
 {% endblock nav_sidebar %}
 

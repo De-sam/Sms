@@ -14,6 +14,7 @@ from .forms import (
 from django.urls import reverse
 from django.db import IntegrityError
 from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_required,teacher_required
 from students.models import ParentStudentRelationship, Student, ParentGuardian
 from staff.models import Staff
 from django.db.models import Case, When, Value, CharField, Count, Subquery, OuterRef  # Corrected this import
@@ -113,63 +114,9 @@ def dashboard(request, short_code):
         ).exists():
             is_parent = True
 
-    print(f"Is Admin: {is_school_admin}")
-    print(f"Is Teacher: {is_teacher}")
-    print(f"Is Student: {is_student}")
-    print(f"Is Parent: {is_parent}")
-    print(f"Is Accountant: {is_accountant}")
-
-    # Number of branches
-    number_of_branches = Branch.objects.filter(school=school).count()
-    print(f"Number of Branches: {number_of_branches}")
-
-    # Number of students
-    number_of_students = Student.objects.filter(branch__school=school).count()
-    print(f"Number of Students: {number_of_students}")
-
-    # Number of staff
-    number_of_staff = Staff.objects.filter(branches__school=school).distinct().count()
-    print(f"Number of Staff: {number_of_staff}")
-
-    # Number of parents
-    number_of_parents = ParentGuardian.objects.filter(school=school).count()
-    print(f"Number of Parents: {number_of_parents}")
-
-    # Data for branch distribution chart
-    branch_distribution = (
-        Branch.objects.filter(school=school)
-        .annotate(
-            branch_type=Case(
-                When(primary_school__isnull=True, then=Value("College")),
-                When(primary_school__isnull=False, then=Value("Primary")),
-                output_field=CharField(),
-            ),
-            student_count=Subquery(
-                Student.objects.filter(branch_id=OuterRef('id'))
-                .values('branch_id')
-                .annotate(count=Count('id'))
-                .values('count')[:1]
-            )
-        )
-        .values('branch_name', 'branch_type', 'student_count')
-    )
-
-    branch_labels = [
-        f"{branch['branch_name']} ({branch['branch_type']})" for branch in branch_distribution
-    ]
-    branch_data = [int(branch['student_count'] or 0) for branch in branch_distribution]
-
-    print(f"Branch Labels: {branch_labels}")
-    print(f"Branch Data: {branch_data}")
-
+    # Base context for all roles #
     context = {
         'school': school,
-        'number_of_branches': number_of_branches,
-        'number_of_students': number_of_students,
-        'number_of_staff': number_of_staff,
-        'number_of_parents': number_of_parents,
-        'branch_labels_json': json.dumps(branch_labels, cls=DjangoJSONEncoder),
-        'branch_data_json': json.dumps(branch_data, cls=DjangoJSONEncoder),
         'is_school_admin': is_school_admin,
         'is_teacher': is_teacher,
         'is_student': is_student,
@@ -177,9 +124,92 @@ def dashboard(request, short_code):
         'is_accountant': is_accountant,
     }
 
+################## Add admin-specific data #################################
+    if is_school_admin:
+        number_of_branches = Branch.objects.filter(school=school).count()
+        number_of_students = Student.objects.filter(branch__school=school).count()
+        number_of_staff = Staff.objects.filter(branches__school=school).distinct().count()
+        number_of_parents = ParentGuardian.objects.filter(school=school).count()
+
+        # Data for branch distribution chart
+        branch_distribution = (
+            Branch.objects.filter(school=school)
+            .annotate(
+                branch_type=Case(
+                    When(primary_school__isnull=True, then=Value("College")),
+                    When(primary_school__isnull=False, then=Value("Primary")),
+                    output_field=CharField(),
+                ),
+                student_count=Subquery(
+                    Student.objects.filter(branch_id=OuterRef('id'))
+                    .values('branch_id')
+                    .annotate(count=Count('id'))
+                    .values('count')[:1]
+                )
+            )
+            .values('branch_name', 'branch_type', 'student_count')
+        )
+
+        branch_labels = [
+            f"{branch['branch_name']} ({branch['branch_type']})" for branch in branch_distribution
+        ]
+        branch_data = [int(branch['student_count'] or 0) for branch in branch_distribution]
+
+        # Add admin-specific context
+        context.update({
+            'number_of_branches': number_of_branches,
+            'number_of_students': number_of_students,
+            'number_of_staff': number_of_staff,
+            'number_of_parents': number_of_parents,
+            'branch_labels_json': json.dumps(branch_labels, cls=DjangoJSONEncoder),
+            'branch_data_json': json.dumps(branch_data, cls=DjangoJSONEncoder),
+        })
+
+################################ Add teacher-specific data #######################################################
+    if is_teacher:
+        # Example: Add a list of classes the teacher is assigned to
+        teacher_classes = []  # Assuming there's a related name `classes`
+        context.update({
+            'teacher_classes': teacher_classes,
+            'assignments_due': [],  # Placeholder for teacher-specific data like assignments
+        })
+
+######################## Add student-specific data #########################################
+    if is_student:
+        # Example: Add student-specific information like grades, attendance, and assignments
+        student_profile = []
+        student_attendance = []  # Placeholder for attendance records
+        student_grades = []  # Placeholder for student's grades
+        student_assignments = []  # Placeholder for upcoming assignments
+
+        context.update({
+            'student_profile': student_profile,
+            'student_attendance': student_attendance,
+            'student_grades': student_grades,
+            'student_assignments': student_assignments,
+        })
+
+####################### Add parent-specific data ################################
+    if is_parent:
+        # Example: Add a list of students related to the parent
+        parent_students = ParentStudentRelationship.objects.filter(parent_guardian=user.parent_profile).select_related('student')
+        context.update({
+            'parent_students': parent_students,
+            'parent_notifications': [],  # Placeholder for parent notifications
+        })
+
+######################### Add accountant-specific data ########################
+    if is_accountant:
+        # Example: Add financial information
+        financial_reports = []  # Placeholder for financial reports
+        context.update({
+            'financial_reports': financial_reports,
+        })
+
     return render(request, 'schools/base_dash.html', context)
 
 @login_required_with_short_code
+@admin_required
 def school_profile(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -195,6 +225,7 @@ def school_profile(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def edit_sch_profile(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -210,6 +241,7 @@ def edit_sch_profile(request, short_code):
     return render(request, "schools/edit_sch_profile.html", {'school': school, 'form': form})
 
 @login_required_with_short_code
+@admin_required
 def edit_pry_profile(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -238,6 +270,7 @@ def edit_pry_profile(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def add_branch(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -255,6 +288,7 @@ def add_branch(request, short_code):
     return render(request, 'schools/add_branch.html', {'form': form, 'school': school})
 
 @login_required_with_short_code
+@admin_required
 def add_primary_branch(request, short_code):
     # Get the SchoolRegistration instance for the provided short_code
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -287,6 +321,7 @@ def add_primary_branch(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def branch_list(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     
@@ -311,6 +346,7 @@ def branch_list(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def add_primary_school(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
