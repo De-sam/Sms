@@ -11,13 +11,14 @@
         {% include 'adminlte/lib/_student_sidebar.html' %}
     {% elif is_parent %}
         {% include 'adminlte/lib/_parent_sidebar.html' %}
+    {% elif is_accountant %}
+        {% include 'adminlte/lib/_accounts_sidebar.html' %}
+    {% else %}
+        <p>Invalid role detected. Please contact your administrator.</p>
     {% endif %}
 {% endblock nav_sidebar %}
 
-
 {% block content %}
-
-
     {% if is_school_admin %}
         {% include 'adminlte/lib/_main_content.html' %}
     {% elif is_teacher %}
@@ -26,8 +27,12 @@
         {% include 'adminlte/lib/_student_content.html' %}
     {% elif is_parent %}
         {% include 'adminlte/lib/_parent_content.html' %}
+    {% elif is_accountant %}
+        {% include 'adminlte/lib/_accounts_content.html' %}
+    {% else %}
+        <p>Invalid role detected. Please contact your administrator.</p>
     {% endif %}
-{% endblock %}
+{% endblock content %}
 
 {% block extra_scripts %}
 {% endblock %}

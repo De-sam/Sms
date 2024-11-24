@@ -1,0 +1,169 @@
+{% load adminlte_helpers %}
+{% load static %}
+<!-- Left side column. contains the sidebar -->
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+     <!-- Brand Logo -->
+    {% block logo %}
+    {% if school.short_code %}
+        <a href="{% url 'schools_dashboard' school.short_code %}" class="brand-link">
+            
+            {% if school.logo %}
+            <img src="{{ school.logo.url }}" alt="school Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+            {% else %}
+                <span>No logo available</span>
+            {% endif %}
+            
+            {% block logo_text %}<span style="font-size: x-small;" class="brand-text font-weight-light">{{ school.school_name }}</span>{% endblock %}
+        </a>
+    {% endif %}
+    {% endblock %}
+    <!-- sidebar: style can be found in sidebar.less -->
+    <div class="sidebar">
+        <!-- Sidebar user panel -->
+        {% block user_panel %}
+        <!-- Removed the profile image and user panel -->
+        {% endblock %}
+
+        {% block form %}{% endblock %}
+
+        <!-- sidebar menu: style can be found in sidebar.less -->
+        {% block nav_links_ul %}
+        <nav class="mt-2 overflow-auto">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% block nav_links_outer %}
+            <li class="nav-header">{% block nav_heading %}ACCOUNTS NAVIGATION{% endblock %}</li>
+
+            {% block nav_links %}
+            <li class="nav-item has-treeview">
+                <a href="{% url 'schools_dashboard' school.short_code %}" class="nav-link">
+                    <i class="nav-icon fas fa-tachometer-alt"></i> 
+                    <p>Dashboard <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Monthly Report
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-money-bill-wave"></i>
+                    <p>Fee Management <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Setup Fees
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Fee Collection
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                    <p>Invoices <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Generate Invoice
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            View Invoices
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-coins"></i>
+                    <p>Payments <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            View Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Record Payment
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-chart-line"></i>
+                    <p>Financial Reports <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Balance Sheet
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Income Statement
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-receipt"></i>
+                    <p>Receipts <i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            View Receipts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Generate Receipt
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            {% endblock nav_links %}
+            {% endblock nav_links_outer %}
+            </ul>
+            </nav>
+        {% endblock nav_links_ul %}
+    </div>
+    <!-- /.sidebar -->
+</aside>
