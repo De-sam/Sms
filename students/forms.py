@@ -14,6 +14,7 @@ from .utils import generate_student_username
 from .tasks import send_student_creation_email
 from django_select2.forms import Select2Widget
 from django_select2.forms import ModelSelect2Widget
+from academics.models import Session
 
 class StudentCreationForm(forms.ModelForm):
     # Additional fields
@@ -106,6 +107,12 @@ class StudentCreationForm(forms.ModelForm):
         student.branch = self.cleaned_data['branch']
         student.student_class = self.cleaned_data['student_class']
 
+        # Automatically assign the current session
+        school = self.cleaned_data['branch'].school  # Assuming branch is linked to a school
+        current_session = Session.objects.filter(school=school, is_active=True).first()
+        if current_session:
+            student.current_session = current_session
+
         # Commit to save the student record and generate a unique ID if new
         if commit:
             student.save()
@@ -120,15 +127,17 @@ class StudentCreationForm(forms.ModelForm):
 
         # Only send the creation email if it's a new student record
         if new_record:
-            print(f"Sending creation email to: {user.email}, username: {user.username}")
-            school_shortcode = self.school.short_code if hasattr(self, 'school') else None
-            send_student_creation_email.delay(
-                user.email,
-                user.username,
-                school_shortcode,
-                self.cleaned_data['first_name'],
-                self.cleaned_data['last_name']
-            )
+            school_shortcode = getattr(student.branch.school, 'short_code', None)
+            if school_shortcode:
+                send_student_creation_email.delay(
+                    user.email,
+                    user.username,
+                    school_shortcode,
+                    self.cleaned_data['first_name'],
+                    self.cleaned_data['last_name']
+                )
+            else:
+                print("Error: School short_code not found while sending email.")
 
         return student
 
