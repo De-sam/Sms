@@ -4,7 +4,7 @@ from django.contrib.auth.models import User  # Use the built-in User model for a
 from classes.models import Class
 from schools.models import Branch
 from landingpage.models import SchoolRegistration
-
+from academics.models import Session 
 
 class ParentGuardian(models.Model):
     TITLE_CHOICES = [
@@ -108,43 +108,57 @@ class Student(models.Model):
         ('non_nigerian', 'Non-Nigerian'),
     ]
 
-    # User authentication (linked to Django's User model)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
+    current_session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='enrolled_students'
+    )
 
-    # Student personal details
+    # Student personal details (existing fields unchanged)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     guardians = models.ManyToManyField(ParentGuardian, through='ParentStudentRelationship', related_name='students')
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')])
     date_of_birth = models.DateField()
-    student_id = models.CharField(max_length=20, unique=True, editable=False)  # Generated on save
-    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, blank=True, null=True)
+    student_id = models.CharField(max_length=20, unique=True, editable=False)
+    blood_group = models.CharField(max_length=3, choices=[
+        ('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-'), ('O+', 'O+'), ('O-', 'O-')
+    ], blank=True, null=True)
     peculiar_illnesses = models.TextField(blank=True, null=True)
-    nationality = models.CharField(max_length=20, choices=NATIONALITY_CHOICES)
+    nationality = models.CharField(max_length=20, choices=[
+        ('nigerian', 'Nigerian'), ('non_nigerian', 'Non-Nigerian')
+    ])
     address = models.CharField(max_length=255, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='students/profile_pictures/', blank=True, null=True)
-
-    # Class and academic information
+    
     admission_date = models.DateField()
     last_admitted_class = models.CharField(max_length=100)  # Last class admitted into
-    student_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')  
-    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)  
+    student_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # Status tracking
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    status = models.CharField(max_length=10, choices=[('active', 'Active'), ('inactive', 'Inactive')], default='active')
 
-    # Timestamps for record tracking
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} (ID: {self.student_id})"
+        return f"{self.first_name} {self.last_name} (ID: {self.student_id}) - {self.current_session.session_name if self.current_session else 'No Session'}"
 
     def save(self, *args, **kwargs):
         # Automatically generate a unique student ID if not provided
         if not self.student_id:
             self.student_id = f"STU{str(self.user.id).zfill(5)}"  # Example: STU00001
-        
+
+        # Set current session if it's not set and there is an active session for the school
+        if not self.current_session:
+            active_session = Session.objects.filter(is_active=True, school=self.branch.school).first()
+            if active_session:
+                self.current_session = active_session
+
         super(Student, self).save(*args, **kwargs)
 
     @property
@@ -154,12 +168,14 @@ class Student(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['first_name', 'last_name']),  # Index for searching students by name
-            models.Index(fields=['student_id']),  # Unique index for student ID
-            models.Index(fields=['student_class']),  # Foreign key index for class
-            models.Index(fields=['user']),  # Index on user for authentication
-            models.Index(fields=['status']),  # Index on status (active/inactive)
+            models.Index(fields=['first_name', 'last_name']),
+            models.Index(fields=['student_id']),
+            models.Index(fields=['student_class']),
+            models.Index(fields=['user']),
+            models.Index(fields=['status']),
+            models.Index(fields=['current_session']),  # Added index for session
         ]
+
 
 class StudentTransferLog(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='transfer_logs')

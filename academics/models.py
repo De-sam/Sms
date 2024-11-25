@@ -21,20 +21,27 @@ class Session(models.Model):
         ]
 
     def save(self, *args, **kwargs):
+        # Check if the object is being updated or created
+        creating = not self.pk
+
+        # If editing an existing session, check if the start date has changed
+        if not creating:
+            original_session = Session.objects.get(pk=self.pk)
+            start_date_changed = original_session.start_date != self.start_date
+        else:
+            start_date_changed = True
+
         # Set the default end_date to be 9 months after the start_date if not provided
-        if not self.end_date:
+        # or if the start_date has been changed and the third term hasn't explicitly set the end date.
+        if (not self.end_date) or (start_date_changed and not self.terms.filter(term_name='Third Term', end_date__isnull=False).exists()):
             self.end_date = self.start_date + timedelta(days=9 * 30)  # Roughly 9 months (30 days each)
 
         # Automatically set `is_active` based on the current date and session dates
         today = date.today()
-        if self.start_date <= today <= self.end_date:
-            self.is_active = True
-        else:
-            self.is_active = False
+        self.is_active = self.start_date <= today <= self.end_date
 
-        creating = not self.pk  # Check if this is a new session being created
         super().save(*args, **kwargs)
-        
+
         # Automatically create three terms for every new session
         if creating:
             Term.objects.create(session=self, term_name='First Term')

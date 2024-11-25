@@ -10,7 +10,7 @@ class SessionForm(forms.ModelForm):
             'start_date': forms.SelectDateWidget(),
         }
         labels = {
-            'session_name': 'Session Name (e.g., 2023/24)',
+            'session_name': 'Session Name (e.g., 2021/2022)',
             'start_date': 'Start Date',
         }
 
