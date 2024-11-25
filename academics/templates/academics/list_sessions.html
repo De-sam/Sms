@@ -30,8 +30,15 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'edit_session' short_code=school.short_code pk=session.pk %}" class="btn btn-warning btn-sm">Edit</a>
-                            <a href="{% url 'list_terms' short_code=school.short_code session_id=session.pk %}" class="btn btn-primary btn-sm">View Terms</a>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ session.pk }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="actionsDropdown{{ session.pk }}">
+                                    <a class="dropdown-item" href="{% url 'edit_session' short_code=school.short_code pk=session.pk %}">Edit Session</a>
+                                    <a class="dropdown-item" href="{% url 'list_terms' short_code=school.short_code session_id=session.pk %}">View Terms</a>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
