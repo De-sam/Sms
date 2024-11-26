@@ -1,444 +1,491 @@
-{% extends "adminlte/base.html" %}
-{% load crispy_forms_tags %}
+    {% extends "adminlte/base.html" %}
+    {% load crispy_forms_tags %}
 
-{% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h5 class="mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg"  width="21" height="21" fill="currentColor" class="bi bi-mortarboard text-primary" viewBox="0 0 16 16">
-                    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/>
-                    <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z"/>
-                  </svg>
-                Students List
-            </h5>
-            <div class="card card-outline card-primary bg-light">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <!-- Mobile View -->
-                    <div class="d-flex d-md-none w-100 justify-content-between align-items-center">
-                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-
-                    <!-- Desktop View -->
-                    <div class="d-none d-md-flex w-100">
-                        <div class="me-3" style="flex-shrink: 0;">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Filter
+    {% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h5 class="mb-2 d-flex justify-content-between align-items-center">
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-mortarboard text-primary" viewBox="0 0 16 16">
+                            <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z" />
+                            <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z" />
+                        </svg>
+                        Students List
+                    </span>
+                    <select id="session-filter" class="form-select form-select-sm" style="width: auto;">
+                        {% for session in sessions %}
+                            <option value="{{ session.id }}" {% if session.id == selected_session.id %}selected{% endif %}>
+                                {{ session.session_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </h5>
+                
+                <div class="card card-outline card-primary bg-light">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <!-- Mobile View -->
+                        <div class="d-flex d-md-none w-100 justify-content-between align-items-center">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+                                <i class="fas fa-ellipsis-v"></i>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdown" style="width: 100%; min-width: 100%;">
-                                <div class="row d-flex justify-content-between">
-                                    <div class="col-md-4">
-                                        <h6 class="dropdown-header">Branches</h6>
-                                        <div class="px-3">
-                                            {% for branch_name in branches %}
-                                                <div class="form-check">
-                                                    <input class="form-check-input branch-filter" 
-                                                    type="checkbox" 
-                                                    value="{{ branch_name }}" 
-                                                    id="branch-{{ forloop.counter }}">
-                                                    <label class="form-check-label" 
-                                                    for="branch-{{ forloop.counter }}">
-                                                        {{ branch_name }}
-                                                    </label>
-                                                </div>
-                                            {% endfor %}
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <!-- Desktop View -->
+                        <div class="d-none d-md-flex w-100">
+                            <div class="me-3" style="flex-shrink: 0;">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Filter
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdown" style="width: 100%; min-width: 100%;">
+                                    <div class="row d-flex justify-content-between">
+                                        <div class="col-md-4">
+                                            <h6 class="dropdown-header">Branches</h6>
+                                            <div class="px-3">
+                                                {% for branch_name in branches %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input branch-filter" 
+                                                        type="checkbox" 
+                                                        value="{{ branch_name }}" 
+                                                        id="branch-{{ forloop.counter }}">
+                                                        <label class="form-check-label" 
+                                                        for="branch-{{ forloop.counter }}">
+                                                            {{ branch_name }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h6 class="dropdown-header">Classes</h6>
-                                        <div class="px-3">
-                                            {% for class_name in classes %}
-                                                <div class="form-check">
-                                                    <input class="form-check-input class-filter" 
-                                                    type="checkbox" 
-                                                    value="{{ class_name }}" 
-                                                    id="class-{{ forloop.counter }}">
-                                                    <label class="form-check-label" 
-                                                    for="class-{{ forloop.counter }}">
-                                                        {{ class_name }}
-                                                    </label>
-                                                </div>
-                                            {% endfor %}
+                                        <div class="col-md-4">
+                                            <h6 class="dropdown-header">Classes</h6>
+                                            <div class="px-3">
+                                                {% for class_name in classes %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input class-filter" 
+                                                        type="checkbox" 
+                                                        value="{{ class_name }}" 
+                                                        id="class-{{ forloop.counter }}">
+                                                        <label class="form-check-label" 
+                                                        for="class-{{ forloop.counter }}">
+                                                            {{ class_name }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h6 class="dropdown-header">Departments</h6>
-                                        <div class="px-3">
-                                            {% for department in departments %}
-                                                <div class="form-check">
-                                                    <input class="form-check-input department-filter" 
-                                                    type="checkbox" 
-                                                    value="{{ department.name }}" 
-                                                    id="department-{{ forloop.counter }}">
-                                                    <label class="form-check-label" 
-                                                    for="department-{{ forloop.counter }}">
-                                                        {{ department.name }}
-                                                    </label>
-                                                </div>
-                                            {% endfor %}
+                                        <div class="col-md-4">
+                                            <h6 class="dropdown-header">Departments</h6>
+                                            <div class="px-3">
+                                                {% for department in departments %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input department-filter" 
+                                                        type="checkbox" 
+                                                        value="{{ department.name }}" 
+                                                        id="department-{{ forloop.counter }}">
+                                                        <label class="form-check-label" 
+                                                        for="department-{{ forloop.counter }}">
+                                                            {{ department.name }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex-grow-1" style="max-width: 400px;">
-    <input type="text" id="student-search" class="form-control" placeholder="Search students by name..." value="{{ search_query }}">
-</div>
+                            <div class="flex-grow-1" style="max-width: 400px;">
+        <input type="text" id="student-search" class="form-control" placeholder="Search students by name..." value="{{ search_query }}">
+    </div>
 
-                        <div class="ms-auto" style="flex-shrink: 0;">
-                            <div class="dropdown">
-                                <button class="btn btn-primary dropdown-toggle" type="button" id="addStudentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Add Student
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="addStudentDropdown">
-                                    <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
-                                    <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
-                                </ul>
+                            <div class="ms-auto" style="flex-shrink: 0;">
+                                <div class="dropdown">
+                                    <button class="btn btn-primary dropdown-toggle" type="button" id="addStudentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Add Student
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="addStudentDropdown">
+                                        <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
+                                        <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    {% if students %}
-                        <div class="table-responsive" style="overflow-x: auto; overflow-y: auto; max-height: 500px;">
-                        <table class="table table-striped" id="students-table">
-                            <thead>
-                                <tr>
-                                    <th><input type="checkbox" id="select-all"></th>
-                                    <th>Profile Image</th>
-                                    <th>Username</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Class</th>
-                                    <th>Dept</th>
-                                    <th>Branch</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for student in students %}
-                                    <tr class="student-row" data-student-id="{{ student.id }}">
-                                        <td><input type="checkbox" class="student-checkbox"></td>
-                                        <td>
-                                            <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px;">
-                                        </td>
-                                        <td>{{ student.user.username }}</td>
-                                        <td class="student-first-name">{{ student.first_name }}</td>
-                                        <td class="student-last-name">{{ student.last_name }}</td>
-                                        <td class="student-class">{% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</td>
-                                        <td class="student-dept">{% if student.student_class %}{{ student.student_class.department }}{% else %}No class assigned{% endif %}</td>
-                                        <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
-                                        <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                                </svg>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown{{ forloop.counter }}">
-                                                <li><a class="dropdown-item" href="{% url 'edit_student' school.short_code student.id %}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                    <div class="card-body">
+                        {% if students %}
+                            <div class="table-responsive" style="overflow-x: auto; overflow-y: auto; max-height: 500px;">
+                            <table class="table table-striped" id="students-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="select-all"></th>
+                                        <th>Profile Image</th>
+                                        <th>Username</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th>Class</th>
+                                        <th>Dept</th>
+                                        <th>Branch</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                        <tr class="student-row" data-student-id="{{ student.id }}">
+                                            <td><input type="checkbox" class="student-checkbox"></td>
+                                            <td>
+                                                <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px;">
+                                            </td>
+                                            <td>{{ student.user.username }}</td>
+                                            <td class="student-first-name">{{ student.first_name }}</td>
+                                            <td class="student-last-name">{{ student.last_name }}</td>
+                                            <td class="student-class">{% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</td>
+                                            <td class="student-dept">{% if student.student_class %}{{ student.student_class.department }}{% else %}No class assigned{% endif %}</td>
+                                            <td class="student-branch">{% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</td>
+                                            <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                                                     </svg>
-                                                    Edit Student
-                                                </a></li>
-                                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewStudentModal{{ forloop.counter }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-                                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-                                                      </svg>
-                                                    View Details
-                                                </a></li>
-                                            </ul>
-                                            
-                                            <!-- View Student Modal -->
-                                            <div class="modal fade" id="viewStudentModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="viewStudentModalLabel{{ forloop.counter }}" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title text-center w-100" id="viewStudentModalLabel{{ forloop.counter }}">Student Details</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center">
-                                                            <div class="mb-4">
-                                                                <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="img-thumbnail rounded-circle" style="width: 100px; height: 100px;">
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown{{ forloop.counter }}">
+                                                    <li><a class="dropdown-item" href="{% url 'edit_student' school.short_code student.id %}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                                        </svg>
+                                                        Edit Student
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewStudentModal{{ forloop.counter }}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                                        </svg>
+                                                        View Details
+                                                    </a></li>
+                                                </ul>
+                                                
+                                                <!-- View Student Modal -->
+                                                <div class="modal fade" id="viewStudentModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="viewStudentModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title text-center w-100" id="viewStudentModalLabel{{ forloop.counter }}">Student Details</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
-                                                            <p><strong>First Name:</strong> {{ student.first_name }}</p>
-                                                            <p><strong>Last Name:</strong> {{ student.last_name }}</p>
-                                                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
-                                                            <p><strong>Date of Birth:</strong> {{ student.date_of_birth }}</p>
-                                                            <p><strong>Age:</strong> {{ student.age }} years</p>
-                                                            <p><strong>Blood Group:</strong> {% if student.blood_group %}{{ student.blood_group }}{% else %}Not Provided{% endif %}</p>
-                                                            <p><strong>Peculiar Illnesses:</strong> {% if student.peculiar_illnesses %}{{ student.peculiar_illnesses }}{% else %}None{% endif %}</p>
-                                                            <p><strong>Nationality:</strong> {{ student.get_nationality_display }}</p>
-                                                            <p><strong>Address:</strong> {% if student.address %}{{ student.address }}{% else %}Not Provided{% endif %}</p>
-                                                            <p><strong>Admission Date:</strong> {{ student.admission_date }}</p>
-                                                            <p><strong>Last Admitted Class:</strong> {{ student.last_admitted_class }}</p>
-                                                            <p><strong>Class:</strong> {% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</p>
-                                                            <p><strong>Department:</strong> {% if student.student_class %}{{ student.student_class.department }}{% else %}No department assigned{% endif %}</p>
-                                                            <p><strong>Branch:</strong> {% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</p>
-                                                            <p><strong>Status:</strong> {{ student.get_status_display }}</p>
+                                                            <div class="modal-body text-center">
+                                                                <div class="mb-4">
+                                                                    <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg{% endif %}" alt="Profile Image" class="img-thumbnail rounded-circle" style="width: 100px; height: 100px;">
+                                                                </div>
+                                                                <p><strong>First Name:</strong> {{ student.first_name }}</p>
+                                                                <p><strong>Last Name:</strong> {{ student.last_name }}</p>
+                                                                <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                                                                <p><strong>Date of Birth:</strong> {{ student.date_of_birth }}</p>
+                                                                <p><strong>Age:</strong> {{ student.age }} years</p>
+                                                                <p><strong>Blood Group:</strong> {% if student.blood_group %}{{ student.blood_group }}{% else %}Not Provided{% endif %}</p>
+                                                                <p><strong>Peculiar Illnesses:</strong> {% if student.peculiar_illnesses %}{{ student.peculiar_illnesses }}{% else %}None{% endif %}</p>
+                                                                <p><strong>Nationality:</strong> {{ student.get_nationality_display }}</p>
+                                                                <p><strong>Address:</strong> {% if student.address %}{{ student.address }}{% else %}Not Provided{% endif %}</p>
+                                                                <p><strong>Admission Date:</strong> {{ student.admission_date }}</p>
+                                                                <p><strong>Last Admitted Class:</strong> {{ student.last_admitted_class }}</p>
+                                                                <p><strong>Class:</strong> {% if student.student_class %}{{ student.student_class.name }}{% else %}No class assigned{% endif %}</p>
+                                                                <p><strong>Department:</strong> {% if student.student_class %}{{ student.student_class.department }}{% else %}No department assigned{% endif %}</p>
+                                                                <p><strong>Branch:</strong> {% if student.branch %}{{ student.branch.branch_name }}{% else %}No branch assigned{% endif %}</p>
+                                                                <p><strong>Status:</strong> {{ student.get_status_display }}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                
                                             </div>
-                                            
-                                        </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                       <div class="mb-3 d-flex justify-content-between align-items-center">
-    <div>
-        <span class="badge bg-info" id="total-students">Total Students: {{ total_students }}</span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-info" id="total-students">Total Students: {{ total_students }}</span>
 
-        <!-- Bulk Action Dropdown -->
-<div class="btn-group ms-2">
-    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        Bulk Action
-    </button>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="#" id="bulk-delete-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
-              </svg>
-            Delete Student(s)
-        </a></li>
-        <li><a class="dropdown-item" href="#">Assign Parent</a></li>
-        <li><a class="dropdown-item" href="#">Reset Password</a></li>
-    </ul>
-</div>
+            <!-- Bulk Action Dropdown -->
+    <div class="btn-group ms-2">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Bulk Action
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" id="bulk-delete-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                </svg>
+                Delete Student(s)
+            </a></li>
+            <li><a class="dropdown-item" href="#">Assign Parent</a></li>
+            <li><a class="dropdown-item" href="#">Reset Password</a></li>
+        </ul>
+    </div>
 
-        <!-- Bulk Delete Confirmation Modal -->
-        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete the selected students? This action cannot be undone.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+            <!-- Bulk Delete Confirmation Modal -->
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete the selected students? This action cannot be undone.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <script>
+                document.getElementById('bulk-delete-btn').addEventListener('click', function () {
+                    const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+                        .map(checkbox => checkbox.closest('tr').dataset.studentId);
+
+                    if (selectedStudents.length > 0) {
+                        const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                        confirmModal.show();
+
+                        document.getElementById('confirm-delete').addEventListener('click', function () {
+                            // Log the request details
+                            console.log('Sending bulk delete request with the following data:', selectedStudents);
+
+                            fetch("{% url 'bulk_delete_students' school.short_code %}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({ student_ids: selectedStudents })
+                            })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('Network response was not ok');
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log('Response from server:', data);
+                                    if (data.success) {
+                                        location.reload();
+                                    } else {
+                                        alert(data.message || 'An error occurred while deleting students.');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('There was a problem with the fetch operation:', error);
+                                    alert('An error occurred. Please check the console for more details.');
+                                });
+                        });
+                    } else {
+                        alert('No students selected.');
+                    }
+                });
+
+
+            </script>
+
         </div>
-
-        <script>
-            document.getElementById('bulk-delete-btn').addEventListener('click', function () {
-                const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked'))
-                    .map(checkbox => checkbox.closest('tr').dataset.studentId);
-
-                if (selectedStudents.length > 0) {
-                    const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-                    confirmModal.show();
-
-                    document.getElementById('confirm-delete').addEventListener('click', function () {
-                        // Log the request details
-                        console.log('Sending bulk delete request with the following data:', selectedStudents);
-
-                        fetch("{% url 'bulk_delete_students' school.short_code %}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify({ student_ids: selectedStudents })
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                console.log('Response from server:', data);
-                                if (data.success) {
-                                    location.reload();
-                                } else {
-                                    alert(data.message || 'An error occurred while deleting students.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('There was a problem with the fetch operation:', error);
-                                alert('An error occurred. Please check the console for more details.');
-                            });
-                    });
-                } else {
-                    alert('No students selected.');
-                }
-            });
-
-
-        </script>
-
     </div>
-</div>
 
-<!-- Pagination controls -->
-<nav aria-label="Page navigation" class="d-flex justify-content-center">
-    <ul class="pagination">
-        {% if students.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ students.previous_page_number }})" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-
-        {% for i in students.paginator.page_range %}
-            {% if students.number == i %}
-                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-            {% else %}
-                <li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ i }})">{{ i }}</a></li>
+    <!-- Pagination controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if students.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?session={{ selected_session.id }}&search={{ search_query }}&page={{ students.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
             {% endif %}
-        {% endfor %}
+    
+            {% for i in students.paginator.page_range %}
+                {% if students.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?session={{ selected_session.id }}&search={{ search_query }}&page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+    
+            {% if students.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?session={{ selected_session.id }}&search={{ search_query }}&page={{ students.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    
 
-        {% if students.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="javascript:void(0)" onclick="filterStudents('', {{ students.next_page_number }})" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+    {% else %}
+        <p>No students found for this school.</p>
+    {% endif %}
 
-
-{% else %}
-    <p>No students found for this school.</p>
-{% endif %}
-
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Filter Modal for Mobile View -->
-<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="me-3" style="flex-shrink: 0;">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
-                        Filter
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdownMobile" style="width: 100%; min-width: 100%;">
-                        <div class="row d-flex justify-content-between">
-                            <div class="col-md-4">
-                                <h6 class="dropdown-header">Branches</h6>
-                                <div class="px-3">
-                                    {% for branch_name in branches %}
-                                        <div class="form-check">
-                                            <input class="form-check-input branch-filter" 
-                                            type="checkbox" 
-                                            value="{{ branch_name }}" 
-                                            id="branch-mobile-{{ forloop.counter }}">
-                                            <label class="form-check-label" 
-                                            for="branch-mobile-{{ forloop.counter }}">
-                                                {{ branch_name }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
+    <!-- Filter Modal for Mobile View -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="me-3" style="flex-shrink: 0;">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-wide" aria-labelledby="filterDropdownMobile" style="width: 100%; min-width: 100%;">
+                            <div class="row d-flex justify-content-between">
+                                <div class="col-md-4">
+                                    <h6 class="dropdown-header">Branches</h6>
+                                    <div class="px-3">
+                                        {% for branch_name in branches %}
+                                            <div class="form-check">
+                                                <input class="form-check-input branch-filter" 
+                                                type="checkbox" 
+                                                value="{{ branch_name }}" 
+                                                id="branch-mobile-{{ forloop.counter }}">
+                                                <label class="form-check-label" 
+                                                for="branch-mobile-{{ forloop.counter }}">
+                                                    {{ branch_name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="dropdown-header">Classes</h6>
-                                <div class="px-3">
-                                    {% for class_name in classes %}
-                                        <div class="form-check">
-                                            <input class="form-check-input class-filter" 
-                                            type="checkbox" 
-                                            value="{{ class_name }}" 
-                                            id="class-mobile-{{ forloop.counter }}">
-                                            <label class="form-check-label" 
-                                            for="class-mobile-{{ forloop.counter }}">
-                                                {{ class_name }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
+                                <div class="col-md-4">
+                                    <h6 class="dropdown-header">Classes</h6>
+                                    <div class="px-3">
+                                        {% for class_name in classes %}
+                                            <div class="form-check">
+                                                <input class="form-check-input class-filter" 
+                                                type="checkbox" 
+                                                value="{{ class_name }}" 
+                                                id="class-mobile-{{ forloop.counter }}">
+                                                <label class="form-check-label" 
+                                                for="class-mobile-{{ forloop.counter }}">
+                                                    {{ class_name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="dropdown-header">Departments</h6>
-                                <div class="px-3">
-                                    {% for department in departments %}
-                                        <div class="form-check">
-                                            <input class="form-check-input department-filter" 
-                                            type="checkbox" 
-                                            value="{{ department.name }}" 
-                                            id="department-mobile-{{ forloop.counter }}">
-                                            <label class="form-check-label" 
-                                            for="department-mobile-{{ forloop.counter }}">
-                                                {{ department.name }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
+                                <div class="col-md-4">
+                                    <h6 class="dropdown-header">Departments</h6>
+                                    <div class="px-3">
+                                        {% for department in departments %}
+                                            <div class="form-check">
+                                                <input class="form-check-input department-filter" 
+                                                type="checkbox" 
+                                                value="{{ department.name }}" 
+                                                id="department-mobile-{{ forloop.counter }}">
+                                                <label class="form-check-label" 
+                                                for="department-mobile-{{ forloop.counter }}">
+                                                    {{ department.name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <div class="dropdown">
-                        <button class="btn btn-primary dropdown-toggle w-100" type="button" id="addStudentDropdownModal" data-bs-toggle="dropdown" aria-expanded="false">
-                            Add Student
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="addStudentDropdownModal">
-                            <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
-                            <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
-                        </ul>
+                    <div class="mt-3">
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" id="addStudentDropdownModal" data-bs-toggle="dropdown" aria-expanded="false">
+                                Add Student
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="addStudentDropdownModal">
+                                <li><a class="dropdown-item" href="{% url 'add-student' school.short_code %}">Add Single Student</a></li>
+                                <li><a class="dropdown-item" href="#">Bulk Upload Students</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Search Modal for Mobile View -->
-<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="searchModalLabel">Search Students</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="student-search-mobile" class="form-control" placeholder="Search students by name...">
+    <!-- Search Modal for Mobile View -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">Search Students</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="student-search-mobile" class="form-control" placeholder="Search students by name...">
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <script>
+        function getSessionParam() {
+        const sessionFilter = document.getElementById('session-filter');
+        return sessionFilter ? sessionFilter.value : null;
+    }
 
-<script>
-// Initialize school short code from the template
-const schoolShortCode = "{{ school.short_code }}";
+    // Function to update query parameters and reload the page
+    function updateQueryParam(param, value) {
+        const urlParams = new URLSearchParams(window.location.search);
 
-document.getElementById('select-all').addEventListener('click', function() {
-    const checkboxes = document.querySelectorAll('.student-checkbox');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-});
+        // Update the session parameter if it's missing
+        const session = getSessionParam();
+        if (session) {
+            urlParams.set('session', session);
+        }
 
-let searchTimeout;
+        // Update the provided parameter
+        urlParams.set(param, value);
 
-// Combine the event listener for both desktop and mobile search inputs
-document.querySelectorAll('#student-search, #student-search-mobile').forEach(input => {
+        // Reload the page with the updated query string
+        window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+    }
+
+    // Attach event listener to the session filter
+    document.getElementById('session-filter').addEventListener('change', function () {
+        updateQueryParam('session', this.value);
+    });
+
+    // Example usage in other filters (search, pagination, etc.)
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.addEventListener('input', function () {
+            updateQueryParam('search', this.value);
+        });
+    });
+    </script>
+    
+    <script>
+    // Initialize school short code from the template
+    const schoolShortCode = "{{ school.short_code }}";
+
+    document.getElementById('select-all').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+    });
+
+    let searchTimeout;
+
+    // Combine the event listener for both desktop and mobile search inputs
+    ddocument.querySelectorAll('#student-search, #student-search-mobile').forEach(input => {
     input.addEventListener('input', function () {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -448,17 +495,25 @@ document.querySelectorAll('#student-search, #student-search-mobile').forEach(inp
     });
 });
 
-// Function to fetch and filter students from the server
-function filterStudents(searchValue = '', page = 1) {
+    // Function to fetch and filter students from the server
+    function filterStudents(searchValue = '', page = 1) {
     const branchFilters = Array.from(document.querySelectorAll('.branch-filter:checked')).map(el => el.value);
     const classFilters = Array.from(document.querySelectorAll('.class-filter:checked')).map(el => el.value);
     const departmentFilters = Array.from(document.querySelectorAll('.department-filter:checked')).map(el => el.value);
 
-    // Set up URL parameters for search and filters
+    // Get the current session parameter from the dropdown
+    const sessionFilter = document.getElementById('session-filter');
+    const sessionValue = sessionFilter ? sessionFilter.value : null;
+
+    // Set up URL parameters for search, filters, and session
     const urlParams = new URLSearchParams({
         search: searchValue,
         page: page // Pass the current page number
     });
+
+    if (sessionValue) {
+        urlParams.append('session', sessionValue);
+    }
 
     // Append branch, class, and department filters to the URL parameters
     branchFilters.forEach(branch => urlParams.append('branch', branch));
@@ -472,7 +527,7 @@ function filterStudents(searchValue = '', page = 1) {
             // Parse the response to update the table content and paginator
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
+
             // Update the table body with the new data
             const newTableBody = tempDiv.querySelector('#students-table tbody');
             if (newTableBody) {
@@ -491,34 +546,35 @@ function filterStudents(searchValue = '', page = 1) {
         .catch(error => console.error('Error fetching students:', error));
 }
 
-// Function to update the total number of students displayed
-function updateTotalCount() {
-    const filteredStudentsCount = document.querySelectorAll('.student-row').length;
-    const totalStudentsCount = "{{ total_students }}"; // Total number of students from the server
+    // Function to update the total number of students displayed
+    function updateTotalCount() {
+        const filteredStudentsCount = document.querySelectorAll('.student-row').length;
+        const totalStudentsCount = "{{ total_students }}"; // Total number of students from the server
 
-    // Display the filtered count and total count when filters are applied
-    if (filteredStudentsCount === parseInt(totalStudentsCount, 10)) {
-        document.getElementById('total-students').textContent = `Total Students: ${totalStudentsCount}`;
-    } else {
-        document.getElementById('total-students').textContent = `Showing ${filteredStudentsCount} of ${totalStudentsCount} students`;
+        // Display the filtered count and total count when filters are applied
+        if (filteredStudentsCount === parseInt(totalStudentsCount, 10)) {
+            document.getElementById('total-students').textContent = `Total Students: ${totalStudentsCount}`;
+        } else {
+            document.getElementById('total-students').textContent = `Showing ${filteredStudentsCount} of ${totalStudentsCount} students`;
+        }
     }
-}
 
 
-// Add event listeners for branch, class, and department filters
-document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
-    filter.addEventListener('change', function () {
-        filterStudents(document.querySelector('#student-search').value.toLowerCase());
+    // Add event listeners for branch, class, and department filters
+    document.querySelectorAll('.branch-filter, .class-filter, .department-filter').forEach(filter => {
+        filter.addEventListener('change', function () {
+            filterStudents(document.querySelector('#student-search').value.toLowerCase());
+        });
     });
-});
 
-// Function to handle pagination click events
-function goToPage(pageNumber) {
+    // Function to handle pagination click events
+    function goToPage(pageNumber) {
     filterStudents(document.querySelector('#student-search').value.toLowerCase(), pageNumber);
 }
 
-// Ensure that the filter function is called initially to handle any pre-existing filters or search
-filterStudents(document.querySelector('#student-search').value.toLowerCase());
 
-</script>   
-{% endblock %}
+    // Ensure that the filter function is called initially to handle any pre-existing filters or search
+    filterStudents(document.querySelector('#student-search').value.toLowerCase());
+
+    </script>   
+    {% endblock %}

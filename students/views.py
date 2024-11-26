@@ -1,4 +1,5 @@
 from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -13,9 +14,11 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import json
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_protect
+from academics.models import Session
 
 @login_required_with_short_code
 @transaction.atomic
+@admin_required
 def add_parent_guardian(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     form = ParentGuardianCreationForm(request.POST or None, school=school)
@@ -31,6 +34,7 @@ def add_parent_guardian(request, short_code):
     })
 
 @login_required_with_short_code
+@admin_required
 def edit_parent(request, short_code, parent_id):
     # Get the school and parent objects
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -59,6 +63,7 @@ def edit_parent(request, short_code, parent_id):
     })
 
 @login_required_with_short_code
+@admin_required
 @transaction.atomic
 def delete_parent(request, short_code, parent_id):
     if request.method == "POST":
@@ -87,6 +92,7 @@ def delete_parent(request, short_code, parent_id):
         return redirect('parent_guardian_list', short_code=short_code)
 
 @login_required_with_short_code
+@admin_required
 @transaction.atomic
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -130,6 +136,7 @@ def add_student(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 def list_parent_guardians(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -169,6 +176,7 @@ def list_parent_guardians(request, short_code):
 
 
 @login_required_with_short_code
+@admin_required
 @transaction.atomic
 def edit_student(request, short_code, student_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -262,14 +270,30 @@ def edit_student(request, short_code, student_id):
 
 
 @login_required_with_short_code
+@admin_required
 def student_list(request, short_code):
     # Get the school based on the short_code
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
-    # Filter students based on the school's branches
-    students = Student.objects.filter(branch__school=school).distinct()
+    # Get all sessions for the school
+    sessions = Session.objects.filter(school=school)
 
-    # Apply search filters
+    # Determine the session filter
+    selected_session_id = request.GET.get('session')
+    print('selected session id is:',selected_session_id)
+    if selected_session_id:
+        try:
+            selected_session = sessions.get(id=selected_session_id)
+        except Session.DoesNotExist:
+            selected_session = sessions.filter(is_active=True).first()
+    else:
+        # Use the current session as the default
+        selected_session = sessions.filter(is_active=True).first()
+
+    # Filter students based on the selected session and the school's branches
+    students = Student.objects.filter(branch__school=school, current_session=selected_session).distinct()
+
+    # Apply search and additional filters
     search_query = request.GET.get('search', '').strip().lower()
     branch_filters = request.GET.getlist('branch')
     class_filters = request.GET.getlist('class')
@@ -310,6 +334,8 @@ def student_list(request, short_code):
 
     return render(request, 'students/student_list.html', {
         'school': school,
+        'sessions': sessions,
+        'selected_session': selected_session,
         'branches': branches,
         'students': students_paginated,
         'departments': departments,
