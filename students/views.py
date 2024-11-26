@@ -309,12 +309,14 @@ def student_list(request, short_code):
         )
 
     if branch_filters:
+        print(f"Filtering by branches: {branch_filters}")  # Debugging log
         students = students.filter(branch__branch_name__in=branch_filters)
     if class_filters:
+        print(f"Filtering by classes: {class_filters}")  # Debugging log
         students = students.filter(student_class__name__in=class_filters)
     if department_filters:
+        print(f"Filtering by departments: {department_filters}")  # Debugging log
         students = students.filter(student_class__department__name__in=department_filters)
-
     # Pagination
     paginator = Paginator(students, 50)
     page = request.GET.get('page')

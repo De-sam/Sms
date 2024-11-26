@@ -485,7 +485,7 @@
     let searchTimeout;
 
     // Combine the event listener for both desktop and mobile search inputs
-    ddocument.querySelectorAll('#student-search, #student-search-mobile').forEach(input => {
+    document.querySelectorAll('#student-search, #student-search-mobile').forEach(input => {
     input.addEventListener('input', function () {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -519,9 +519,12 @@
     branchFilters.forEach(branch => urlParams.append('branch', branch));
     classFilters.forEach(cls => urlParams.append('class', cls));
     departmentFilters.forEach(dept => urlParams.append('department', dept));
+    
+    const finalUrl = `/students/${schoolShortCode}/student-list/?${urlParams.toString()}`;
+    console.log('Fetching data from:', finalUrl);
 
     // Fetch data from the server using the constructed URL
-    fetch(`/students/${schoolShortCode}/student-list/?${urlParams.toString()}`)
+    fetch(finalUrl)
         .then(response => response.text())
         .then(html => {
             // Parse the response to update the table content and paginator
