@@ -4,7 +4,7 @@ from django.core.cache import cache
 from .forms import StaffCreationForm,UserUpdateForm,\
 TeacherSubjectAssignmentForm,StaffUploadForm
 from django.http import HttpResponse, HttpResponseBadRequest
-from schools.models import SchoolRegistration, Branch
+from schools.models import SchoolRegistration, Branch 
 from classes.models import TeacherSubjectClassAssignment
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage,PageNotAnInteger
@@ -22,6 +22,10 @@ from .tasks import process_file_task,send_staff_creation_email
 import os
 from django.conf import settings
 from uuid import uuid4
+from django.http import JsonResponse
+from classes.models import Subject
+
+
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -349,31 +353,21 @@ def assign_subjects_to_staff(request, short_code, staff_id):
             branch = form.cleaned_data['branch']
             subject = form.cleaned_data['subject']
             classes = form.cleaned_data['classes']
+            session = form.cleaned_data['session']
+            term = form.cleaned_data['term']
 
-            
-            # Optimize this part by fetching the data once
-            existing_assignments = TeacherSubjectClassAssignment.objects.filter(
-                subject=subject,
-                branch=branch,
-                classes_assigned__in=classes
-            ).exclude(teacher=staff).prefetch_related('classes_assigned')
-
-            # Unassign the subject from the selected classes for any other teacher in the same branch
-            for assignment in existing_assignments:
-                assignment.classes_assigned.remove(*classes)
-                if assignment.classes_assigned.count() == 0:
-                    assignment.delete()
-
-            # Create or update the assignment for the current teacher in the specific branch
+            # Create or update the assignment for the current teacher, subject, branch, session, and term
             assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
                 teacher=staff,
                 subject=subject,
-                branch=branch
+                branch=branch,
+                session=session,
+                term=term
             )
             assignment.classes_assigned.add(*classes)
             assignment.save()
 
-            messages.success(request, f'Subjects and classes assigned to {staff.user.first_name} successfully!')
+            messages.success(request, f'Subjects and classes assigned to {staff.user.first_name} successfully for {session.session_name}, {term.term_name}!')
             return redirect('teacher_assignments', short_code=school.short_code)
         else:
             print(f"Form Errors: {form.errors}")
@@ -387,7 +381,75 @@ def assign_subjects_to_staff(request, short_code, staff_id):
         'branches': branches,
         'selected_branch': selected_branch,
     })
+from academics.models import Session, Term
+# Fetch sessions for a given school identified by the short_code
+def get_sessions(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    sessions = Session.objects.filter(school=school)
+  
 
+    sessions_data = [{'id': session.id, 'session_name': session.session_name} for session in sessions]
+    print(sessions_data)
+    return JsonResponse({'sessions': sessions_data})
+
+# Fetch terms for a given session
+def get_terms(request, short_code, session_id):
+    session = get_object_or_404(Session, id=session_id, school__short_code=short_code)
+    terms = Term.objects.filter(session=session)
+
+
+    terms_data = [{'id': term.id, 'term_name': term.term_name} for term in terms]
+    print(terms_data)
+    return JsonResponse({'terms': terms_data})
+
+def get_subjects_and_classes(request, short_code, branch_id):
+    # Fetch the branch using the branch_id and also ensure it belongs to the correct school using short_code
+    branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
+    
+    # Get classes and subjects for the selected branch
+    classes = branch.classes.all().select_related('department')
+    subjects = Subject.objects.filter(classes__in=classes).distinct()
+
+    # Prepare the data to send as JSON response
+    classes_data = [{'id': c.id, 'name': c.name, 'department': c.department.name if c.department else None} for c in classes]
+    subjects_data = [{'id': s.id, 'name': s.name, 'subject_code': s.subject_code} for s in subjects]
+
+    return JsonResponse({
+        'classes': classes_data,
+        'subjects': subjects_data,
+    })
+    
+def get_classes(request, short_code, branch_id, subject_id):
+    # Fetch the branch and ensure it belongs to the correct school
+    branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
+    
+    # Fetch the subject and ensure it belongs to the correct branch
+    subject = get_object_or_404(Subject, id=subject_id, classes__branches=branch)
+
+    # Fetch all classes for that subject under the selected branch
+    classes = subject.classes.filter(branches=branch).distinct()
+
+    # Prepare the data to send as JSON response
+    classes_data = [{'id': c.id, 'name': c.name} for c in classes]
+
+    return JsonResponse({
+        'classes': classes_data,
+    })
+
+from classes.models import Class
+def get_classes_by_subject(request, short_code, subject_id):
+    # Fetch the subject ensuring it belongs to the school associated with the short_code
+    subject = get_object_or_404(Subject, id=subject_id)
+
+    # Filter classes by the subject and ensure the related branch belongs to the correct school
+    classes = Class.objects.filter(subjects=subject, branches__school__short_code=short_code).select_related('department')
+
+    # Prepare the data to send as JSON response
+    classes_data = [{'id': c.id, 'name': c.name, 'department': c.department.name if c.department else None} for c in classes]
+
+    return JsonResponse({
+        'classes': classes_data,
+    })
 
 @login_required_with_short_code
 @admin_required

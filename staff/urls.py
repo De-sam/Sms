@@ -2,6 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('<str:short_code>/get-sessions/', views.get_sessions, name='get_sessions'),
+    path('<str:short_code>/get-terms/<int:session_id>/', views.get_terms, name='get_terms'),
+    path('<str:short_code>/get-classes-by-subject/<int:subject_id>/', views.get_classes_by_subject, name='get_classes_by_subject'),
+    path('<str:short_code>/get-classes/<int:branch_id>/<int:subject_id>/', views.get_classes, name='get_classes'),
+    path('<str:short_code>/get-subjects-and-classes/<int:branch_id>/', views.get_subjects_and_classes, name='get_subjects_and_classes'),
     path('<str:short_code>/pre-add-staff/', views.pre_add_staff, name='pre_add_staff'),
     path('<str:short_code>/add-staff/', views.add_staff, name='add_staff'),
     path('<str:short_code>/staff-list/', views.staff_list, name='staff_list'),

@@ -2,6 +2,7 @@ from django.db import models
 import uuid
 from schools.models import Branch
 from staff.models import Staff
+from academics.models import Session,Term
 
 class SubjectType(models.Model):
     LEVEL_CHOICES = [
@@ -120,14 +121,18 @@ class TeacherSubjectClassAssignment(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='teacher_assignments')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='subject_assignments')
     classes_assigned = models.ManyToManyField(Class, related_name='teacher_subject_classes')
+    session = models.ForeignKey('academics.Session', on_delete=models.CASCADE, related_name='teacher_assignments')  # Use qualified reference
+    term = models.ForeignKey('academics.Term', on_delete=models.CASCADE, related_name='teacher_assignments')  # Use qualified reference
 
     class Meta:
-        unique_together = ('teacher', 'subject', 'branch')
+        unique_together = ('teacher', 'subject', 'branch', 'session', 'term')
         indexes = [
             models.Index(fields=['teacher']),  # Index to speed up queries involving teacher
             models.Index(fields=['subject']),  # Index to optimize subject-based filtering
             models.Index(fields=['branch']),   # Index to optimize branch-based filtering
+            models.Index(fields=['session']),  # Index to optimize session-based filtering
+            models.Index(fields=['term']),     # Index to optimize term-based filtering
         ]
 
     def __str__(self):
-        return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name}"
+        return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name} in {self.session.session_name}, {self.term.term_name}"

@@ -7,6 +7,7 @@ from classes.models import Subject, Class, TeacherSubjectClassAssignment
 from django import forms
 import datetime
 from .utils import generate_unique_username
+from academics.models import Session, Term
 
 class StaffUploadForm(forms.Form):
     file = forms.FileField()
@@ -209,25 +210,30 @@ class UserUpdateForm(forms.ModelForm):
 class TeacherSubjectAssignmentForm(forms.Form):
     branch = forms.ModelChoiceField(queryset=Branch.objects.none())
     subject = forms.ModelChoiceField(queryset=Subject.objects.none())
-    classes = forms.ModelMultipleChoiceField(queryset=Class.objects.none(),
-                                              widget=forms.CheckboxSelectMultiple)
-  
+    classes = forms.ModelMultipleChoiceField(queryset=Class.objects.none(), widget=forms.CheckboxSelectMultiple)
+    session = forms.ModelChoiceField(queryset=Session.objects.none())
+    term = forms.ModelChoiceField(queryset=Term.objects.none())
+
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)
         branch_id = kwargs.pop('branch_id', None)
-        staff = kwargs.pop('staff', None)  # Get the staff object
+        staff = kwargs.pop('staff', None)
         super().__init__(*args, **kwargs)
 
         if school and staff:
             # Filter branches to only those associated with the school and assigned to the staff
             self.fields['branch'].queryset = Branch.objects.filter(school=school, staff=staff).distinct()
-            print(f"Available Branches for Form: {self.fields['branch'].queryset}")
+            self.fields['session'].queryset = Session.objects.filter(school=school)  # Populate session based on school
 
         if branch_id:
             branch = Branch.objects.get(id=branch_id)
             classes_in_branch = branch.classes.all()
             self.fields['subject'].queryset = Subject.objects.filter(classes__in=classes_in_branch).distinct()
             self.fields['classes'].queryset = classes_in_branch
+
+        if self.data.get('session'):
+            session_id = self.data.get('session')
+            self.fields['term'].queryset = Term.objects.filter(session_id=session_id)
 
         if self.data.get('subject'):
             subject_id = int(self.data.get('subject'))
