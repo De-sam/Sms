@@ -16,5 +16,8 @@ urlpatterns = [
     path('<str:short_code>/assignments/', views.teacher_assignments_view, name='teacher_assignments'),
     path('<str:short_code>/upload_staff/', views.upload_staff, name='upload_staff'),
     path('<str:short_code>/download_staff_template/', views.download_staff_template, name='download_staff_template'),
+    path('<str:short_code>/copy-term-assignments/', views.copy_term_assignments, name='copy_term_assignments'),
+    path('<str:short_code>/copy-session-assignments/', views.copy_session_assignments, name='copy_session_assignments'),
+
     # Other URLs...
 ]

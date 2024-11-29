@@ -24,7 +24,7 @@ from django.conf import settings
 from uuid import uuid4
 from django.http import JsonResponse
 from classes.models import Subject
-
+from django.views.decorators.http import require_POST
 
 
 def save_temp_file(uploaded_file):
@@ -381,6 +381,7 @@ def assign_subjects_to_staff(request, short_code, staff_id):
         'branches': branches,
         'selected_branch': selected_branch,
     })
+
 from academics.models import Session, Term
 # Fetch sessions for a given school identified by the short_code
 def get_sessions(request, short_code):
@@ -455,28 +456,45 @@ def get_classes_by_subject(request, short_code, subject_id):
 @admin_required
 def teacher_assignments_view(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    
+
     branches = Branch.objects.filter(school=school)
+    sessions = Session.objects.filter(school=school)
     
     selected_branch_id = request.GET.get('branch_id')
+    selected_session_id = request.GET.get('session_id')
+    selected_term_id = request.GET.get('term_id')
     search_query = request.GET.get('search', '')
 
     selected_branch = None
+    selected_session = None
+    selected_term = None
     teacher_assignments = {}
     page_obj = None  # Initialize page_obj as None
 
     if selected_branch_id:
         selected_branch = get_object_or_404(Branch, id=selected_branch_id, school=school)
-        assignments = TeacherSubjectClassAssignment.objects.filter(branch=selected_branch).select_related('teacher', 'subject').prefetch_related('classes_assigned')
+        
+        assignments = TeacherSubjectClassAssignment.objects.filter(branch=selected_branch)
+
+        if selected_session_id:
+            selected_session = get_object_or_404(Session, id=selected_session_id, school=school)
+            assignments = assignments.filter(session=selected_session)
+
+        if selected_term_id:
+            selected_term = get_object_or_404(Term, id=selected_term_id, session=selected_session)
+            assignments = assignments.filter(term=selected_term)
         
         if search_query:
-            assignments = assignments.filter(teacher__user__first_name__icontains=search_query) | assignments.filter(teacher__user__last_name__icontains=search_query)
-        
+            assignments = assignments.filter(
+                Q(teacher__user__first_name__icontains=search_query) |
+                Q(teacher__user__last_name__icontains=search_query)
+            )
+
         # Pagination
         paginator = Paginator(assignments, 10)  # Show 10 assignments per page
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-        
+
         # Organize assignments by teacher
         for assignment in page_obj:
             teacher = assignment.teacher
@@ -490,8 +508,107 @@ def teacher_assignments_view(request, short_code):
     return render(request, 'staff/teacher_assignments.html', {
         'school': school,
         'branches': branches,
+        'sessions': sessions,
         'selected_branch': selected_branch,
+        'selected_session': selected_session,
+        'selected_term': selected_term,
         'teacher_assignments': teacher_assignments,
         'page_obj': page_obj,
-        'search_query': search_query
+        'search_query': search_query,
     })
+
+
+@require_POST
+@login_required_with_short_code
+@admin_required
+@transaction.atomic
+def copy_term_assignments(request, short_code):
+    """
+    View to copy teacher assignments from one term to another term.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    branch_id = request.POST.get('branch_id')
+    from_session_id = request.POST.get('from_session_id')
+    from_term_id = request.POST.get('from_term_id')
+    to_session_id = request.POST.get('to_session_id')
+    to_term_id = request.POST.get('to_term_id')
+
+    # Ensure all required fields are filled
+    if not all([branch_id, from_session_id, from_term_id, to_session_id, to_term_id]):
+        messages.error(request, "Please select all the necessary fields to proceed.")
+        return redirect('teacher_assignments', short_code=school.short_code)
+
+    # Get the branch, sessions, and terms
+    branch = get_object_or_404(Branch, id=branch_id, school=school)
+    from_session = get_object_or_404(Session, id=from_session_id, school=school)
+    from_term = get_object_or_404(Term, id=from_term_id, session=from_session)
+    to_session = get_object_or_404(Session, id=to_session_id, school=school)
+    to_term = get_object_or_404(Term, id=to_term_id, session=to_session)
+
+    # Fetch all assignments from the source term
+    assignments = TeacherSubjectClassAssignment.objects.filter(branch=branch, session=from_session, term=from_term)
+
+    # Assuming `to_term_assignments` is the queryset of assignments for the "To Term"
+    for from_assignment in assignments:
+        assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
+            teacher=from_assignment.teacher,
+            subject=from_assignment.subject,
+            branch=from_assignment.branch,
+            session=to_session,
+            term=to_term,
+    )
+    
+    # Instead of direct assignment, use `.set()` method
+    assignment.classes_assigned.set(from_assignment.classes_assigned.all())
+    assignment.save()
+
+    messages.success(request, "Assignments successfully copied from the selected term.")
+    return redirect('teacher_assignments', short_code=school.short_code)
+
+
+@require_POST
+@login_required_with_short_code
+@admin_required
+@transaction.atomic
+def copy_session_assignments(request, short_code):
+    """
+    View to copy all assignments from one session to another session.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    branch_id = request.POST.get('branch_id')
+    from_session_id = request.POST.get('from_session_id')
+    to_session_id = request.POST.get('to_session_id')
+
+    # Ensure all required fields are filled
+    if not all([branch_id, from_session_id, to_session_id]):
+        messages.error(request, "Please select all the necessary fields to proceed.")
+        return redirect('teacher_assignments', short_code=school.short_code)
+
+    # Get the branch, sessions
+    branch = get_object_or_404(Branch, id=branch_id, school=school)
+    from_session = get_object_or_404(Session, id=from_session_id, school=school)
+    to_session = get_object_or_404(Session, id=to_session_id, school=school)
+
+    # Fetch all assignments from the source session (all terms)
+    assignments = TeacherSubjectClassAssignment.objects.filter(branch=branch, session=from_session)
+
+    # Copy each assignment to the target session, for all terms
+    for assignment in assignments:
+        to_term = Term.objects.get(session=to_session, term_name=assignment.term.term_name)  # Match the term name
+        
+        # Create or get the assignment without setting the many-to-many field
+        new_assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
+            teacher=assignment.teacher,
+            subject=assignment.subject,
+            branch=assignment.branch,
+            session=to_session,
+            term=to_term
+        )
+
+        # Use `.set()` to copy the classes assigned
+        new_assignment.classes_assigned.set(assignment.classes_assigned.all())
+        new_assignment.save()
+
+    messages.success(request, "Assignments successfully copied to the selected session.")
+    return redirect('teacher_assignments', short_code=school.short_code)
+

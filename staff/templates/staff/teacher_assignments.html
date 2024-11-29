@@ -5,19 +5,33 @@
 
     <!-- School Name and Teacher Assignments Title Card -->
     <div class="card bg-primary mb-4">
-        <div class="card-body">
-            <h4 class="mb-0">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <!-- Title -->
+            <h6 class="mb-0 text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-person" viewBox="0 0 16 16">
                     <path d="M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2v9.255S12 12 8 12s-5 1.755-5 1.755V2a1 1 0 0 1 1-1h5.5z"/>
-                  </svg>
+                </svg>
                 Teacher Assignments
-            </h4>
+            </h6>
+
+            <!-- Dropdown Button with Two Options -->
+            <div class="ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="copyAssignmentsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Copy Assignments
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="copyAssignmentsDropdown">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#copyTermModal">Copy Term Assignments</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#copySessionModal">Copy Session Assignments</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Bootstrap Tabs -->
-    <ul class="nav nav-tabs mb-4" id="assignmentTabs" role="tablist">
+    <ul class="nav nav-tabs mb-" id="assignmentTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="subject-assignment-tab" data-bs-toggle="tab" data-bs-target="#subject-assignment" type="button" role="tab" aria-controls="subject-assignment" aria-selected="true">Assigned Subjects</button>
         </li>
@@ -28,10 +42,10 @@
 
     <div class="tab-content" id="assignmentTabsContent">
         <div class="tab-pane fade show active" id="subject-assignment" role="tabpanel" aria-labelledby="subject-assignment-tab">
-
-            <!-- Branch Filter Form -->
+            <!-- Session, Term, and Branch Filter Form -->
             <form method="GET" action="{% url 'teacher_assignments' short_code=school.short_code %}" class="mb-4">
                 <div class="row g-3 align-items-center">
+                    <!-- Branch Filter -->
                     <div class="col-auto">
                         <label for="branch" class="col-form-label">Select Branch:</label>
                     </div>
@@ -49,6 +63,34 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <!-- Session Filter -->
+                    <div class="col-auto">
+                        <select name="session_id" id="session" class="form-select" onchange="updateTerms(this.value);">
+                            <option value="">-- Select Session --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}" {% if session.id == selected_session.id %}selected{% endif %}>
+                                    {{ session.session_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Term Filter -->
+                    <div class="col-auto">
+                        <select name="term_id" id="term" class="form-select" onchange="this.form.submit();">
+                            <option value="">-- Select Term --</option>
+                            {% if selected_session %}
+                                {% for term in selected_session.terms.all %}
+                                    <option value="{{ term.id }}" {% if term.id == selected_term.id %}selected{% endif %}>
+                                        {{ term.term_name }}
+                                    </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <!-- Search Teacher -->
                     <div class="col-auto">
                         <input type="text" id="search" name="search" class="form-control" placeholder="Search by teacher name..." value="{{ search_query }}">
                     </div>
@@ -80,31 +122,31 @@
                                     <tbody>
                                         {% for teacher, assignments in teacher_assignments.items %}
                                             {% for assignment in assignments %}
-                                            <tr>
-                                                <td>{{ teacher.user.first_name }} {{ teacher.user.last_name }}</td>
-                                                <td>{{ assignment.subject.name }}</td>
-                                                <td>
-                                                    {% for cls in assignment.classes %}
-                                                        {{ cls.name }} 
-                                                        {% if cls.department %}
-                                                            ({{ cls.department.name }})
-                                                        {% endif %}
-                                                        {% if not forloop.last %}, {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                            </tr>
+                                                <tr>
+                                                    <td>{{ teacher.user.first_name }} {{ teacher.user.last_name }}</td>
+                                                    <td>{{ assignment.subject.name }}</td>
+                                                    <td>
+                                                        {% for cls in assignment.classes %}
+                                                            {{ cls.name }}
+                                                            {% if cls.department %}
+                                                                ({{ cls.department.name }})
+                                                            {% endif %}
+                                                            {% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </td>
+                                                </tr>
                                             {% endfor %}
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <!-- Pagination Controls -->
                             <nav aria-label="Page navigation">
                                 <ul class="pagination">
                                     {% if page_obj.has_previous %}
-                                        <li class="page-item"><a class="page-link" href="?page=1&branch_id={{ selected_branch.id }}&search={{ search_query }}">&laquo; First</a></li>
-                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">&lsaquo; Previous</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page=1&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">&laquo; First</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">&lsaquo; Previous</a></li>
                                     {% else %}
                                         <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
                                         <li class="page-item disabled"><span class="page-link">&lsaquo; Previous</span></li>
@@ -113,8 +155,8 @@
                                     <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
 
                                     {% if page_obj.has_next %}
-                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">Next &rsaquo;</a></li>
-                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&branch_id={{ selected_branch.id }}&search={{ search_query }}">Last &raquo;</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">Next &rsaquo;</a></li>
+                                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">Last &raquo;</a></li>
                                     {% else %}
                                         <li class="page-item disabled"><span class="page-link">Next &rsaquo;</span></li>
                                         <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
@@ -135,7 +177,7 @@
                 <div class="alert alert-info" role="alert">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
                         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
-                      </svg>
+                    </svg>
                     Please select a branch to view its teacher assignments.
                 </div>
             {% endif %}
@@ -147,11 +189,186 @@
         </div>
     </div>
 </div>
+<!-- Copy Term Assignments Modal -->
+<div class="modal fade" id="copyTermModal" tabindex="-1" aria-labelledby="copyTermModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="copyTermModalLabel">Copy Term Assignments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="copyTermForm" method="POST" action="{% url 'copy_term_assignments' short_code=school.short_code %}">
+                    {% csrf_token %}
+                    <!-- Branch Filter -->
+                    <div class="mb-3">
+                        <label for="branchSelect" class="form-label">Select Branch:</label>
+                        <select name="branch_id" id="branchSelect" class="form-select">
+                            <option value="">-- Select Branch --</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}">
+                                    {% if branch.primary_school %}
+                                        {{ branch.primary_school.school_name }} - {{ branch.branch_name }} (Primary)
+                                    {% else %}
+                                        {{ branch.school.school_name }} - {{ branch.branch_name }} (Secondary)
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-<!-- JavaScript for Delayed Search -->
+                    <!-- Copy From Section -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="copyFromSession" class="form-label">Copy From Session:</label>
+                            <select name="from_session_id" id="copyFromSession" class="form-select" onchange="updateTermsForModal(this.value, 'fromTermSelect');">
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="fromTermSelect" class="form-label">Copy From Term:</label>
+                            <select name="from_term_id" id="fromTermSelect" class="form-select">
+                                <option value="">-- Select Term --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Copy To Section -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="copyToSession" class="form-label">Copy To Session:</label>
+                            <select name="to_session_id" id="copyToSession" class="form-select" onchange="updateTermsForModal(this.value, 'toTermSelect');">
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="toTermSelect" class="form-label">Copy To Term:</label>
+                            <select name="to_term_id" id="toTermSelect" class="form-select">
+                                <option value="">-- Select Term --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Copy Assignments</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Session Assignments Modal -->
+<div class="modal fade" id="copySessionModal" tabindex="-1" aria-labelledby="copySessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="copySessionModalLabel">Copy Session Assignments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="copySessionForm" method="POST" action="{% url 'copy_session_assignments' short_code=school.short_code %}">
+                    {% csrf_token %}
+                    <!-- Branch Filter -->
+                    <div class="mb-3">
+                        <label for="branchSelectSession" class="form-label">Select Branch:</label>
+                        <select name="branch_id" id="branchSelectSession" class="form-select">
+                            <option value="">-- Select Branch --</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}">
+                                    {% if branch.primary_school %}
+                                        {{ branch.primary_school.school_name }} - {{ branch.branch_name }} (Primary)
+                                    {% else %}
+                                        {{ branch.school.school_name }} - {{ branch.branch_name }} (Secondary)
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Copy From and Copy To Sessions -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="fromSessionCopy" class="form-label">Copy From Session:</label>
+                            <select name="from_session_id" id="fromSessionCopy" class="form-select">
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="toSessionCopy" class="form-label">Copy To Session:</label>
+                            <select name="to_session_id" id="toSessionCopy" class="form-select">
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Copy Assignments</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to Dynamically Update Term Dropdowns in Modals -->
 <script>
-    let timeout = null;
+    function updateTermsForModal(sessionId, termSelectId) {
+        const shortCode = "{{ school.short_code }}";
+        const termDropdown = document.getElementById(termSelectId);
 
+        if (sessionId) {
+            fetch(`/staff/${shortCode}/get-terms/${sessionId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    termDropdown.innerHTML = '<option value="">-- Select Term --</option>'; // Clear current options
+                    data.terms.forEach(term => {
+                        const option = document.createElement('option');
+                        option.value = term.id;
+                        option.textContent = term.term_name;
+                        termDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching terms:', error));
+        } else {
+            termDropdown.innerHTML = '<option value="">-- Select Term --</option>'; // Default when no session is selected
+        }
+    }
+</script>
+
+<!-- JavaScript to Dynamically Update Term Dropdown -->
+<script>
+    function updateTerms(sessionId) {
+        const shortCode = "{{ school.short_code }}";
+        const termDropdown = document.getElementById('term');
+
+        if (sessionId) {
+            fetch(`/staff/${shortCode}/get-terms/${sessionId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    termDropdown.innerHTML = '<option value="">-- Select Term --</option>'; // Clear current options
+                    data.terms.forEach(term => {
+                        const option = document.createElement('option');
+                        option.value = term.id;
+                        option.textContent = term.term_name;
+                        termDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching terms:', error));
+        } else {
+            termDropdown.innerHTML = '<option value="">-- Select Term --</option>'; // Default when no session is selected
+        }
+    }
+
+    let timeout = null;
     document.getElementById('search').addEventListener('input', function() {
         clearTimeout(timeout);
 
