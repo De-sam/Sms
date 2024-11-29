@@ -40,24 +40,21 @@
         </li>
     </ul>
 
-    <div class="tab-content" id="assignmentTabsContent">
+    <div class="tab-content m-2" id="assignmentTabsContent ">
         <div class="tab-pane fade show active" id="subject-assignment" role="tabpanel" aria-labelledby="subject-assignment-tab">
             <!-- Session, Term, and Branch Filter Form -->
             <form method="GET" action="{% url 'teacher_assignments' short_code=school.short_code %}" class="mb-4">
                 <div class="row g-3 align-items-center">
                     <!-- Branch Filter -->
                     <div class="col-auto">
-                        <label for="branch" class="col-form-label">Select Branch:</label>
-                    </div>
-                    <div class="col-auto">
                         <select name="branch_id" id="branch" class="form-select" onchange="this.form.submit();">
                             <option value="">-- Select Branch --</option>
                             {% for branch in branches %}
                                 <option value="{{ branch.id }}" {% if branch.id == selected_branch.id %}selected{% endif %}>
                                     {% if branch.primary_school %}
-                                        {{ branch.primary_school.school_name }} - {{ branch.branch_name }} (Primary)
+                                        {{ branch.branch_name }} (Primary)
                                     {% else %}
-                                        {{ branch.school.school_name }} - {{ branch.branch_name }} (Secondary)
+                                        {{ branch.branch_name }} (Secondary)
                                     {% endif %}
                                 </option>
                             {% endfor %}

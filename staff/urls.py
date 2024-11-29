@@ -4,8 +4,7 @@ from . import views
 urlpatterns = [
     path('<str:short_code>/get-sessions/', views.get_sessions, name='get_sessions'),
     path('<str:short_code>/get-terms/<int:session_id>/', views.get_terms, name='get_terms'),
-    path('<str:short_code>/get-classes-by-subject/<int:subject_id>/', views.get_classes_by_subject, name='get_classes_by_subject'),
-    path('<str:short_code>/get-classes/<int:branch_id>/<int:subject_id>/', views.get_classes, name='get_classes'),
+    path('<str:short_code>/get-classes-by-subject/<int:branch_id>/<int:subject_id>/', views.get_classes_by_subject, name='get_classes_by_subject'),    path('<str:short_code>/get-classes/<int:branch_id>/<int:subject_id>/', views.get_classes, name='get_classes'),
     path('<str:short_code>/get-subjects-and-classes/<int:branch_id>/', views.get_subjects_and_classes, name='get_subjects_and_classes'),
     path('<str:short_code>/pre-add-staff/', views.pre_add_staff, name='pre_add_staff'),
     path('<str:short_code>/add-staff/', views.add_staff, name='add_staff'),
@@ -18,6 +17,5 @@ urlpatterns = [
     path('<str:short_code>/download_staff_template/', views.download_staff_template, name='download_staff_template'),
     path('<str:short_code>/copy-term-assignments/', views.copy_term_assignments, name='copy_term_assignments'),
     path('<str:short_code>/copy-session-assignments/', views.copy_session_assignments, name='copy_session_assignments'),
-
     # Other URLs...
 ]

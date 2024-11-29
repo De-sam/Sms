@@ -39,13 +39,13 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Select Branch</label>
+                             
                                 {{ form.branch|as_crispy_field }}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Select Subject</label>
+                                
                                 {{ form.subject|as_crispy_field }}
                             </div>
                         </div>
@@ -170,9 +170,9 @@
 
         subjectField.addEventListener('change', function () {
             const subjectId = subjectField.value;
-
-            if (subjectId) {
-                fetch(`/staff/${shortCode}/get-classes-by-subject/${subjectId}/`)
+            const branchId = branchField.value;
+            if (subjectId  && branchId) {
+                fetch(`/staff/${shortCode}/get-classes-by-subject/${branchId}/${subjectId}/`)
                     .then(response => response.json())
                     .then(data => {
                         // Populate classes with checkboxes

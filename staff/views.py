@@ -438,15 +438,22 @@ def get_classes(request, short_code, branch_id, subject_id):
     })
 
 from classes.models import Class
-def get_classes_by_subject(request, short_code, subject_id):
-    # Fetch the subject ensuring it belongs to the school associated with the short_code
+def get_classes_by_subject(request, short_code, branch_id, subject_id):
+    """
+    Fetch classes for a given subject and branch combination.
+    Only classes that belong to the selected branch and are associated with the subject should be returned.
+    """
+    # Get the branch ensuring it belongs to the correct school by short_code
+    branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
+
+    # Get the subject ensuring it is within the current school
     subject = get_object_or_404(Subject, id=subject_id)
 
-    # Filter classes by the subject and ensure the related branch belongs to the correct school
-    classes = Class.objects.filter(subjects=subject, branches__school__short_code=short_code).select_related('department')
+    # Filter classes by both the branch and subject
+    classes = Class.objects.filter(branches=branch, subjects=subject).select_related('department').distinct()
 
     # Prepare the data to send as JSON response
-    classes_data = [{'id': c.id, 'name': c.name, 'department': c.department.name if c.department else None} for c in classes]
+    classes_data = [{'id': cls.id, 'name': cls.name, 'department': cls.department.name if cls.department else None} for cls in classes]
 
     return JsonResponse({
         'classes': classes_data,
