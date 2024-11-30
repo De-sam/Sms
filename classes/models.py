@@ -136,3 +136,55 @@ class TeacherSubjectClassAssignment(models.Model):
 
     def __str__(self):
         return f"{self.teacher.user.first_name} {self.teacher.user.last_name} teaches {self.subject.name} in {self.session.session_name}, {self.term.term_name}"
+
+
+class TeacherClassAssignment(models.Model):
+    teacher = models.ForeignKey(
+        Staff, on_delete=models.CASCADE,
+        related_name="class_assignments",
+         null=True, 
+        blank=True
+    )
+    session = models.ForeignKey(
+        Session, on_delete=models.CASCADE, 
+        related_name="teacher_class_assignments",
+        null=True, 
+        blank=True
+    )
+    term = models.ForeignKey(
+        Term, on_delete=models.CASCADE, 
+        related_name="teacher_class_assignments",
+        null=True, 
+        blank=True
+    )
+    branch = models.ForeignKey(
+        Branch, on_delete=models.CASCADE, 
+        related_name="teacher_class_assignments",
+        null=True, 
+        blank=True
+    )
+    assigned_classes = models.ManyToManyField(
+        Class,
+        related_name="teacher_assignments",
+        null=True, 
+        blank=True
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('teacher', 'session', 'term', 'branch')
+        indexes = [
+            models.Index(fields=['teacher']),  # Index to optimize teacher filtering
+            models.Index(fields=['session']),  # Index to optimize session filtering
+            models.Index(fields=['term']),     # Index to optimize term filtering
+            models.Index(fields=['branch']),   # Index to optimize branch filtering
+        ]
+
+    def __str__(self):
+        # Use the branch's `branch_name` field or its `__str__` method
+        return (f"{self.teacher.user.first_name} {self.teacher.user.last_name} "
+                f"manages classes in {self.session.session_name}, "
+                f"{self.term.term_name}, {self.branch.branch_name}")
+        # Alternatively, use the Branch model's __str__:
+        # return f"{self.teacher.user.first_name} {self.teacher.user.last_name} manages classes in {self.session.session_name}, {self.term.term_name}, {self.branch}"

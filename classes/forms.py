@@ -1,7 +1,7 @@
 from django import forms
 from schools.models import Branch
 from .models import Subject, Class, SubjectType, Department,Arm
-from .models import Staff, TeacherSubjectClassAssignment
+from .models import Staff, TeacherSubjectClassAssignment, TeacherClassAssignment
 from classes.models import Class
 
 
@@ -72,3 +72,36 @@ class TeacherSubjectClassAssignmentForm(forms.ModelForm):
     class Meta:
         model = TeacherSubjectClassAssignment
         fields = ['teacher', 'subject', 'class_assigned']
+
+
+class TeacherClassAssignmentForm(forms.ModelForm):
+    class Meta:
+        model = TeacherClassAssignment
+        fields = ['session', 'term', 'branch', 'assigned_classes']
+
+    branch = forms.ModelChoiceField(
+        queryset=Branch.objects.none(),
+        required=True,
+        label="Branch"
+    )
+    assigned_classes = forms.ModelMultipleChoiceField(
+        queryset=Class.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        label="Classes"
+    )
+
+    def __init__(self, *args, **kwargs):
+        teacher_branches = kwargs.pop('teacher_branches', None)
+        branch_id = kwargs.pop('branch_id', None)
+        super().__init__(*args, **kwargs)
+
+        # Filter branches based on the teacher's assigned branches
+        if teacher_branches:
+            self.fields['branch'].queryset = Branch.objects.filter(id__in=teacher_branches)
+
+        # Filter classes based on the selected branch
+        if branch_id:
+            self.fields['assigned_classes'].queryset = Class.objects.filter(branches__id=branch_id)
+        else:
+            self.fields['assigned_classes'].queryset = Class.objects.none()

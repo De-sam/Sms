@@ -34,3 +34,11 @@ class TeacherSubjectClassAssignmentAdmin(admin.ModelAdmin):
     get_classes_assigned.short_description = 'Classes Assigned'
 
 admin.site.register(TeacherSubjectClassAssignment, TeacherSubjectClassAssignmentAdmin)
+
+from classes.models import TeacherClassAssignment
+
+@admin.register(TeacherClassAssignment)
+class TeacherClassAssignmentAdmin(admin.ModelAdmin):
+    # Specify which fields to display in the list view
+    list_display = ('teacher', 'branch', 'session', 'term', 'assigned_at')
+    

@@ -25,6 +25,7 @@ from uuid import uuid4
 from django.http import JsonResponse
 from classes.models import Subject
 from django.views.decorators.http import require_POST
+from classes.forms import TeacherClassAssignmentForm
 
 
 def save_temp_file(uploaded_file):
@@ -459,6 +460,8 @@ def get_classes_by_subject(request, short_code, branch_id, subject_id):
         'classes': classes_data,
     })
 
+from classes.models import TeacherClassAssignment  # Ensure you have imported the model
+
 @login_required_with_short_code
 @admin_required
 def teacher_assignments_view(request, short_code):
@@ -476,8 +479,11 @@ def teacher_assignments_view(request, short_code):
     selected_session = None
     selected_term = None
     teacher_assignments = {}
-    page_obj = None  # Initialize page_obj as None
+    class_assignments = {}
+    page_obj_subjects = None
+    page_obj_classes = None
 
+    # Subject Assignments
     if selected_branch_id:
         selected_branch = get_object_or_404(Branch, id=selected_branch_id, school=school)
         
@@ -497,13 +503,13 @@ def teacher_assignments_view(request, short_code):
                 Q(teacher__user__last_name__icontains=search_query)
             )
 
-        # Pagination
-        paginator = Paginator(assignments, 10)  # Show 10 assignments per page
+        # Pagination for Subject Assignments
+        paginator = Paginator(assignments, 10)
         page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
+        page_obj_subjects = paginator.get_page(page_number)
 
-        # Organize assignments by teacher
-        for assignment in page_obj:
+        # Organize Subject Assignments by Teacher
+        for assignment in page_obj_subjects:
             teacher = assignment.teacher
             if teacher not in teacher_assignments:
                 teacher_assignments[teacher] = []
@@ -511,6 +517,40 @@ def teacher_assignments_view(request, short_code):
                 'subject': assignment.subject,
                 'classes': assignment.classes_assigned.all()
             })
+
+    # Class Assignments
+    if selected_branch_id:
+        class_assignments_queryset = TeacherClassAssignment.objects.filter(branch=selected_branch)
+
+        if selected_session_id:
+            class_assignments_queryset = class_assignments_queryset.filter(session=selected_session)
+
+        if selected_term_id:
+            class_assignments_queryset = class_assignments_queryset.filter(term=selected_term)
+
+        if search_query:
+            class_assignments_queryset = class_assignments_queryset.filter(
+                Q(teacher__user__first_name__icontains=search_query) |
+                Q(teacher__user__last_name__icontains=search_query)
+            )
+
+        # Pagination for Class Assignments
+        paginator_classes = Paginator(class_assignments_queryset, 10)
+        page_number_classes = request.GET.get('page_classes')
+        page_obj_classes = paginator_classes.get_page(page_number_classes)
+
+        # Organize Class Assignments by Teacher
+        for assignment in page_obj_classes:
+            teacher = assignment.teacher
+            if teacher not in class_assignments:
+                class_assignments[teacher] = []
+            class_assignments[teacher].append({
+                'classes': assignment.assigned_classes.all()
+            })
+    print("Class Assignments:", class_assignments)
+    print("Selected Branch:", selected_branch)
+    print("Selected Session:", selected_session)
+    print("Selected Term:", selected_term)
 
     return render(request, 'staff/teacher_assignments.html', {
         'school': school,
@@ -520,7 +560,9 @@ def teacher_assignments_view(request, short_code):
         'selected_session': selected_session,
         'selected_term': selected_term,
         'teacher_assignments': teacher_assignments,
-        'page_obj': page_obj,
+        'class_assignments': class_assignments,
+        'page_obj_subjects': page_obj_subjects,
+        'page_obj_classes': page_obj_classes,
         'search_query': search_query,
     })
 
@@ -531,7 +573,7 @@ def teacher_assignments_view(request, short_code):
 @transaction.atomic
 def copy_term_assignments(request, short_code):
     """
-    View to copy teacher assignments from one term to another term.
+    View to copy both subject and class assignments from one term to another term.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branch_id = request.POST.get('branch_id')
@@ -552,22 +594,36 @@ def copy_term_assignments(request, short_code):
     to_session = get_object_or_404(Session, id=to_session_id, school=school)
     to_term = get_object_or_404(Term, id=to_term_id, session=to_session)
 
-    # Fetch all assignments from the source term
-    assignments = TeacherSubjectClassAssignment.objects.filter(branch=branch, session=from_session, term=from_term)
-
-    # Assuming `to_term_assignments` is the queryset of assignments for the "To Term"
-    for from_assignment in assignments:
-        assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
+    # Copy subject assignments
+    subject_assignments = TeacherSubjectClassAssignment.objects.filter(
+        branch=branch, session=from_session, term=from_term
+    )
+    for from_assignment in subject_assignments:
+        subject_assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
             teacher=from_assignment.teacher,
             subject=from_assignment.subject,
             branch=from_assignment.branch,
             session=to_session,
-            term=to_term,
+            term=to_term
+        )
+        # Copy classes assigned to the subject
+        subject_assignment.classes_assigned.set(from_assignment.classes_assigned.all())
+        subject_assignment.save()
+
+    # Copy class assignments
+    class_assignments = TeacherClassAssignment.objects.filter(
+        branch=branch, session=from_session, term=from_term
     )
-    
-    # Instead of direct assignment, use `.set()` method
-    assignment.classes_assigned.set(from_assignment.classes_assigned.all())
-    assignment.save()
+    for from_assignment in class_assignments:
+        class_assignment, created = TeacherClassAssignment.objects.get_or_create(
+            teacher=from_assignment.teacher,
+            branch=from_assignment.branch,
+            session=to_session,
+            term=to_term
+        )
+        # Copy classes assigned
+        class_assignment.assigned_classes.set(from_assignment.assigned_classes.all())
+        class_assignment.save()
 
     messages.success(request, "Assignments successfully copied from the selected term.")
     return redirect('teacher_assignments', short_code=school.short_code)
@@ -579,7 +635,7 @@ def copy_term_assignments(request, short_code):
 @transaction.atomic
 def copy_session_assignments(request, short_code):
     """
-    View to copy all assignments from one session to another session.
+    View to copy both subject and class assignments from one session to another session.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branch_id = request.POST.get('branch_id')
@@ -596,26 +652,101 @@ def copy_session_assignments(request, short_code):
     from_session = get_object_or_404(Session, id=from_session_id, school=school)
     to_session = get_object_or_404(Session, id=to_session_id, school=school)
 
-    # Fetch all assignments from the source session (all terms)
-    assignments = TeacherSubjectClassAssignment.objects.filter(branch=branch, session=from_session)
-
-    # Copy each assignment to the target session, for all terms
-    for assignment in assignments:
-        to_term = Term.objects.get(session=to_session, term_name=assignment.term.term_name)  # Match the term name
-        
-        # Create or get the assignment without setting the many-to-many field
-        new_assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
-            teacher=assignment.teacher,
-            subject=assignment.subject,
-            branch=assignment.branch,
+    # Copy subject assignments
+    subject_assignments = TeacherSubjectClassAssignment.objects.filter(
+        branch=branch, session=from_session
+    )
+    for from_assignment in subject_assignments:
+        to_term = Term.objects.get(session=to_session, term_name=from_assignment.term.term_name)
+        subject_assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
+            teacher=from_assignment.teacher,
+            subject=from_assignment.subject,
+            branch=from_assignment.branch,
             session=to_session,
             term=to_term
         )
+        # Copy classes assigned to the subject
+        subject_assignment.classes_assigned.set(from_assignment.classes_assigned.all())
+        subject_assignment.save()
 
-        # Use `.set()` to copy the classes assigned
-        new_assignment.classes_assigned.set(assignment.classes_assigned.all())
-        new_assignment.save()
+    # Copy class assignments
+    class_assignments = TeacherClassAssignment.objects.filter(
+        branch=branch, session=from_session
+    )
+    for from_assignment in class_assignments:
+        to_term = Term.objects.get(session=to_session, term_name=from_assignment.term.term_name)
+        class_assignment, created = TeacherClassAssignment.objects.get_or_create(
+            teacher=from_assignment.teacher,
+            branch=from_assignment.branch,
+            session=to_session,
+            term=to_term
+        )
+        # Copy classes assigned
+        class_assignment.assigned_classes.set(from_assignment.assigned_classes.all())
+        class_assignment.save()
 
     messages.success(request, "Assignments successfully copied to the selected session.")
     return redirect('teacher_assignments', short_code=school.short_code)
 
+@login_required_with_short_code
+@admin_required
+@transaction.atomic
+def assign_teacher_to_class(request, short_code, teacher_id):
+    # Identify the school using the short_code
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    
+    # Fetch the teacher and ensure they belong to the same school
+    teacher = get_object_or_404(Staff, id=teacher_id)
+    
+    # Ensure the teacher belongs to branches within the school
+    teacher_branches = Branch.objects.filter(school=school, staff=teacher).values_list('id', flat=True)
+    
+    if not teacher_branches.exists():
+        messages.error(request, f"{teacher.user.first_name} {teacher.user.last_name} is not assigned to any branches under this school.")
+        return redirect('teacher_assignments', short_code=short_code)
+
+    if request.method == 'POST':
+        # Get the selected branch ID from the form
+        branch_id = request.POST.get('branch')
+        
+        # Pass teacher_branches and branch_id to the form for filtering
+        form = TeacherClassAssignmentForm(
+            request.POST,
+            teacher_branches=teacher_branches,
+            branch_id=branch_id
+        )
+        
+        if form.is_valid():
+            assignment = form.save(commit=False)
+            assignment.teacher = teacher  # Set the teacher for the assignment
+            assignment.save()
+            form.save_m2m()  # Save many-to-many relationships for assigned_classes
+            
+            messages.success(request, f"Classes assigned to {teacher.user.first_name} successfully.")
+            return redirect('teacher_assignments', short_code=short_code)
+    else:
+        # Initialize the form with the teacher's branches
+        form = TeacherClassAssignmentForm(teacher_branches=teacher_branches)
+
+    context = {
+        'form': form,
+        'teacher': teacher,
+        'school': school,
+        'short_code': short_code,
+    }
+    return render(request, 'staff/assign_teacher.html', context)
+
+
+@admin_required
+def get_classes_by_branch(request, short_code, branch_id):
+    # Fetch the branch ensuring it belongs to the correct school
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    branch = get_object_or_404(Branch, id=branch_id, school=school)
+
+    # Fetch classes associated with the branch
+    classes = branch.classes.all().select_related('department').distinct()
+
+    # Prepare the data to send as JSON response
+    classes_data = [{'id': cls.id, 'name': cls.name, 'department': cls.department.name if cls.department else None} for cls in classes]
+
+    return JsonResponse({'classes': classes_data})

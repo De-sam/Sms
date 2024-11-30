@@ -142,8 +142,8 @@
                                                           </svg>
                                                         Assign Subject(s)
                                                     </a></li>
-                                                    <li><a class="dropdown-item" href="{% url 'edit_staff' school.short_code staff.id %}">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
+                                                    <li><a class="dropdown-item" href="{% url 'assign_teacher_to_class' short_code=school.short_code teacher_id=staff.id %}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" widt% uh="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
                                                             <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
                                                             <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
                                                           </svg>

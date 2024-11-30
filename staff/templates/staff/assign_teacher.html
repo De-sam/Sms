@@ -1,0 +1,143 @@
+{% extends "adminlte/base.html" %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="container mt-5">
+    <h5 class="mb-4">Assign Classes to {{ teacher.user.first_name }} {{ teacher.user.last_name }}</h5>
+    
+    <form method="post" id="assignmentForm">
+        {% csrf_token %}
+
+        <!-- Session Field -->
+        <div class="mb-3">
+            <label for="session" class="form-label">Session</label>
+            <select name="session" id="id_session" class="form-control" required>
+                <option value="" selected>Select a session</option>
+                <!-- Sessions will be populated dynamically -->
+            </select>
+        </div>
+
+        <!-- Term Field -->
+        <div class="mb-3">
+            <label for="term" class="form-label">Term</label>
+            <select name="term" id="id_term" class="form-control" required>
+                <option value="" selected>Select a term</option>
+                <!-- Terms will be populated dynamically -->
+            </select>
+        </div>
+
+        <!-- Branch Field -->
+        <div class="mb-3">
+            {{ form.branch|as_crispy_field }}
+        </div>
+
+        <!-- Assigned Classes Field -->
+        <div class="mb-3">
+            <label for="assigned_classes" class="form-label">Classes</label>
+            <div id="classesContainer">
+                <!-- Checkboxes will be dynamically added here -->
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Assign Classes</button>
+    </form>
+</div>
+
+<script>
+    // CSRF token setup for AJAX
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Wait for the DOM to fully load
+    document.addEventListener("DOMContentLoaded", function () {
+        // Fetch and populate sessions for the school
+        const sessionField = document.getElementById("id_session");
+        fetch("{% url 'get_sessions' short_code=school.short_code %}")
+            .then(response => response.json())
+            .then(data => {
+                data.sessions.forEach(session => {
+                    const option = document.createElement("option");
+                    option.value = session.id;
+                    option.textContent = session.session_name;
+                    sessionField.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error fetching sessions:", error));
+
+        // Fetch and populate terms when a session is selected
+        sessionField.addEventListener("change", function() {
+            const sessionId = this.value;
+            const termField = document.getElementById("id_term");
+
+            // Clear previous term options
+            termField.innerHTML = '<option value="" selected>Select a term</option>';
+
+            if (sessionId) {
+                const url = "{% url 'get_terms' short_code=school.short_code session_id=0 %}".replace("0", sessionId);
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.terms.forEach(term => {
+                            const option = document.createElement("option");
+                            option.value = term.id;
+                            option.textContent = term.term_name;
+                            termField.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error("Error fetching terms:", error));
+            }
+        });
+
+        // Fetch and populate classes dynamically based on the selected branch
+        document.getElementById("id_branch").addEventListener("change", function() {
+            const branchId = this.value;
+            const classesContainer = document.getElementById("classesContainer");
+
+            // Clear previous checkboxes
+            classesContainer.innerHTML = ""; 
+
+            if (branchId) {
+                const url = "{% url 'get_classes_by_branch' short_code=school.short_code branch_id=0 %}".replace("0", branchId);
+                fetch(url, {
+                    method: 'GET',
+                    headers: {'X-CSRFToken': csrftoken},
+                })
+                .then(response => response.json())
+                .then(data => {
+                    data.classes.forEach(cls => {
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.name = "assigned_classes";
+                        checkbox.value = cls.id;
+                        checkbox.id = `class_${cls.id}`;
+                        
+                        const label = document.createElement("label");
+                        label.htmlFor = `class_${cls.id}`;
+                        label.textContent = cls.name;
+
+                        const div = document.createElement("div");
+                        div.appendChild(checkbox);
+                        div.appendChild(label);
+
+                        classesContainer.appendChild(div);
+                    });
+                })
+                .catch(error => console.error("Error fetching classes:", error));
+            }
+        });
+    });
+</script>
+{% endblock %}

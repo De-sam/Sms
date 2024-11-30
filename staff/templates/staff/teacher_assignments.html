@@ -183,6 +183,135 @@
         <div class="tab-pane fade" id="class-assignment" role="tabpanel" aria-labelledby="class-assignment-tab">
             <!-- Placeholder for Assigned Classes -->
             <!-- Future implementation for displaying class assignments will go here -->
+                <form method="GET" action="{% url 'teacher_assignments' short_code=school.short_code %}" class="mb-4">
+                    <div class="row g-3 align-items-center">
+                        <!-- Branch Filter -->
+                        <div class="col-auto">
+                            <select name="branch_id" id="branch" class="form-select" onchange="this.form.submit();">
+                                <option value="">-- Select Branch --</option>
+                                {% for branch in branches %}
+                                    <option value="{{ branch.id }}" {% if branch.id == selected_branch.id %}selected{% endif %}>
+                                        {% if branch.primary_school %}
+                                            {{ branch.branch_name }} (Primary)
+                                        {% else %}
+                                            {{ branch.branch_name }} (Secondary)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+            
+                        <!-- Session Filter -->
+                        <div class="col-auto">
+                            <select name="session_id" id="session" class="form-select" onchange="updateTerms(this.value);">
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}" {% if session.id == selected_session.id %}selected{% endif %}>
+                                        {{ session.session_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+            
+                        <!-- Term Filter -->
+                        <div class="col-auto">
+                            <select name="term_id" id="term" class="form-select" onchange="this.form.submit();">
+                                <option value="">-- Select Term --</option>
+                                {% if selected_session %}
+                                    {% for term in selected_session.terms.all %}
+                                        <option value="{{ term.id }}" {% if term.id == selected_term.id %}selected{% endif %}>
+                                            {{ term.term_name }}
+                                        </option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+            
+                        <!-- Search Teacher -->
+                        <div class="col-auto">
+                            <input type="text" id="search" name="search" class="form-control" placeholder="Search by teacher name..." value="{{ search_query }}">
+                        </div>
+                    </div>
+                </form>
+            
+                {% if selected_branch %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                {% if selected_branch.primary_school %}
+                                    {{ selected_branch.primary_school.school_name }} - {{ selected_branch.branch_name }} (Primary)
+                                {% else %}
+                                    {{ selected_branch.school.school_name }} - {{ selected_branch.branch_name }} (Secondary)
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {% if class_assignments %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th>Teacher</th>
+                                                <th>Classes Assigned</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for teacher, assignments in class_assignments.items %}
+                                                <tr>
+                                                    <td>{{ teacher.user.first_name }} {{ teacher.user.last_name }}</td>
+                                                    <td>
+                                                        {% for cls in assignments.0.classes %}
+                                                            {{ cls.name }}
+                                                            {% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Pagination Controls -->
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        {% if page_obj_classes.has_previous %}
+                                            <li class="page-item"><a class="page-link" href="?page_classes=1&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">&laquo; First</a></li>
+                                            <li class="page-item"><a class="page-link" href="?page_classes={{ page_obj_classes.previous_page_number }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">&lsaquo; Previous</a></li>
+                                        {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
+                                            <li class="page-item disabled"><span class="page-link">&lsaquo; Previous</span></li>
+                                        {% endif %}
+            
+                                        <li class="page-item active"><span class="page-link">{{ page_obj_classes.number }} of {{ page_obj_classes.paginator.num_pages }}</span></li>
+            
+                                        {% if page_obj_classes.has_next %}
+                                            <li class="page-item"><a class="page-link" href="?page_classes={{ page_obj_classes.next_page_number }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">Next &rsaquo;</a></li>
+                                            <li class="page-item"><a class="page-link" href="?page_classes={{ page_obj_classes.paginator.num_pages }}&branch_id={{ selected_branch.id }}&session_id={{ selected_session.id }}&term_id={{ selected_term.id }}&search={{ search_query }}">Last &raquo;</a></li>
+                                        {% else %}
+                                            <li class="page-item disabled"><span class="page-link">Next &rsaquo;</span></li>
+                                            <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                                    </svg>
+                                    No class assignments found for this branch.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                        </svg>
+                        Please select a branch to view its class assignments.
+                    </div>
+                {% endif %}
+            </div>
+            
         </div>
     </div>
 </div>
