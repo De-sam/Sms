@@ -336,14 +336,17 @@ def delete_staff(request, short_code, staff_id):
         'staff': staff
     })
 
-
 @transaction.atomic
-@admin_required
 @login_required_with_short_code
+@admin_required
 def assign_subjects_to_staff(request, short_code, staff_id):
+    """
+    Assign subjects and classes to a staff member.
+    """
+    # Fetch the staff and school context
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     staff = get_object_or_404(Staff, id=staff_id)
-    branches = Branch.objects.filter(school=school, staff__id=staff.id).distinct()
+    branches = Branch.objects.filter(school=school, staff=staff).distinct()
 
     branch_id = request.POST.get('branch') or request.GET.get('branch')
     selected_branch = Branch.objects.get(id=branch_id) if branch_id else None
@@ -357,7 +360,21 @@ def assign_subjects_to_staff(request, short_code, staff_id):
             session = form.cleaned_data['session']
             term = form.cleaned_data['term']
 
-            # Create or update the assignment for the current teacher, subject, branch, session, and term
+            # Unassign classes from other staff for the same subject, branch, session, and term
+            existing_assignments = TeacherSubjectClassAssignment.objects.filter(
+                branch=branch, subject=subject, session=session, term=term
+            ).exclude(teacher=staff)
+
+            for assignment in existing_assignments:
+                # Remove conflicting classes
+                conflicting_classes = assignment.classes_assigned.filter(id__in=classes.values_list('id', flat=True))
+                assignment.classes_assigned.remove(*conflicting_classes)
+
+                # If no classes are left, delete the assignment
+                if assignment.classes_assigned.count() == 0:
+                    assignment.delete()
+
+            # Assign the subject to the current staff
             assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
                 teacher=staff,
                 subject=subject,
@@ -366,21 +383,20 @@ def assign_subjects_to_staff(request, short_code, staff_id):
                 term=term
             )
             assignment.classes_assigned.add(*classes)
-            assignment.save()
 
-            messages.success(request, f'Subjects and classes assigned to {staff.user.first_name} successfully for {session.session_name}, {term.term_name}!')
+            messages.success(request, f"Subject '{subject.name}' successfully assigned to {staff.user.get_full_name()} for {session.session_name}, {term.term_name}.")
             return redirect('teacher_assignments', short_code=school.short_code)
         else:
-            print(f"Form Errors: {form.errors}")
+            messages.error(request, "Please correct the errors in the form.")
     else:
         form = TeacherSubjectAssignmentForm(school=school, branch_id=branch_id, staff=staff)
 
     return render(request, 'staff/assign_subjects.html', {
         'form': form,
-        'school': school,
         'staff': staff,
         'branches': branches,
         'selected_branch': selected_branch,
+        'school': school,
     })
 
 from academics.models import Session, Term

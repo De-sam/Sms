@@ -97,13 +97,13 @@
             {% if selected_branch %}
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="mb-0">
+                        <h6 class="mb-0">
                             {% if selected_branch.primary_school %}
                                 {{ selected_branch.primary_school.school_name }} - {{ selected_branch.branch_name }} (Primary)
                             {% else %}
                                 {{ selected_branch.school.school_name }} - {{ selected_branch.branch_name }} (Secondary)
                             {% endif %}
-                        </h3>
+                        </h6>
                     </div>
                     <div class="card-body">
                         {% if teacher_assignments %}
