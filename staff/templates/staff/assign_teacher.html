@@ -34,7 +34,7 @@
         <!-- Assigned Classes Field -->
         <div class="mb-3">
             <label for="assigned_classes" class="form-label">Classes</label>
-            <div id="classesContainer">
+            <div id="classesContainer" class="bg-light p-3 rounded">
                 <!-- Checkboxes will be dynamically added here -->
             </div>
         </div>
@@ -63,8 +63,12 @@
 
     // Wait for the DOM to fully load
     document.addEventListener("DOMContentLoaded", function () {
-        // Fetch and populate sessions for the school
         const sessionField = document.getElementById("id_session");
+        const termField = document.getElementById("id_term");
+        const branchField = document.getElementById("id_branch");
+        const classesContainer = document.getElementById("classesContainer");
+
+        // Fetch and populate sessions for the school
         fetch("{% url 'get_sessions' short_code=school.short_code %}")
             .then(response => response.json())
             .then(data => {
@@ -80,7 +84,6 @@
         // Fetch and populate terms when a session is selected
         sessionField.addEventListener("change", function() {
             const sessionId = this.value;
-            const termField = document.getElementById("id_term");
 
             // Clear previous term options
             termField.innerHTML = '<option value="" selected>Select a term</option>';
@@ -102,9 +105,8 @@
         });
 
         // Fetch and populate classes dynamically based on the selected branch
-        document.getElementById("id_branch").addEventListener("change", function() {
+        branchField.addEventListener("change", function() {
             const branchId = this.value;
-            const classesContainer = document.getElementById("classesContainer");
 
             // Clear previous checkboxes
             classesContainer.innerHTML = ""; 
@@ -118,20 +120,27 @@
                 .then(response => response.json())
                 .then(data => {
                     data.classes.forEach(cls => {
+                        // Create checkbox
                         const checkbox = document.createElement("input");
                         checkbox.type = "checkbox";
                         checkbox.name = "assigned_classes";
                         checkbox.value = cls.id;
                         checkbox.id = `class_${cls.id}`;
-                        
+                        checkbox.classList.add("form-check-input");
+
+                        // Create label and include department details
                         const label = document.createElement("label");
                         label.htmlFor = `class_${cls.id}`;
-                        label.textContent = cls.name;
+                        label.innerHTML = `${cls.name} <span style="font-size: 0.9em; color: grey;">(${cls.department ? cls.department : 'No Department'})</span>`;
+                        label.classList.add("form-check-label");
 
+                        // Create a container div for the checkbox and label
                         const div = document.createElement("div");
+                        div.classList.add("form-check");
                         div.appendChild(checkbox);
                         div.appendChild(label);
 
+                        // Append to the classes container
                         classesContainer.appendChild(div);
                     });
                 })

@@ -27,6 +27,7 @@ from classes.models import Subject
 from django.views.decorators.http import require_POST
 from classes.forms import TeacherClassAssignmentForm
 from utils.academics import get_sessions, get_terms
+from academics.models import Session, Term
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -418,21 +419,24 @@ def get_subjects_and_classes(request, short_code, branch_id):
     })
     
 def get_classes(request, short_code, branch_id, subject_id):
-    # Fetch the branch and ensure it belongs to the correct school
     branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
-    
-    # Fetch the subject and ensure it belongs to the correct branch
     subject = get_object_or_404(Subject, id=subject_id, classes__branches=branch)
 
     # Fetch all classes for that subject under the selected branch
-    classes = subject.classes.filter(branches=branch).distinct()
+    classes = subject.classes.filter(branches=branch).select_related('department').distinct()
 
     # Prepare the data to send as JSON response
-    classes_data = [{'id': c.id, 'name': c.name} for c in classes]
+    classes_data = [
+        {
+            'id': cls.id,
+            'name': cls.name,
+            'department': cls.department.name if cls.department else 'No Department'
+        }
+        for cls in classes
+    ]
 
-    return JsonResponse({
-        'classes': classes_data,
-    })
+    return JsonResponse({'classes': classes_data})
+
 
 from classes.models import Class
 def get_classes_by_subject(request, short_code, branch_id, subject_id):
