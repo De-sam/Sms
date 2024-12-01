@@ -9,19 +9,12 @@
             </h3>
         </div>
         <div class="card-body">
+           
             <!-- Form for Setting School Days Open -->
             <form id="schoolDaysOpenForm" method="post" action="{% url 'set_school_days_open' school.short_code %}">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="branches">Branch(es)</label>
-                    <div class="form-check">
-                        {% for branch in form.branches.field.queryset %}
-                            <input class="form-check-input" type="checkbox" name="branches" value="{{ branch.id }}" id="branch_{{ branch.id }}">
-                            <label class="form-check-label" for="branch_{{ branch.id }}">{{ branch.branch_name }}</label><br>
-                        {% endfor %}
-                    </div>
-                </div>
-
+                
+                <!-- Session Selection -->
                 <div class="form-group mt-3">
                     <label for="session">Session</label>
                     <select id="session" name="session" class="form-control" required>
@@ -29,6 +22,7 @@
                     </select>
                 </div>
 
+                <!-- Term Selection -->
                 <div class="form-group mt-3">
                     <label for="term">Term</label>
                     <select id="term" name="term" class="form-control" required disabled>
@@ -36,11 +30,29 @@
                     </select>
                 </div>
 
+                <!-- Branches Selection -->
+                <div class="form-group">
+                    <label for="branches">Branch(es)</label>
+                    <div class="form-check">
+                        {% for branch in form.fields.branches.queryset %}
+                            <input class="form-check-input" type="checkbox" name="branches" value="{{ branch.id }}"
+                                id="branch_{{ branch.id }}"
+                                {% if branch.id in form.data.branches or branch.id in form.initial.branches %}
+                                    checked
+                                {% endif %}
+                            >
+                            <label class="form-check-label" for="branch_{{ branch.id }}">{{ branch.branch_name }}</label><br>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Number of Days School Opened -->
                 <div class="form-group mt-3">
                     <label for="days_open">Number of Days School Opened: </label><br>
                     {{ form.days_open }}
                 </div>
 
+                <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary mt-3">Set Days Open</button>
             </form>
         </div>
