@@ -1,0 +1,97 @@
+{% extends "adminlte/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Card with Primary Color and Icon -->
+    <div class="card card-outline card-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-calendar-alt"></i> Set School Days Open
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Form for Setting School Days Open -->
+            <form id="schoolDaysOpenForm" method="post" action="{% url 'set_school_days_open' school.short_code %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="branches">Branch(es)</label>
+                    <div class="form-check">
+                        {% for branch in form.branches.field.queryset %}
+                            <input class="form-check-input" type="checkbox" name="branches" value="{{ branch.id }}" id="branch_{{ branch.id }}">
+                            <label class="form-check-label" for="branch_{{ branch.id }}">{{ branch.branch_name }}</label><br>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="session">Session</label>
+                    <select id="session" name="session" class="form-control" required>
+                        <option value="">Select Session</option>
+                    </select>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="term">Term</label>
+                    <select id="term" name="term" class="form-control" required disabled>
+                        <option value="">Select Term</option>
+                    </select>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="days_open">Number of Days School Opened: </label><br>
+                    {{ form.days_open }}
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3">Set Days Open</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionSelect = document.getElementById('session');
+        const termSelect = document.getElementById('term');
+        const shortCode = "{{ school.short_code }}";
+        
+        // Fetch sessions for the selected school
+        fetch(`/attendance/${shortCode}/get-sessions/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.sessions) {
+                    data.sessions.forEach(session => {
+                        const option = document.createElement('option');
+                        option.value = session.id;
+                        option.text = session.session_name;
+                        sessionSelect.appendChild(option);
+                    });
+                }
+            });
+
+        // Fetch terms based on the selected session
+        sessionSelect.addEventListener('change', function() {
+            const sessionId = sessionSelect.value;
+
+            if (sessionId) {
+                termSelect.disabled = false;
+                termSelect.innerHTML = '<option value="">Select Term</option>'; // Clear and reset term options
+                
+                fetch(`/attendance/${shortCode}/get-terms/${sessionId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.terms) {
+                            data.terms.forEach(term => {
+                                const option = document.createElement('option');
+                                option.value = term.id;
+                                option.text = term.term_name;
+                                termSelect.appendChild(option);
+                            });
+                        }
+                    });
+            } else {
+                termSelect.disabled = true;
+                termSelect.innerHTML = '<option value="">Select Term</option>';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -26,7 +26,7 @@ from django.http import JsonResponse
 from classes.models import Subject
 from django.views.decorators.http import require_POST
 from classes.forms import TeacherClassAssignmentForm
-
+from utils.academics import get_sessions, get_terms
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -399,26 +399,6 @@ def assign_subjects_to_staff(request, short_code, staff_id):
         'school': school,
     })
 
-from academics.models import Session, Term
-# Fetch sessions for a given school identified by the short_code
-def get_sessions(request, short_code):
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    sessions = Session.objects.filter(school=school)
-  
-
-    sessions_data = [{'id': session.id, 'session_name': session.session_name} for session in sessions]
-    print(sessions_data)
-    return JsonResponse({'sessions': sessions_data})
-
-# Fetch terms for a given session
-def get_terms(request, short_code, session_id):
-    session = get_object_or_404(Session, id=session_id, school__short_code=short_code)
-    terms = Term.objects.filter(session=session)
-
-
-    terms_data = [{'id': term.id, 'term_name': term.term_name} for term in terms]
-    print(terms_data)
-    return JsonResponse({'terms': terms_data})
 
 def get_subjects_and_classes(request, short_code, branch_id):
     # Fetch the branch using the branch_id and also ensure it belongs to the correct school using short_code

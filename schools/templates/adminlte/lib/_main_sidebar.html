@@ -69,18 +69,6 @@
                                 Branch setup
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{% url 'create_session' short_code=school.short_code %}" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
-                                Add New Session
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'list_sessions' short_code=school.short_code %}" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
-                                List Sessions
-                            </a>
-                        </li> 
                     </ul>
                 </li>
                 
@@ -233,7 +221,49 @@
                         </li>
                     </ul>
                 </li>            
-                    
+                <li class="nav-item has-tree-view">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-cogs"></i>
+                        <p>Settings</p>
+                        <i class="right fas fa-angle-left"></i>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'create_session' short_code=school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
+                                Add New Session
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'list_sessions' short_code=school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
+                                List Sessions
+                            </a>
+                        </li> 
+                        <li class="nav-item">
+                            <a href="{% url 'set_school_days_open' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                Set School Days Open
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Dummy Item 2
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Dummy Item 3
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Dummy Item 4
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 {% endblock nav_links %}
                 {% endblock nav_links_outer %}
                 </ul>
