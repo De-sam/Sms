@@ -10,6 +10,7 @@ from .forms import SchoolDaysOpenForm, StudentAttendanceFilterForm, StudentAtten
 from students.models import Student
 from utils.decorator import login_required_with_short_code
 from utils.permissions import admin_required,teacher_required,admin_or_teacher_required
+from utils.context_helpers import get_user_roles
 from classes.models import TeacherClassAssignment
 from django.http import JsonResponse
 
@@ -55,26 +56,29 @@ def set_school_days_open(request, short_code):
         form = SchoolDaysOpenForm()
         form.fields['branches'].queryset = branches
 
+    # Get user roles
+    user_roles = get_user_roles(request.user, school)
+
     # Render the template for setting school days open
     return render(request, 'attendance/set_school_days_open.html', {
         'form': form,
         'school': school,
-        'branches': branches  # Pass branches to the template for further use
+        'branches': branches,  # Pass branches to the template for further use
+        **user_roles,  # Include user roles in the context
     })
 
 
 @login_required_with_short_code
-@admin_or_teacher_required
+@admin_required
 @transaction.atomic
 def record_student_attendance(request, short_code):
-    # Get the school and branches related to the school
+    # Get the school context
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user = request.user
 
-    # Determine the role of the user
-    is_school_admin = user == school.admin_user
-    is_teacher = hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher'
-    
+    # Get user roles
+    user_roles = get_user_roles(user, school)
+
     # Initialize empty lists
     students = []  
     days_open = None
@@ -100,11 +104,7 @@ def record_student_attendance(request, short_code):
                     'days_open': None,
                     'attendance_forms': [],
                     'school': school,
-                    'is_school_admin': is_school_admin,
-                    'is_teacher': is_teacher,
-                    'is_student': False,
-                    'is_parent': False,
-                    'is_accountant': False,
+                    **user_roles,  # Add roles to context
                 })
 
             # Fetch students who are in the selected classes, linked to the correct session and branch
@@ -143,17 +143,13 @@ def record_student_attendance(request, short_code):
         'days_open': days_open,  # Add days_open to the context to display in the template
         'attendance_forms': attendance_forms,
         'school': school,
-        'is_school_admin': is_school_admin,
-        'is_teacher': is_teacher,
-        'is_student': False,
-        'is_parent': False,
-        'is_accountant': False,
+        **user_roles,  # Include user roles in the context
     }
 
     # Debugging: Print the context to verify role flags
     print(f"Attendance View Context for User {user.username}:")
-    print(f"  - is_school_admin: {context['is_school_admin']}")
-    print(f"  - is_teacher: {context['is_teacher']}")
+    print(f"  - is_school_admin: {user_roles['is_school_admin']}")
+    print(f"  - is_teacher: {user_roles['is_teacher']}")
     
     return render(request, 'attendance/student_attendance.html', context)
 
@@ -308,10 +304,8 @@ def record_teacher_attendance(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user = request.user
 
-    # Validate the teacher role
-    if not hasattr(user, 'staff') or user.staff.role.name.lower() != 'teacher':
-        messages.error(request, "You are not authorized to access this page.")
-        return redirect('dashboard', short_code=short_code)
+    # Get user roles
+    user_roles = get_user_roles(user, school)
 
     # Get teacher's class assignments for the current school
     teacher_assignments = TeacherClassAssignment.objects.filter(teacher=teacher, branch__school=school)
@@ -365,11 +359,7 @@ def record_teacher_attendance(request, short_code):
                     'days_open': None,
                     'attendance_forms': [],
                     'school': school,
-                    'is_teacher': True,
-                    'is_school_admin': False,
-                    'is_student': False,
-                    'is_parent': False,
-                    'is_accountant': False,
+                    **user_roles,  # Add roles to context
                 })
 
             # Fetch students who are in the selected classes, linked to the correct session and branch
@@ -406,24 +396,20 @@ def record_teacher_attendance(request, short_code):
         form.fields['student'].initial = student
         attendance_forms.append(form)
 
-    # Update the context to include all role-specific keys to avoid `KeyError`
+    # Prepare context for rendering
     context = {
         'filter_form': filter_form,
         'students': students,
         'days_open': days_open,  # Add days_open to the context to display in the template
         'attendance_forms': attendance_forms,
         'school': school,
-        'is_teacher': True,
-        'is_school_admin': False,
-        'is_student': False,
-        'is_parent': False,
-        'is_accountant': False,
+        **user_roles,  # Include user roles in the context
     }
 
     # Debugging: Print out the context values to verify
     print(f"Teacher Attendance View Context for User {user.username}:")
-    print(f"  - is_school_admin: {context['is_school_admin']}")
-    print(f"  - is_teacher: {context['is_teacher']}")
+    print(f"  - is_school_admin: {user_roles['is_school_admin']}")
+    print(f"  - is_teacher: {user_roles['is_teacher']}")
     print(f"  - branches: {branches}")
     print(f"  - assigned_classes: {assigned_classes}")
 
