@@ -145,6 +145,9 @@ class Student(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} (ID: {self.student_id}) - {self.current_session.session_name if self.current_session else 'No Session'}"
 

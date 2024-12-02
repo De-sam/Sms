@@ -3,7 +3,7 @@
 <div class="container mt-4">
     <!-- Header Card with Primary Color and Icon -->
     <div class="card card-outline card-primary">
-        <div class="card-header bg-primary text-white">
+        <div id="cardHeader" class="card-header bg-primary text-white">
             <h3 class="card-title">
                 <i class="fas fa-calendar-alt"></i> Record Student Attendance
             </h3>
@@ -78,6 +78,24 @@
     </div>
 </div>
 
+<!-- Bootstrap Modal for Alerts -->
+<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="alertModalLabel">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="alertModalBody">
+                <!-- Alert message goes here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sessionSelect = document.getElementById('session');
@@ -88,8 +106,11 @@
         const attendanceTableBody = document.getElementById('attendanceTableBody');
         const daysOpenElement = document.getElementById('daysOpenValue');
         const submitAttendanceButton = document.getElementById('submitAttendanceButton');
+        const cardHeader = document.getElementById('cardHeader');
 
         const shortCode = "{{ school.short_code }}";
+
+        let daysOpen = 0;
 
         // Fetch sessions
         fetch(`/attendance/${shortCode}/get-sessions/`)
@@ -207,7 +228,8 @@
                     .then(data => {
                         if (data.students) {
                             attendanceTableBody.innerHTML = '';
-                            daysOpenElement.innerText = data.days_open;
+                            daysOpen = data.days_open;  // Save days_open to validate attendance count
+                            daysOpenElement.innerText = daysOpen;
 
                             data.students.forEach(student => {
                                 const row = document.createElement('tr');
@@ -222,6 +244,18 @@
                                 attendanceInput.name = `attendance_${student.id}`;
                                 attendanceInput.value = student.attendance_count;
                                 attendanceInput.min = 0;
+                                attendanceInput.max = daysOpen;  // Set max to daysOpen to limit input
+                                attendanceInput.classList.add('attendance-input', 'form-control');
+
+                                // Validate input to ensure it is not more than days open
+                                attendanceInput.addEventListener('input', function() {
+                                    if (attendanceInput.value.trim() === '' || parseInt(attendanceInput.value) > daysOpen) {
+                                        attendanceInput.classList.add('is-invalid');
+                                    } else {
+                                        attendanceInput.classList.remove('is-invalid');
+                                    }
+                                });
+
                                 attendanceInputCell.appendChild(attendanceInput);
                                 row.appendChild(attendanceInputCell);
 
@@ -232,7 +266,7 @@
                         }
                     });
             } else {
-                alert("Please select a session, term, branch, and at least one class.");
+                showModal("All fields are required. Please select session, term, branch, and at least one class.", 'alert-warning');
             }
         });
 
@@ -244,23 +278,60 @@
             formData.append('branch', branchSelect.value);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
+            let isValid = true;
+            let validationMessage = "";
+
             Array.from(attendanceTableBody.querySelectorAll('tr')).forEach(row => {
-                const studentId = row.querySelector('input[type="number"]').name.split('_')[1];
-                const attendanceCount = row.querySelector('input[type="number"]').value;
-                formData.append(`attendance_${studentId}`, attendanceCount);
+                const attendanceInput = row.querySelector('input[type="number"]');
+                const studentId = attendanceInput.name.split('_')[1];
+                const attendanceCount = attendanceInput.value;
+
+                if (attendanceInput.value.trim() === '') {
+                    attendanceInput.classList.add('is-invalid');
+                    isValid = false;
+                    validationMessage = "All fields are required.";
+                } else if (parseInt(attendanceCount) > daysOpen) {
+                    attendanceInput.classList.add('is-invalid');
+                    isValid = false;
+                    validationMessage = "One or more fields exceed the number of days school opened.";
+                } else {
+                    attendanceInput.classList.remove('is-invalid');
+                    formData.append(`attendance_${studentId}`, attendanceCount);
+                }
             });
+
+            if (!isValid) {
+                showModal(validationMessage, validationMessage === "All fields are required." ? 'alert-warning' : 'alert-danger');
+                return;
+            }
 
             fetch(`/attendance/${shortCode}/record-attendance/`, {
                 method: 'POST',
                 body: formData,
             }).then(response => {
                 if (response.ok) {
-                    alert('Attendance recorded successfully!');
+                    showModal('Attendance recorded successfully!', 'alert-success');
                 } else {
-                    alert('An error occurred while recording attendance.');
+                    showModal('An error occurred while recording attendance.', 'alert-danger');
                 }
             });
         });
+
+        function showModal(message, alertClass) {
+            const modal = new bootstrap.Modal(document.getElementById('alertModal'));
+            const modalBody = document.getElementById('alertModalBody');
+            const modalDialog = document.querySelector('.modal-dialog');
+            const modalHeader = document.querySelector('.modal-header');
+            const modalFooter = document.querySelector('.modal-footer');
+
+            // Set message and update classes
+            modalBody.innerText = message;
+            modalHeader.className = `modal-header ${alertClass}`;
+            modalFooter.className = `modal-footer ${alertClass}`;
+            modalDialog.className = `modal-dialog ${alertClass}`; // Alert class for border color
+            
+            modal.show();
+        }
     });
 </script>
 {% endblock %}
