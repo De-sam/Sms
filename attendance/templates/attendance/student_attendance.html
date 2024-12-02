@@ -12,30 +12,43 @@
             <!-- Attendance Filters -->
             <form id="attendanceFilterForm" method="get">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="session">Session</label>
-                    <select id="session" name="session" class="form-control" required>
-                        <option value="">Select Session</option>
-                    </select>
+
+                <!-- Session, Term, and Branch Fields -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="session">Session</label>
+                            <select id="session" name="session" class="form-control" required>
+                                <option value="">Select Session</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="term">Term</label>
+                            <select id="term" name="term" class="form-control" required disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="branch">Branch</label>
+                            <select id="branch" name="branch" class="form-control" required>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="term">Term</label>
-                    <select id="term" name="term" class="form-control" required disabled>
-                        <option value="">Select Term</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="branch">Branch</label>
-                    <select id="branch" name="branch" class="form-control" required>
-                        <option value="">Select Branch</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
+                <!-- Classes -->
+                <div class="mb-3">
                     <label for="classes">Class(es)</label>
-                    <div id="classes"></div>
+                    <div id="classes" class="bg-light p-3 rounded">
+                        <!-- Classes will be dynamically populated here -->
+                    </div>
                 </div>
 
                 <button type="button" class="btn btn-primary mt-3" id="filterButton">Filter</button>
@@ -72,13 +85,13 @@
         const branchSelect = document.getElementById('branch');
         const classesContainer = document.getElementById('classes');
         const filterButton = document.getElementById('filterButton');
-        const attendanceTableBody = document.getElementById('attendanceTableBody'); // Table body for displaying attendance
+        const attendanceTableBody = document.getElementById('attendanceTableBody');
         const daysOpenElement = document.getElementById('daysOpenValue');
         const submitAttendanceButton = document.getElementById('submitAttendanceButton');
 
         const shortCode = "{{ school.short_code }}";
 
-        // Fetch sessions for the selected school
+        // Fetch sessions
         fetch(`/attendance/${shortCode}/get-sessions/`)
             .then(response => response.json())
             .then(data => {
@@ -92,13 +105,13 @@
                 }
             });
 
-        // Fetch terms based on the selected session
+        // Fetch terms
         sessionSelect.addEventListener('change', function() {
             const sessionId = sessionSelect.value;
 
             if (sessionId) {
                 termSelect.disabled = false;
-                termSelect.innerHTML = '<option value="">Select Term</option>'; // Clear and reset term options
+                termSelect.innerHTML = '<option value="">Select Term</option>';
 
                 fetch(`/attendance/${shortCode}/get-terms/${sessionId}/`)
                     .then(response => response.json())
@@ -118,7 +131,7 @@
             }
         });
 
-        // Fetch branches for the selected school
+        // Fetch branches
         fetch(`/attendance/${shortCode}/get-branches/`)
             .then(response => response.json())
             .then(data => {
@@ -132,38 +145,56 @@
                 }
             });
 
-        // Fetch classes based on the selected branch
+        // Fetch classes
         branchSelect.addEventListener('change', function() {
             const branchId = branchSelect.value;
 
             if (branchId) {
-                classesContainer.innerHTML = ''; // Clear and reset classes options
+                classesContainer.innerHTML = '';
 
                 fetch(`/attendance/${shortCode}/get-classes/${branchId}/`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.classes) {
-                            data.classes.forEach(cls => {
+                            let rowDiv = document.createElement('div');
+                            rowDiv.classList.add('row', 'mb-2');
+
+                            data.classes.forEach((cls, index) => {
+                                const colDiv = document.createElement('div');
+                                colDiv.classList.add('col-md-4');
+
                                 const checkbox = document.createElement('input');
                                 checkbox.type = 'checkbox';
                                 checkbox.name = 'classes';
                                 checkbox.value = cls.id;
                                 checkbox.id = `class_${cls.id}`;
+                                checkbox.classList.add('form-check-input');
 
                                 const label = document.createElement('label');
                                 label.htmlFor = `class_${cls.id}`;
                                 label.innerHTML = `${cls.name} <span style="font-size: 0.9em; color: grey;">(${cls.department || 'No Department'})</span>`;
+                                label.classList.add('form-check-label');
 
-                                classesContainer.appendChild(checkbox);
-                                classesContainer.appendChild(label);
-                                classesContainer.appendChild(document.createElement('br'));
+                                const checkboxDiv = document.createElement('div');
+                                checkboxDiv.classList.add('form-check');
+                                checkboxDiv.appendChild(checkbox);
+                                checkboxDiv.appendChild(label);
+
+                                colDiv.appendChild(checkboxDiv);
+                                rowDiv.appendChild(colDiv);
+
+                                if ((index + 1) % 3 === 0 || index === data.classes.length - 1) {
+                                    classesContainer.appendChild(rowDiv);
+                                    rowDiv = document.createElement('div');
+                                    rowDiv.classList.add('row', 'mb-2');
+                                }
                             });
                         }
                     });
             }
         });
 
-        // Filter attendance records and display them in a table
+        // Filter attendance records and display them
         filterButton.addEventListener('click', function() {
             const sessionId = sessionSelect.value;
             const termId = termSelect.value;
@@ -175,10 +206,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.students) {
-                            // Clear any previous records in the table body
                             attendanceTableBody.innerHTML = '';
-
-                            // Display the number of days school was open
                             daysOpenElement.innerText = data.days_open;
 
                             data.students.forEach(student => {
@@ -208,7 +236,7 @@
             }
         });
 
-        // Submit attendance data to the backend
+        // Submit attendance
         submitAttendanceButton.addEventListener('click', function() {
             const formData = new FormData();
             formData.append('session', sessionSelect.value);
@@ -216,7 +244,6 @@
             formData.append('branch', branchSelect.value);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-            // Collect attendance data
             Array.from(attendanceTableBody.querySelectorAll('tr')).forEach(row => {
                 const studentId = row.querySelector('input[type="number"]').name.split('_')[1];
                 const attendanceCount = row.querySelector('input[type="number"]').value;
@@ -236,5 +263,4 @@
         });
     });
 </script>
-
 {% endblock %}

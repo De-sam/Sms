@@ -3,44 +3,62 @@
 {% load crispy_forms_tags %}
 
 <div class="container mt-5">
-    <h5 class="mb-4">Assign Classes to {{ teacher.user.first_name }} {{ teacher.user.last_name }}</h5>
-    
-    <form method="post" id="assignmentForm">
-        {% csrf_token %}
-
-        <!-- Session Field -->
-        <div class="mb-3">
-            <label for="session" class="form-label">Session</label>
-            <select name="session" id="id_session" class="form-control" required>
-                <option value="" selected>Select a session</option>
-                <!-- Sessions will be populated dynamically -->
-            </select>
+    <!-- Secondary Card for Title -->
+    <div class="card card-outline card-secondary mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-chalkboard-teacher"></i> Assign Classes to {{ teacher.user.first_name }} {{ teacher.user.last_name }}
+            </h3>
         </div>
+    </div>
 
-        <!-- Term Field -->
-        <div class="mb-3">
-            <label for="term" class="form-label">Term</label>
-            <select name="term" id="id_term" class="form-control" required>
-                <option value="" selected>Select a term</option>
-                <!-- Terms will be populated dynamically -->
-            </select>
+    <!-- Main Form Card -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post" id="assignmentForm">
+                {% csrf_token %}
+
+                <!-- Session, Term, and Branch Fields (side by side) -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="session" class="form-label">Session</label>
+                            <select name="session" id="id_session" class="form-control" required>
+                                <option value="" selected>Select a session</option>
+                                <!-- Sessions will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="term" class="form-label">Term</label>
+                            <select name="term" id="id_term" class="form-control" required>
+                                <option value="" selected>Select a term</option>
+                                <!-- Terms will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.branch|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Classes Field -->
+                <div class="mb-3">
+                    <label for="assigned_classes" class="form-label">Classes</label>
+                    <div id="classesContainer" class="bg-light p-3 rounded">
+                        <!-- Checkboxes will be dynamically added here -->
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Assign Classes</button>
+            </form>
         </div>
-
-        <!-- Branch Field -->
-        <div class="mb-3">
-            {{ form.branch|as_crispy_field }}
-        </div>
-
-        <!-- Assigned Classes Field -->
-        <div class="mb-3">
-            <label for="assigned_classes" class="form-label">Classes</label>
-            <div id="classesContainer" class="bg-light p-3 rounded">
-                <!-- Checkboxes will be dynamically added here -->
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Assign Classes</button>
-    </form>
+    </div>
 </div>
 
 <script>
@@ -119,8 +137,13 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    data.classes.forEach(cls => {
-                        // Create checkbox
+                    let rowDiv = document.createElement("div");
+                    rowDiv.classList.add("row", "mb-2");
+
+                    data.classes.forEach((cls, index) => {
+                        const colDiv = document.createElement("div");
+                        colDiv.classList.add("col-md-4"); // Bootstrap column for 3 items per row
+
                         const checkbox = document.createElement("input");
                         checkbox.type = "checkbox";
                         checkbox.name = "assigned_classes";
@@ -128,20 +151,24 @@
                         checkbox.id = `class_${cls.id}`;
                         checkbox.classList.add("form-check-input");
 
-                        // Create label and include department details
                         const label = document.createElement("label");
                         label.htmlFor = `class_${cls.id}`;
                         label.innerHTML = `${cls.name} <span style="font-size: 0.9em; color: grey;">(${cls.department ? cls.department : 'No Department'})</span>`;
                         label.classList.add("form-check-label");
 
-                        // Create a container div for the checkbox and label
-                        const div = document.createElement("div");
-                        div.classList.add("form-check");
-                        div.appendChild(checkbox);
-                        div.appendChild(label);
+                        const checkboxDiv = document.createElement("div");
+                        checkboxDiv.classList.add("form-check");
+                        checkboxDiv.appendChild(checkbox);
+                        checkboxDiv.appendChild(label);
 
-                        // Append to the classes container
-                        classesContainer.appendChild(div);
+                        colDiv.appendChild(checkboxDiv);
+                        rowDiv.appendChild(colDiv);
+
+                        if ((index + 1) % 3 === 0 || index === data.classes.length - 1) {
+                            classesContainer.appendChild(rowDiv);
+                            rowDiv = document.createElement("div");
+                            rowDiv.classList.add("row", "mb-2");
+                        }
                     });
                 })
                 .catch(error => console.error("Error fetching classes:", error));

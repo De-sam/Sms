@@ -39,13 +39,11 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                             
                                 {{ form.branch|as_crispy_field }}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                
                                 {{ form.subject|as_crispy_field }}
                             </div>
                         </div>
@@ -142,14 +140,12 @@
                     .then(data => {
                         // Populate subjects
                         subjectField.innerHTML = '';  // Clear current options
-                        
-                        // Add a default "Select Subject" option
+
                         const defaultOption = document.createElement('option');
                         defaultOption.value = '';
                         defaultOption.textContent = 'Select Subject';
                         subjectField.appendChild(defaultOption);
 
-                        // Populate with actual subjects
                         data.subjects.forEach(subject => {
                             const option = document.createElement('option');
                             option.value = subject.id;
@@ -171,13 +167,19 @@
         subjectField.addEventListener('change', function () {
             const subjectId = subjectField.value;
             const branchId = branchField.value;
-            if (subjectId  && branchId) {
+            if (subjectId && branchId) {
                 fetch(`/staff/${shortCode}/get-classes-by-subject/${branchId}/${subjectId}/`)
                     .then(response => response.json())
                     .then(data => {
-                        // Populate classes with checkboxes
-                        classesContainer.innerHTML = '';  // Clear current options
-                        data.classes.forEach(cls => {
+                        // Populate classes with checkboxes in rows of 3
+                        classesContainer.innerHTML = ''; // Clear current options
+                        let rowDiv = document.createElement('div');
+                        rowDiv.classList.add('row', 'mb-2');
+
+                        data.classes.forEach((cls, index) => {
+                            const colDiv = document.createElement('div');
+                            colDiv.classList.add('col-md-4'); // Bootstrap column for 3 items per row
+
                             const checkboxDiv = document.createElement('div');
                             checkboxDiv.classList.add('form-check');
 
@@ -195,7 +197,15 @@
 
                             checkboxDiv.appendChild(checkbox);
                             checkboxDiv.appendChild(label);
-                            classesContainer.appendChild(checkboxDiv);
+                            colDiv.appendChild(checkboxDiv);
+                            rowDiv.appendChild(colDiv);
+
+                            // Add a new row every 3 items
+                            if ((index + 1) % 3 === 0 || index === data.classes.length - 1) {
+                                classesContainer.appendChild(rowDiv);
+                                rowDiv = document.createElement('div');
+                                rowDiv.classList.add('row', 'mb-2');
+                            }
                         });
                     })
                     .catch(error => console.error('Error fetching classes by subject:', error));
