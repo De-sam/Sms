@@ -26,4 +26,7 @@ urlpatterns = [
 
     # URL for saving student attendance
     path('<str:short_code>/record-attendance/', views.save_student_attendance, name='save_student_attendance'),
+
+    path('<str:short_code>/teacher-attendance/', views.record_teacher_attendance, name='record_teacher_attendance'),
+
 ]

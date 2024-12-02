@@ -124,6 +124,15 @@ def dashboard(request, short_code):
         'is_accountant': is_accountant,
     }
 
+ # Debugging: Print out the context values
+    print(f"Dashboard View Context for User {user.username}:")
+    print(f"  - is_school_admin: {is_school_admin}")
+    print(f"  - is_teacher: {is_teacher}")
+    print(f"  - is_student: {is_student}")
+    print(f"  - is_parent: {is_parent}")
+    print(f"  - is_accountant: {is_accountant}")
+
+
 ################## Add admin-specific data #################################
     if is_school_admin:
         number_of_branches = Branch.objects.filter(school=school).count()

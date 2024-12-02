@@ -9,7 +9,8 @@ from .models import SchoolDaysOpen, StudentAttendance
 from .forms import SchoolDaysOpenForm, StudentAttendanceFilterForm, StudentAttendanceForm
 from students.models import Student
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required
+from utils.permissions import admin_required,teacher_required,admin_or_teacher_required
+from classes.models import TeacherClassAssignment
 from django.http import JsonResponse
 
 @login_required_with_short_code
@@ -63,14 +64,19 @@ def set_school_days_open(request, short_code):
 
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 @transaction.atomic
 def record_student_attendance(request, short_code):
     # Get the school and branches related to the school
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    branches = Branch.objects.filter(school=school)
+    user = request.user
 
-    students = []  # Initialize empty list for students
+    # Determine the role of the user
+    is_school_admin = user == school.admin_user
+    is_teacher = hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher'
+    
+    # Initialize empty lists
+    students = []  
     days_open = None
 
     if request.method == 'POST':
@@ -88,12 +94,17 @@ def record_student_attendance(request, short_code):
                 days_open = SchoolDaysOpen.objects.get(branch=branch, session=session, term=term).days_open
             except SchoolDaysOpen.DoesNotExist:
                 messages.error(request, 'Number of days school opened is not set for the selected branch, session, and term.')
-                return render(request, 'attendance/record_student_attendance.html', {
+                return render(request, 'attendance/student_attendance.html', {
                     'filter_form': filter_form,
                     'students': [],
                     'days_open': None,
                     'attendance_forms': [],
                     'school': school,
+                    'is_school_admin': is_school_admin,
+                    'is_teacher': is_teacher,
+                    'is_student': False,
+                    'is_parent': False,
+                    'is_accountant': False,
                 })
 
             # Fetch students who are in the selected classes, linked to the correct session and branch
@@ -125,14 +136,25 @@ def record_student_attendance(request, short_code):
         form.fields['student'].initial = student
         attendance_forms.append(form)
 
+    # Prepare the context for rendering
     context = {
         'filter_form': filter_form,
         'students': students,
         'days_open': days_open,  # Add days_open to the context to display in the template
         'attendance_forms': attendance_forms,
         'school': school,
+        'is_school_admin': is_school_admin,
+        'is_teacher': is_teacher,
+        'is_student': False,
+        'is_parent': False,
+        'is_accountant': False,
     }
 
+    # Debugging: Print the context to verify role flags
+    print(f"Attendance View Context for User {user.username}:")
+    print(f"  - is_school_admin: {context['is_school_admin']}")
+    print(f"  - is_teacher: {context['is_teacher']}")
+    
     return render(request, 'attendance/student_attendance.html', context)
 
 
@@ -197,7 +219,7 @@ def get_attendance(request, short_code):
 
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 @transaction.atomic
 def save_student_attendance(request, short_code):
     # Handling attendance data submission
@@ -275,3 +297,134 @@ def save_student_attendance(request, short_code):
 
     # Return error for non-POST requests
     return JsonResponse({'success': False, 'message': "Invalid request method."}, status=405)
+
+# ###########Techer specific################ #
+@login_required_with_short_code
+@teacher_required
+@transaction.atomic
+def record_teacher_attendance(request, short_code):
+    # Get the school context
+    teacher = request.user.staff  # Assuming a teacher is logged in and `staff` is linked to the `Staff` model
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    user = request.user
+
+    # Validate the teacher role
+    if not hasattr(user, 'staff') or user.staff.role.name.lower() != 'teacher':
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('dashboard', short_code=short_code)
+
+    # Get teacher's class assignments for the current school
+    teacher_assignments = TeacherClassAssignment.objects.filter(teacher=teacher, branch__school=school)
+
+    # Debugging: Print the teacher assignments to verify the data
+    print("Teacher Assignments:")
+    for assignment in teacher_assignments:
+        print(f"Branch: {assignment.branch}, Session: {assignment.session}, Term: {assignment.term}")
+        print(f"Assigned Classes: {[cls.name for cls in assignment.assigned_classes.all()]}")
+
+    # Filter sessions, terms, branches, and classes based on the teacher's assignments
+    sessions = Session.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    terms = Term.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    branches = Branch.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    assigned_classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).distinct()
+
+    # Debugging: Print sessions, terms, branches, and assigned classes to verify the data
+    print("Filtered Data for Teacher:")
+    print(f"Sessions: {[session.session_name for session in sessions]}")
+    print(f"Terms: {[term.term_name for term in terms]}")
+    print(f"Branches: {[branch.branch_name for branch in branches]}")
+    print(f"Assigned Classes: {[cls.name for cls in assigned_classes]}")
+
+    students = []  # Initialize empty list for students
+    days_open = None
+
+    if request.method == 'POST':
+        # Filter form where the teacher can only see their assigned data
+        filter_form = StudentAttendanceFilterForm(request.POST, school=school)
+
+        if filter_form.is_valid():
+            # Extract form data
+            session = filter_form.cleaned_data['session']
+            term = filter_form.cleaned_data['term']
+            branch = filter_form.cleaned_data['branch']
+            selected_classes = filter_form.cleaned_data['classes']
+
+            # Validate that the selected branch and classes belong to the teacher's assignments
+            if not teacher_assignments.filter(branch=branch, assigned_classes__in=selected_classes, session=session, term=term).exists():
+                messages.error(request, 'Invalid selection. You are not assigned to the selected classes or branch for this session and term.')
+                return redirect('record_teacher_attendance', short_code=short_code)
+
+            # Get number of days school opened
+            try:
+                days_open = SchoolDaysOpen.objects.get(branch=branch, session=session, term=term).days_open
+            except SchoolDaysOpen.DoesNotExist:
+                messages.error(request, 'Number of days school opened is not set for the selected branch, session, and term.')
+                return render(request, 'attendance/student_attendance.html', {
+                    'filter_form': filter_form,
+                    'students': [],
+                    'days_open': None,
+                    'attendance_forms': [],
+                    'school': school,
+                    'is_teacher': True,
+                    'is_school_admin': False,
+                    'is_student': False,
+                    'is_parent': False,
+                    'is_accountant': False,
+                })
+
+            # Fetch students who are in the selected classes, linked to the correct session and branch
+            students = Student.objects.filter(
+                student_class__in=selected_classes,
+                current_session=session,
+                branch=branch
+            ).distinct()
+
+            if not students.exists():
+                messages.warning(request, "No students found for the selected filter criteria.")
+
+    else:
+        # Initialize a filter form with only allowed choices for the teacher
+        filter_form = StudentAttendanceFilterForm(school=school)
+        filter_form.fields['session'].queryset = sessions
+        filter_form.fields['term'].queryset = terms
+        filter_form.fields['branch'].queryset = branches
+        filter_form.fields['classes'].queryset = assigned_classes
+
+    # Create attendance forms for students found
+    attendance_forms = []
+    for student in students:
+        # Fetch existing attendance record for each student
+        attendance_record = StudentAttendance.objects.filter(
+            session=session,
+            term=term,
+            branch=branch,
+            student_class=student.student_class,
+            student=student,
+        ).first()
+
+        form = StudentAttendanceForm(instance=attendance_record)
+        form.fields['student'].initial = student
+        attendance_forms.append(form)
+
+    # Update the context to include all role-specific keys to avoid `KeyError`
+    context = {
+        'filter_form': filter_form,
+        'students': students,
+        'days_open': days_open,  # Add days_open to the context to display in the template
+        'attendance_forms': attendance_forms,
+        'school': school,
+        'is_teacher': True,
+        'is_school_admin': False,
+        'is_student': False,
+        'is_parent': False,
+        'is_accountant': False,
+    }
+
+    # Debugging: Print out the context values to verify
+    print(f"Teacher Attendance View Context for User {user.username}:")
+    print(f"  - is_school_admin: {context['is_school_admin']}")
+    print(f"  - is_teacher: {context['is_teacher']}")
+    print(f"  - branches: {branches}")
+    print(f"  - assigned_classes: {assigned_classes}")
+
+    return render(request, 'attendance/student_attendance.html', context)

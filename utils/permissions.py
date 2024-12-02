@@ -56,3 +56,22 @@ def parent_required(view_func):
                 return view_func(request, *args, **kwargs)
         raise PermissionDenied("You do not have permission to access this view.")
     return wrapper
+
+def admin_or_teacher_required(view_func):
+    """Decorator to check if the user is either an admin or a teacher."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        school = get_object_or_404(SchoolRegistration, short_code=kwargs.get('short_code'))
+        
+        # Check if user is admin
+        if request.user == school.admin_user:
+            return view_func(request, *args, **kwargs)
+
+        # Check if user is a teacher
+        if hasattr(request.user, 'staff') and request.user.staff.role.name.lower() == 'teacher':
+            return view_func(request, *args, **kwargs)
+        
+        # If neither, raise PermissionDenied
+        raise PermissionDenied("You do not have permission to access this view.")
+    
+    return wrapper
