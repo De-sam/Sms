@@ -58,6 +58,7 @@ def set_school_days_open(request, short_code):
     return render(request, 'attendance/set_school_days_open.html', {
         'form': form,
         'school': school,
+        'branches': branches  # Pass branches to the template for further use
     })
 
 

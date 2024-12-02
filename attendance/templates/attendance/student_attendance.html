@@ -160,7 +160,7 @@
                     data.branches.forEach(branch => {
                         const option = document.createElement('option');
                         option.value = branch.id;
-                        option.text = branch.branch_name;
+                        option.text = `${branch.branch_name} (${branch.branch_type || 'Unknown'})`; // Add type to indicate if it's primary or secondary
                         branchSelect.appendChild(option);
                     });
                 }
@@ -328,8 +328,8 @@
             modalBody.innerText = message;
             modalHeader.className = `modal-header ${alertClass}`;
             modalFooter.className = `modal-footer ${alertClass}`;
-            modalDialog.className = `modal-dialog ${alertClass}`; // Alert class for border color
-            
+            modalDialog.className = `modal-dialog ${alertClass}`;
+
             modal.show();
         }
     });

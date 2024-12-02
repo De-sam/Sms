@@ -31,25 +31,17 @@
                 </div>
 
                 <!-- Branches Selection -->
-                <div class="form-group">
+                <div class="form-group mt-3">
                     <label for="branches">Branch(es)</label>
-                    <div class="form-check">
-                        {% for branch in form.fields.branches.queryset %}
-                            <input class="form-check-input" type="checkbox" name="branches" value="{{ branch.id }}"
-                                id="branch_{{ branch.id }}"
-                                {% if branch.id in form.data.branches or branch.id in form.initial.branches %}
-                                    checked
-                                {% endif %}
-                            >
-                            <label class="form-check-label" for="branch_{{ branch.id }}">{{ branch.branch_name }}</label><br>
-                        {% endfor %}
+                    <div id="branchesContainer" class="bg-light p-3 rounded">
+                        <!-- Branches checkboxes will be dynamically populated here -->
                     </div>
                 </div>
 
                 <!-- Number of Days School Opened -->
                 <div class="form-group mt-3">
-                    <label for="days_open">Number of Days School Opened: </label><br>
-                    {{ form.days_open }}
+                    <label for="days_open">Number of Days School Opened</label>
+                    <input type="number" id="days_open" name="days_open" class="form-control" min="1" placeholder="Enter number of days school opened" required>
                 </div>
 
                 <!-- Submit Button -->
@@ -63,6 +55,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const sessionSelect = document.getElementById('session');
         const termSelect = document.getElementById('term');
+        const branchesContainer = document.getElementById('branchesContainer');
         const shortCode = "{{ school.short_code }}";
         
         // Fetch sessions for the selected school
@@ -104,6 +97,37 @@
                 termSelect.innerHTML = '<option value="">Select Term</option>';
             }
         });
+
+        // Fetch branches with Primary/Secondary labels
+        fetch(`/attendance/${shortCode}/get-branches/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.branches) {
+                    branchesContainer.innerHTML = '';  // Clear any previous content
+
+                    data.branches.forEach(branch => {
+                        const branchDiv = document.createElement('div');
+                        branchDiv.classList.add('form-check');
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.name = 'branches';
+                        checkbox.value = branch.id;
+                        checkbox.id = `branch_${branch.id}`;
+                        checkbox.classList.add('form-check-input');
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `branch_${branch.id}`;
+                        label.innerText = `${branch.branch_name} (${branch.branch_type})`;
+                        label.classList.add('form-check-label');
+
+                        branchDiv.appendChild(checkbox);
+                        branchDiv.appendChild(label);
+
+                        branchesContainer.appendChild(branchDiv);
+                    });
+                }
+            });
     });
 </script>
 {% endblock %}

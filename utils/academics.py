@@ -22,11 +22,28 @@ def get_terms(request, short_code, session_id):
     return JsonResponse({'terms': terms_data})
 
 # Fetch branches for a given school
+
+# Updated Function: Fetch branches for a given school with type indication
 def get_branches(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     branches = Branch.objects.filter(school=school)
 
-    branches_data = [{'id': branch.id, 'branch_name': branch.branch_name} for branch in branches]
+    branches_data = []
+    for branch in branches:
+        # Determine branch type based on whether it is linked to primary or secondary school
+        if branch.primary_school:
+            branch_type = 'Primary'
+        elif branch.school:
+            branch_type = 'Secondary'
+        else:
+            branch_type = 'Unknown'
+
+        branches_data.append({
+            'id': branch.id,
+            'branch_name': branch.branch_name,
+            'branch_type': branch_type  # Add type to indicate if it's primary or secondary
+        })
+
     return JsonResponse({'branches': branches_data})
 
 # Fetch classes by branch for a given school
