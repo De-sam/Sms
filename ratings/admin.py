@@ -1,58 +1,63 @@
 from django.contrib import admin
-from .models import PsychomotorRating, BehavioralRating
+from .models import Rating
 
-@admin.register(PsychomotorRating)
-class PsychomotorRatingAdmin(admin.ModelAdmin):
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
     list_display = (
         'student', 
+        'rating_type', 
         'session', 
         'term', 
         'branch', 
-        'rating_date', 
-        'coordination', 
-        'handwriting', 
-        'sports', 
-        'artistry', 
-        'verbal_fluency', 
-        'games'
+        'rating_date'
+    )
+    list_filter = (
+        'rating_type', 
+        'session', 
+        'term', 
+        'branch', 
+        'rating_date'
     )
     search_fields = (
         'student__first_name', 
         'student__last_name', 
         'session__session_name', 
         'term__term_name', 
-        'branch__branch_name'
+        'branch__name'
     )
-    list_filter = ('session', 'term', 'branch', 'rating_date')
+    ordering = ('-rating_date',)  # Newest ratings first
 
-    def student_full_name(self, obj):
-        return obj.student.full_name()
-    student_full_name.short_description = 'Student'
+    def get_fields(self, request, obj=None):
+        """
+        Dynamically adjust fields based on the rating type.
+        """
+        if obj and obj.rating_type == 'psychomotor':
+            return ('student', 'rating_type', 'session', 'term', 'branch',
+                    'coordination', 'handwriting', 'sports', 'artistry', 
+                    'verbal_fluency', 'games', 'rating_date')
+        elif obj and obj.rating_type == 'behavioral':
+            return ('student', 'rating_type', 'session', 'term', 'branch',
+                    'punctuality', 'attentiveness', 'obedience', 
+                    'leadership', 'emotional_stability', 'teamwork', 'rating_date')
+        return super().get_fields(request, obj)
 
-@admin.register(BehavioralRating)
-class BehavioralRatingAdmin(admin.ModelAdmin):
-    list_display = (
-        'student', 
-        'session', 
-        'term', 
-        'branch', 
-        'rating_date', 
-        'punctuality', 
-        'attentiveness', 
-        'obedience', 
-        'leadership', 
-        'emotional_stability', 
-        'teamwork'
-    )
-    search_fields = (
-        'student__first_name', 
-        'student__last_name', 
-        'session__session_name', 
-        'term__term_name', 
-        'branch__branch_name'
-    )
-    list_filter = ('session', 'term', 'branch', 'rating_date')
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make `rating_type` and `rating_date` readonly after creation.
+        """
+        if obj:
+            return ('rating_type', 'rating_date')
+        return ('rating_date',)
 
-    def student_full_name(self, obj):
-        return obj.student.full_name()
-    student_full_name.short_description = 'Student'
+    def save_model(self, request, obj, form, change):
+        """
+        Add custom save behavior if needed (e.g., validation, notifications).
+        """
+        # Example: Ensure only relevant fields are filled
+        if obj.rating_type == 'psychomotor' and any(
+            getattr(obj, field) is not None for field in 
+            ['punctuality', 'attentiveness', 'obedience', 
+             'leadership', 'emotional_stability', 'teamwork']
+        ):
+            raise ValueError("Behavioral fields should not be filled for psychomotor ratings.")
+      

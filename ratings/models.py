@@ -4,19 +4,43 @@ from students.models import Student
 from academics.models import Session, Term
 from schools.models import Branch
 
-class PsychomotorRating(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='psychomotor_ratings', null=True, blank=True)
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, null=True, blank=True)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
+
+class Rating(models.Model):
+    RATING_TYPE_CHOICES = [
+        ('psychomotor', 'Psychomotor'),
+        ('behavioral', 'Behavioral'),
+    ]
+
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='ratings'
+    )
+    session = models.ForeignKey(
+        Session, 
+        on_delete=models.CASCADE
+    )
+    term = models.ForeignKey(
+        Term, 
+        on_delete=models.CASCADE
+    )
+    branch = models.ForeignKey(
+        Branch, 
+        on_delete=models.CASCADE
+    )
+    rating_type = models.CharField(
+        max_length=15, 
+        choices=RATING_TYPE_CHOICES, 
+        default='psychomotor'
+    )
     rating_date = models.DateField(auto_now_add=True)
 
-    # Psychomotor skills
+    # Psychomotor fields
     coordination = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)], 
         null=True, 
         blank=True
-    )  # e.g., scale 1-5
+    )
     handwriting = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)], 
         null=True, 
@@ -43,23 +67,12 @@ class PsychomotorRating(models.Model):
         blank=True
     )
 
-    def __str__(self):
-        return f"{self.student.full_name()} - {self.session.session_name} - {self.term.term_name}"
-
-
-class BehavioralRating(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='behavioral_ratings', null=True, blank=True)
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, null=True, blank=True)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-    rating_date = models.DateField(auto_now_add=True)
-
-    # Behavioral traits
+    # Behavioral fields
     punctuality = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)], 
         null=True, 
         blank=True
-    )  # e.g., scale 1-5
+    )
     attentiveness = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)], 
         null=True, 
@@ -87,4 +100,10 @@ class BehavioralRating(models.Model):
     )
 
     def __str__(self):
-        return f"{self.student.full_name()} - {self.session.session_name} - {self.term.term_name}"
+        return f"{self.student.full_name()} - {self.session.session_name} - {self.term.term_name} ({self.rating_type})"
+
+    def is_psychomotor(self):
+        return self.rating_type == 'psychomotor'
+
+    def is_behavioral(self):
+        return self.rating_type == 'behavioral'

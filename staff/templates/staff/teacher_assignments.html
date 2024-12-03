@@ -262,6 +262,9 @@
                                                     <td>
                                                         {% for cls in assignments.0.classes %}
                                                             {{ cls.name }}
+                                                            {% if cls.department %}
+                                                                ({{ cls.department.name }})
+                                                            {% endif %}
                                                             {% if not forloop.last %}, {% endif %}
                                                         {% endfor %}
                                                     </td>
