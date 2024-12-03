@@ -14,7 +14,9 @@ class PsychomotorRating(models.Model):
     coordination = models.PositiveSmallIntegerField(null=True, blank=True)  # e.g., scale 1-5
     handwriting = models.PositiveSmallIntegerField(null=True, blank=True)
     sports = models.PositiveSmallIntegerField(null=True, blank=True)
-    music = models.PositiveSmallIntegerField(null=True, blank=True)
+    artistry = models.PositiveSmallIntegerField(null=True, blank=True)
+    verbal_fluency = models.PositiveSmallIntegerField(null=True, blank=True)
+    games = models.PositiveSmallIntegerField(null=True, blank=True)
 
     
 
@@ -33,7 +35,8 @@ class BehavioralRating(models.Model):
     attentiveness = models.PositiveSmallIntegerField(null=True, blank=True)
     obedience = models.PositiveSmallIntegerField(null=True, blank=True)
     leadership = models.PositiveSmallIntegerField(null=True, blank=True)
-
+    emotional_stability = models.PositiveSmallIntegerField(null=True, blank=True)
+    teamwork = models.PositiveSmallIntegerField(null=True, blank=True)
     
 
     def __str__(self):

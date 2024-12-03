@@ -779,6 +779,80 @@ def assign_teacher_to_class(request, short_code, teacher_id):
             return redirect('teacher_assignments', short_code=short_code)
         else:
             # Debug: Print form errors if invalid
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             print("Form errors:", form.errors)
     else:
         # Initialize the form with the teacher's branches
@@ -788,7 +862,7 @@ def assign_teacher_to_class(request, short_code, teacher_id):
         'form': form,
         'teacher': teacher,
         'school': school,
-        'short_code': short_code,
+        'short_code': short_code,  
     }
     return render(request, 'staff/assign_teacher.html', context)
 
