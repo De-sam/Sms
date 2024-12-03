@@ -706,6 +706,9 @@ def assign_teacher_to_class(request, short_code, teacher_id):
         return redirect('teacher_assignments', short_code=short_code)
 
     if request.method == 'POST':
+        # Debug: Print the POST data
+        print("Request POST data:", request.POST)
+        
         # Get the selected branch ID from the form
         branch_id = request.POST.get('branch')
         
@@ -717,13 +720,66 @@ def assign_teacher_to_class(request, short_code, teacher_id):
         )
         
         if form.is_valid():
-            assignment = form.save(commit=False)
-            assignment.teacher = teacher  # Set the teacher for the assignment
+            # Retrieve session, term, branch for the assignment
+            session = form.cleaned_data['session']
+            term = form.cleaned_data['term']
+            branch = form.cleaned_data['branch']
+            assigned_classes = form.cleaned_data['assigned_classes']
+
+            # Debug: Print cleaned data
+            print(f"Class Assignments: {assigned_classes}")
+            print(f"Selected Branch: {branch}")
+            print(f"Selected Session: {session}")
+            print(f"Selected Term: {term}")
+
+            # Check if an assignment already exists
+            assignment, created = TeacherClassAssignment.objects.get_or_create(
+                teacher=teacher,
+                session=session,
+                term=term,
+                branch=branch
+            )
+
+            # Update the assigned classes
+            assignment.assigned_classes.set(assigned_classes)
+
+            # Handle the toggle (assign_all_subjects)
+            assign_all_subjects = form.cleaned_data.get('assign_all_subjects', False)
+            assignment.assign_all_subjects = assign_all_subjects
             assignment.save()
-            form.save_m2m()  # Save many-to-many relationships for assigned_classes
+
+            # If toggle is ON, assign all subjects in the selected classes
+            if assign_all_subjects:
+                for cls in assigned_classes:
+                    for subject in cls.subjects.all():
+                        # Create or update the subject-class assignment
+                        teacher_subject_assignment, created = TeacherSubjectClassAssignment.objects.get_or_create(
+                            teacher=teacher,
+                            subject=subject,
+                            branch=branch,
+                            session=session,
+                            term=term
+                        )
+                        # Add the class to classes_assigned
+                        teacher_subject_assignment.classes_assigned.add(cls)
+
+            # Debug: Print all assigned subjects for the teacher
+            print(f"Assigned subjects for teacher {teacher.user.first_name} {teacher.user.last_name}:")
+            assigned_subjects = TeacherSubjectClassAssignment.objects.filter(
+                teacher=teacher,
+                branch=branch,
+                session=session,
+                term=term
+            ).select_related('subject')
+            for ts in assigned_subjects:
+                assigned_classes_names = [cls.name for cls in ts.classes_assigned.all()]
+                print(f"Subject: {ts.subject.name}, Classes: {assigned_classes_names}")
             
             messages.success(request, f"Classes assigned to {teacher.user.first_name} successfully.")
             return redirect('teacher_assignments', short_code=short_code)
+        else:
+            # Debug: Print form errors if invalid
+            print("Form errors:", form.errors)
     else:
         # Initialize the form with the teacher's branches
         form = TeacherClassAssignmentForm(teacher_branches=teacher_branches)
@@ -736,7 +792,7 @@ def assign_teacher_to_class(request, short_code, teacher_id):
     }
     return render(request, 'staff/assign_teacher.html', context)
 
-
+@login_required_with_short_code
 @admin_required
 def get_classes_by_branch(request, short_code, branch_id):
     # Fetch the branch ensuring it belongs to the correct school

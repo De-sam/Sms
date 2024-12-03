@@ -75,9 +75,15 @@ class TeacherSubjectClassAssignmentForm(forms.ModelForm):
 
 
 class TeacherClassAssignmentForm(forms.ModelForm):
+    assign_all_subjects = forms.BooleanField(
+        required=False,
+        label="Assign All Subjects",
+        help_text="Toggle to assign all subjects for the selected classes."
+    )
+
     class Meta:
         model = TeacherClassAssignment
-        fields = ['session', 'term', 'branch', 'assigned_classes']
+        fields = ['session', 'term', 'branch', 'assigned_classes', 'assign_all_subjects']
 
     branch = forms.ModelChoiceField(
         queryset=Branch.objects.none(),

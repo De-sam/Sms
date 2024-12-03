@@ -142,7 +142,7 @@ class TeacherClassAssignment(models.Model):
     teacher = models.ForeignKey(
         Staff, on_delete=models.CASCADE,
         related_name="class_assignments",
-         null=True, 
+        null=True, 
         blank=True
     )
     session = models.ForeignKey(
@@ -166,8 +166,11 @@ class TeacherClassAssignment(models.Model):
     assigned_classes = models.ManyToManyField(
         Class,
         related_name="teacher_assignments",
-        null=True, 
         blank=True
+    )
+    assign_all_subjects = models.BooleanField(
+        default=False,
+        help_text="Assign all subjects linked to the selected classes to the teacher."
     )
     assigned_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -175,16 +178,29 @@ class TeacherClassAssignment(models.Model):
     class Meta:
         unique_together = ('teacher', 'session', 'term', 'branch')
         indexes = [
-            models.Index(fields=['teacher']),  # Index to optimize teacher filtering
-            models.Index(fields=['session']),  # Index to optimize session filtering
-            models.Index(fields=['term']),     # Index to optimize term filtering
-            models.Index(fields=['branch']),   # Index to optimize branch filtering
+            models.Index(fields=['teacher']),
+            models.Index(fields=['session']),
+            models.Index(fields=['term']),
+            models.Index(fields=['branch']),
         ]
 
     def __str__(self):
-        # Use the branch's `branch_name` field or its `__str__` method
         return (f"{self.teacher.user.first_name} {self.teacher.user.last_name} "
                 f"manages classes in {self.session.session_name}, "
                 f"{self.term.term_name}, {self.branch.branch_name}")
-        # Alternatively, use the Branch model's __str__:
-        # return f"{self.teacher.user.first_name} {self.teacher.user.last_name} manages classes in {self.session.session_name}, {self.term.term_name}, {self.branch}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Save the instance first
+        
+        if self.assign_all_subjects:
+            # Iterate through assigned classes and assign their subjects
+            for class_instance in self.assigned_classes.all():
+                subjects = class_instance.subjects.all()  # Assuming `subjects` is related to `Class`
+                for subject in subjects:
+                    TeacherSubjectClassAssignment.objects.get_or_create(
+                        teacher=self.teacher,
+                        subject=subject,
+                        branch=self.branch,
+                        session=self.session,
+                        term=self.term
+                    )

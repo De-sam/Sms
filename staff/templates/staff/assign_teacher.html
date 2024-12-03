@@ -25,7 +25,6 @@
                             <label for="session" class="form-label">Session</label>
                             <select name="session" id="id_session" class="form-control" required>
                                 <option value="" selected>Select a session</option>
-                                <!-- Sessions will be populated dynamically -->
                             </select>
                         </div>
                     </div>
@@ -35,7 +34,6 @@
                             <label for="term" class="form-label">Term</label>
                             <select name="term" id="id_term" class="form-control" required>
                                 <option value="" selected>Select a term</option>
-                                <!-- Terms will be populated dynamically -->
                             </select>
                         </div>
                     </div>
@@ -50,8 +48,25 @@
                 <!-- Assigned Classes Field -->
                 <div class="mb-3">
                     <label for="assigned_classes" class="form-label">Classes</label>
-                    <div id="classesContainer" class="bg-light p-3 rounded">
-                        <!-- Checkboxes will be dynamically added here -->
+                    <div id="classesContainer" class="bg-light p-3 rounded"></div>
+                </div>
+
+                <!-- Toggle Switch in a Light Bootstrap Card -->
+                <div class="card border-light mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Toggle Assignment Mode</h5>
+                        <p class="card-text">
+                            Switch this on if the teacher will teach all subjects in the selected classes.
+                        </p>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                id="assignAllSubjects" 
+                                name="assign_all_subjects" 
+                                {% if teacher_class_assignment.assign_all_subjects %}checked{% endif %}>
+                            <label class="form-check-label" for="assignAllSubjects">Assign all subjects</label>
+                        </div>
                     </div>
                 </div>
 
@@ -142,7 +157,7 @@
 
                     data.classes.forEach((cls, index) => {
                         const colDiv = document.createElement("div");
-                        colDiv.classList.add("col-md-4"); // Bootstrap column for 3 items per row
+                        colDiv.classList.add("col-md-4");
 
                         const checkbox = document.createElement("input");
                         checkbox.type = "checkbox";
