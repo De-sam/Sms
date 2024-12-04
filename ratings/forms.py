@@ -1,7 +1,10 @@
 from django import forms
 from academics.models import Session, Term
-from schools.models import Branch, Class
+from schools.models import Branch
+from classes.models import Class
 from .models import Rating
+
+
 
 class RatingFilterForm(forms.Form):
     session = forms.ModelChoiceField(
