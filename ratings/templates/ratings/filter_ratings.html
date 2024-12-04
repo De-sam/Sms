@@ -1,0 +1,323 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Card -->
+    <div class="card card-outline card-primary">
+        <div id="cardHeader" class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-star"></i> Manage Student Ratings
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form id="ratingsFilterForm" method="GET">
+                {% csrf_token %}
+
+                <div class="row mb-3">
+                    <!-- Session -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="session">Session</label>
+                            <select id="session" name="session" class="form-control" required>
+                                <option value="">Select Session</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Term -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="term">Term</label>
+                            <select id="term" name="term" class="form-control" required disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Rating Type -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="ratingType">Rating Type</label>
+                            <select id="ratingType" name="ratingType" class="form-control" required>
+                                <option value="psychomotor">Psychomotor</option>
+                                <option value="behavioral">Behavioral</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Branch -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="branch">Branch</label>
+                            <select id="branch" name="branch" class="form-control" required>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classes -->
+                <div class="form-group mb-3">
+                    <label for="classes">Class(es)</label>
+                    <div id="classes" class="bg-light p-3 rounded">
+                        <!-- Classes will be dynamically populated -->
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="filterButton">Filter</button>
+            </form>
+            <hr>
+
+            <!-- Ratings Table -->
+            <table class="table table-bordered mt-3" id="ratingsTable">
+                <thead>
+                    <tr id="ratingsTableHeader">
+                        <th>Student Name</th>
+                        <!-- Dynamic header for ratings fields -->
+                    </tr>
+                </thead>
+                <tbody id="ratingsTableBody">
+                    <!-- Dynamically populated student data -->
+                </tbody>
+            </table>
+
+            <button type="button" class="btn btn-success mt-3" id="submitRatingsButton">Save Ratings</button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+   document.addEventListener("DOMContentLoaded", function () {
+    const shortCode = "{{ school.short_code }}";
+    const sessionSelect = document.getElementById("session");
+    const termSelect = document.getElementById("term");
+    const branchSelect = document.getElementById("branch");
+    const classesContainer = document.getElementById("classes");
+    const ratingsTableHeader = document.getElementById("ratingsTableHeader");
+    const ratingsTableBody = document.getElementById("ratingsTableBody");
+    const filterButton = document.getElementById("filterButton");
+    const submitRatingsButton = document.getElementById("submitRatingsButton");
+
+    // Function to get the CSRF token from cookies
+    function getCSRFToken() {
+        const cookieValue = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1];
+        return cookieValue;
+    }
+
+    const csrfToken = getCSRFToken();
+
+    // Fetch sessions
+    fetch(`/ratings/${shortCode}/get-sessions/`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.sessions) {
+                data.sessions.forEach((session) => {
+                    const option = document.createElement("option");
+                    option.value = session.id;
+                    option.textContent = session.session_name;
+                    sessionSelect.appendChild(option);
+                });
+            }
+        });
+
+    // Fetch terms when session changes
+    sessionSelect.addEventListener("change", function () {
+        const sessionId = sessionSelect.value;
+
+        if (sessionId) {
+            termSelect.disabled = false;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+
+            fetch(`/ratings/${shortCode}/get-terms/${sessionId}/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.terms) {
+                        data.terms.forEach((term) => {
+                            const option = document.createElement("option");
+                            option.value = term.id;
+                            option.textContent = term.term_name;
+                            termSelect.appendChild(option);
+                        });
+                    }
+                });
+        } else {
+            termSelect.disabled = true;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+        }
+    });
+
+    // Fetch branches
+    fetch(`/ratings/${shortCode}/get-branches/`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.branches) {
+                data.branches.forEach((branch) => {
+                    const option = document.createElement("option");
+                    option.value = branch.id;
+                    option.textContent = branch.branch_name;
+                    branchSelect.appendChild(option);
+                });
+            }
+        });
+
+    // Fetch classes when branch changes
+    branchSelect.addEventListener("change", function () {
+        const branchId = branchSelect.value;
+
+        if (branchId) {
+            classesContainer.innerHTML = "";
+
+            fetch(`/ratings/${shortCode}/get-classes/${branchId}/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.classes) {
+                        data.classes.forEach((cls) => {
+                            const div = document.createElement("div");
+                            div.classList.add("form-check");
+
+                            const checkbox = document.createElement("input");
+                            checkbox.type = "checkbox";
+                            checkbox.name = "classes";
+                            checkbox.value = cls.id;
+                            checkbox.classList.add("form-check-input");
+
+                            const label = document.createElement("label");
+                            label.textContent = cls.name;
+                            label.classList.add("form-check-label");
+
+                            div.appendChild(checkbox);
+                            div.appendChild(label);
+                            classesContainer.appendChild(div);
+                        });
+                    }
+                });
+        }
+    });
+
+    // Filter ratings
+    filterButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(
+            classesContainer.querySelectorAll("input:checked")
+        ).map((checkbox) => checkbox.value);
+        const ratingType = document.getElementById("ratingType").value;
+
+        if (session && term && branch && classes.length > 0) {
+            fetch(`/ratings/${shortCode}/get-ratings/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    ratingsTableHeader.innerHTML = `
+                        <th>Student Name</th>
+                        ${
+                            ratingType === "psychomotor"
+                                ? `<th>Coordination</th>
+                                   <th>Handwriting</th>
+                                   <th>Sports</th>
+                                   <th>Artistry</th>
+                                   <th>Verbal Fluency</th>
+                                   <th>Games</th>`
+                                : `<th>Punctuality</th>
+                                   <th>Attentiveness</th>
+                                   <th>Obedience</th>
+                                   <th>Leadership</th>
+                                   <th>Emotional Stability</th>
+                                   <th>Teamwork</th>`
+                        }
+                    `;
+
+                    ratingsTableBody.innerHTML = "";
+                    if (data.students) {
+                        data.students.forEach((student) => {
+                            const row = document.createElement("tr");
+                            row.setAttribute("data-student-id", student.id);
+
+                            const nameCell = document.createElement("td");
+                            nameCell.textContent = `${student.first_name} ${student.last_name}`;
+                            row.appendChild(nameCell);
+
+                            Object.keys(student)
+                                .filter((key) => key !== "id" && key !== "first_name" && key !== "last_name")
+                                .forEach((field) => {
+                                    const fieldCell = document.createElement("td");
+                                    const input = document.createElement("input");
+                                    input.type = "number";
+                                    input.name = `${field}_${student.id}`;
+                                    input.value = student[field] || "";
+                                    input.min = 0;
+                                    input.max = 5;
+                                    input.classList.add("form-control");
+                                    fieldCell.appendChild(input);
+                                    row.appendChild(fieldCell);
+                                });
+
+                            ratingsTableBody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement("tr");
+                        const cell = document.createElement("td");
+                        cell.colSpan = 7;
+                        cell.textContent = "No students found.";
+                        row.appendChild(cell);
+                        ratingsTableBody.appendChild(row);
+                    }
+                });
+        } else {
+            alert("Please complete all fields.");
+        }
+    });
+
+    // Save ratings
+    submitRatingsButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(
+            classesContainer.querySelectorAll("input:checked")
+        ).map((checkbox) => checkbox.value);
+        const ratingType = document.getElementById("ratingType").value;
+
+        const ratings = [];
+        ratingsTableBody.querySelectorAll("tr").forEach((row) => {
+            const studentId = row.getAttribute("data-student-id");
+            const ratingData = { student_id: studentId };
+
+            row.querySelectorAll("input").forEach((input) => {
+                const field = input.name.split("_")[0];
+                ratingData[field] = input.value;
+            });
+
+            ratings.push(ratingData);
+        });
+
+        fetch(`/ratings/${shortCode}/save-ratings/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType, ratings }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Ratings saved successfully!");
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            })
+            .catch((error) => console.error("Error submitting ratings:", error));
+    });
+});
+</script>
+{% endblock %}

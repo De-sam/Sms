@@ -153,7 +153,9 @@ def record_student_attendance(request, short_code):
     
     return render(request, 'attendance/student_attendance.html', context)
 
-
+@login_required_with_short_code
+@admin_or_teacher_required
+@transaction.atomic
 def get_attendance(request, short_code):
     # Ensure the school context is correctly fetched
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
