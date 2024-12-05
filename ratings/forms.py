@@ -58,9 +58,9 @@ class RatingForm(forms.ModelForm):
         model = Rating
         fields = [
             'coordination', 'handwriting', 'sports', 'artistry', 
-            'verbal_fluency', 'games',  # Psychomotor fields
+            'verbal_fluency', 'games', 'neatness',  # Psychomotor fields
             'punctuality', 'attentiveness', 'obedience', 
-            'leadership', 'emotional_stability', 'teamwork',  # Behavioral fields
+            'leadership', 'emotional_stability', 'teamwork', 'neatness',  # Behavioral fields
         ]
         widgets = {
             'coordination': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
@@ -69,6 +69,7 @@ class RatingForm(forms.ModelForm):
             'artistry': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'verbal_fluency': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'games': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
+            'neatness': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),  # Added
             'punctuality': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'attentiveness': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'obedience': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
@@ -96,3 +97,5 @@ class RatingForm(forms.ModelForm):
             self.fields['artistry'].widget = forms.HiddenInput()
             self.fields['verbal_fluency'].widget = forms.HiddenInput()
             self.fields['games'].widget = forms.HiddenInput()
+
+        # Neatness is shared across both types, so it remains visible for both

@@ -164,8 +164,9 @@ def save_ratings(request, short_code):
                             "handwriting": rating_data.get("handwriting") or None,
                             "sports": rating_data.get("sports") or None,
                             "artistry": rating_data.get("artistry") or None,
-                            "verbal_fluency": rating_data.get("verbal") or None,
+                            "verbal_fluency": rating_data.get("verbal_fluency") or None,
                             "games": rating_data.get("games") or None,
+                            "neatness": rating_data.get("neatness") or None,  # Added
                         })
                     elif rating_type == "behavioral":
                         defaults.update({
@@ -173,8 +174,9 @@ def save_ratings(request, short_code):
                             "attentiveness": rating_data.get("attentiveness") or None,
                             "obedience": rating_data.get("obedience") or None,
                             "leadership": rating_data.get("leadership") or None,
-                            "emotional_stability": rating_data.get("emotional") or None,  # Map "emotional" to "emotional_stability"
+                            "emotional_stability": rating_data.get("emotional_stability") or None,
                             "teamwork": rating_data.get("teamwork") or None,
+                            "neatness": rating_data.get("neatness") or None,  # Added
                         })
 
                     # Save or update the rating
