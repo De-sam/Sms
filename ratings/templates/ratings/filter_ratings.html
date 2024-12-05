@@ -66,27 +66,50 @@
             </form>
             <hr>
 
-            <!-- Ratings Table -->
-            <table class="table table-bordered mt-3" id="ratingsTable">
-                <thead>
-                    <tr id="ratingsTableHeader">
-                        <th>Student Name</th>
-                        <!-- Dynamic header for ratings fields -->
-                    </tr>
-                </thead>
-                <tbody id="ratingsTableBody">
-                    <!-- Dynamically populated student data -->
-                </tbody>
-            </table>
+            <!-- Scrollable Ratings Table -->
+            <div class="table-responsive" style="overflow-x: auto; overflow-y: auto; max-height: 400px; position: relative;">
+                <table class="table table-bordered mt-3" id="ratingsTable" style="min-width: 1200px;">
+                    <thead style="position: sticky; top: 0; background-color: white; z-index: 2;">
+                        <tr id="ratingsTableHeader">
+                            <th style="position: sticky; left: 0; background-color: white; z-index: 3;">Student Name</th>
+                            <!-- Dynamic header for ratings fields -->
+                        </tr>
+                    </thead>
+                    <tbody id="ratingsTableBody">
+                        <!-- Dynamically populated student data -->
+                    </tbody>
+                </table>
+            </div>
 
             <button type="button" class="btn btn-success mt-3" id="submitRatingsButton">Save Ratings</button>
         </div>
     </div>
 </div>
 
+<!-- Alert Modal -->
+<div id="alertsModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div id="modalHeader" class="modal-header">
+                <h5 id="modalTitle" class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+            <div id="modalFooter" class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- JavaScript -->
 <script>
-   document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
+    const modalElement = new bootstrap.Modal(document.getElementById("alertsModal"));
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalHeader = document.getElementById("modalHeader");
+    const modalFooter = document.getElementById("modalFooter");
+
     const shortCode = "{{ school.short_code }}";
     const sessionSelect = document.getElementById("session");
     const termSelect = document.getElementById("term");
@@ -97,18 +120,36 @@
     const filterButton = document.getElementById("filterButton");
     const submitRatingsButton = document.getElementById("submitRatingsButton");
 
-    // Function to get the CSRF token from cookies
+    // Utility function to get CSRF token
     function getCSRFToken() {
-        const cookieValue = document.cookie
+        return document.cookie
             .split("; ")
             .find((row) => row.startsWith("csrftoken="))
             ?.split("=")[1];
-        return cookieValue;
     }
 
     const csrfToken = getCSRFToken();
 
-    // Fetch sessions
+    // Show modal for alerts
+    function showModal(type, title, message) {
+        modalTitle.textContent = title;
+        modalBody.textContent = message;
+
+        if (type === "error") {
+            modalHeader.className = "modal-header bg-danger text-white";
+            modalFooter.className = "modal-footer bg-danger text-white";
+        } else if (type === "success") {
+            modalHeader.className = "modal-header bg-success text-white";
+            modalFooter.className = "modal-footer bg-success text-white";
+        } else if (type === "warning") {
+            modalHeader.className = "modal-header bg-warning text-dark";
+            modalFooter.className = "modal-footer bg-warning text-dark";
+        }
+
+        modalElement.show();
+    }
+
+    // Fetch and populate sessions
     fetch(`/ratings/${shortCode}/get-sessions/`)
         .then((response) => response.json())
         .then((data) => {
@@ -122,7 +163,7 @@
             }
         });
 
-    // Fetch terms when session changes
+    // Fetch terms based on session selection
     sessionSelect.addEventListener("change", function () {
         const sessionId = sessionSelect.value;
 
@@ -162,7 +203,7 @@
             }
         });
 
-    // Fetch classes when branch changes
+    // Fetch and display classes based on branch selection
     branchSelect.addEventListener("change", function () {
         const branchId = branchSelect.value;
 
@@ -173,24 +214,23 @@
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.classes) {
-                        data.classes.forEach((cls) => {
-                            const div = document.createElement("div");
-                            div.classList.add("form-check");
-
-                            const checkbox = document.createElement("input");
-                            checkbox.type = "checkbox";
-                            checkbox.name = "classes";
-                            checkbox.value = cls.id;
-                            checkbox.classList.add("form-check-input");
-
-                            const label = document.createElement("label");
-                            label.textContent = cls.name;
-                            label.classList.add("form-check-label");
-
-                            div.appendChild(checkbox);
-                            div.appendChild(label);
-                            classesContainer.appendChild(div);
-                        });
+                        const rows = Math.ceil(data.classes.length / 3);
+                        for (let i = 0; i < rows; i++) {
+                            const row = document.createElement("div");
+                            row.classList.add("row", "mb-2");
+                            for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                                const col = document.createElement("div");
+                                col.classList.add("col-md-4");
+                                col.innerHTML = `
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="classes" value="${data.classes[j].id}">
+                                        <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department})</label>
+                                    </div>
+                                `;
+                                row.appendChild(col);
+                            }
+                            classesContainer.appendChild(row);
+                        }
                     }
                 });
         }
@@ -201,80 +241,76 @@
         const session = sessionSelect.value;
         const term = termSelect.value;
         const branch = branchSelect.value;
-        const classes = Array.from(
-            classesContainer.querySelectorAll("input:checked")
-        ).map((checkbox) => checkbox.value);
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map((checkbox) => checkbox.value);
         const ratingType = document.getElementById("ratingType").value;
 
-        if (session && term && branch && classes.length > 0) {
-            fetch(`/ratings/${shortCode}/get-ratings/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-                body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType }),
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    ratingsTableHeader.innerHTML = `
-                        <th>Student Name</th>
-                        ${
-                            ratingType === "psychomotor"
-                                ? `<th>Coordination</th>
-                                   <th>Handwriting</th>
-                                   <th>Sports</th>
-                                   <th>Artistry</th>
-                                   <th>Verbal Fluency</th>
-                                   <th>Games</th>`
-                                : `<th>Punctuality</th>
-                                   <th>Attentiveness</th>
-                                   <th>Obedience</th>
-                                   <th>Leadership</th>
-                                   <th>Emotional Stability</th>
-                                   <th>Teamwork</th>`
-                        }
-                    `;
-
-                    ratingsTableBody.innerHTML = "";
-                    if (data.students) {
-                        data.students.forEach((student) => {
-                            const row = document.createElement("tr");
-                            row.setAttribute("data-student-id", student.id);
-
-                            const nameCell = document.createElement("td");
-                            nameCell.textContent = `${student.first_name} ${student.last_name}`;
-                            row.appendChild(nameCell);
-
-                            Object.keys(student)
-                                .filter((key) => key !== "id" && key !== "first_name" && key !== "last_name")
-                                .forEach((field) => {
-                                    const fieldCell = document.createElement("td");
-                                    const input = document.createElement("input");
-                                    input.type = "number";
-                                    input.name = `${field}_${student.id}`;
-                                    input.value = student[field] || "";
-                                    input.min = 0;
-                                    input.max = 5;
-                                    input.classList.add("form-control");
-                                    fieldCell.appendChild(input);
-                                    row.appendChild(fieldCell);
-                                });
-
-                            ratingsTableBody.appendChild(row);
-                        });
-                    } else {
-                        const row = document.createElement("tr");
-                        const cell = document.createElement("td");
-                        cell.colSpan = 7;
-                        cell.textContent = "No students found.";
-                        row.appendChild(cell);
-                        ratingsTableBody.appendChild(row);
-                    }
-                });
-        } else {
-            alert("Please complete all fields.");
+        if (!session || !term || !branch || classes.length === 0) {
+            showModal("warning", "Incomplete Fields", "Please complete all fields before filtering.");
+            return;
         }
+
+        fetch(`/ratings/${shortCode}/get-ratings/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                ratingsTableHeader.innerHTML = `
+                    <th style="position: sticky; left: 0; background-color: white; z-index: 3;">Student Name</th>
+                    ${
+                        ratingType === "psychomotor"
+                            ? `<th>Coordination</th>
+                               <th>Handwriting</th>
+                               <th>Sports</th>
+                               <th>Artistry</th>
+                               <th>Verbal Fluency</th>
+                               <th>Games</th>`
+                            : `<th>Punctuality</th>
+                               <th>Attentiveness</th>
+                               <th>Obedience</th>
+                               <th>Leadership</th>
+                               <th>Emotional Stability</th>
+                               <th>Teamwork</th>`
+                    }
+                `;
+                ratingsTableBody.innerHTML = "";
+                if (data.students) {
+                    data.students.forEach((student) => {
+                        const row = document.createElement("tr");
+                        row.setAttribute("data-student-id", student.id);
+
+                        const nameCell = document.createElement("td");
+                        nameCell.style.position = "sticky";
+                        nameCell.style.left = "0";
+                        nameCell.style.backgroundColor = "white";
+                        nameCell.textContent = `${student.first_name} ${student.last_name}`;
+                        row.appendChild(nameCell);
+
+                        Object.keys(student)
+                            .filter((key) => key !== "id" && key !== "first_name" && key !== "last_name")
+                            .forEach((field) => {
+                                const fieldCell = document.createElement("td");
+                                const input = document.createElement("input");
+                                input.type = "number";
+                                input.name = `${field}_${student.id}`;
+                                input.value = student[field] || "";
+                                input.min = 1;
+                                input.max = 5;
+                                input.classList.add("form-control");
+                                fieldCell.appendChild(input);
+                                row.appendChild(fieldCell);
+                            });
+
+                        ratingsTableBody.appendChild(row);
+                    });
+                } else {
+                    ratingsTableBody.innerHTML = `<tr><td colspan="7">No students found.</td></tr>`;
+                }
+            });
     });
 
     // Save ratings
@@ -282,23 +318,37 @@
         const session = sessionSelect.value;
         const term = termSelect.value;
         const branch = branchSelect.value;
-        const classes = Array.from(
-            classesContainer.querySelectorAll("input:checked")
-        ).map((checkbox) => checkbox.value);
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map((checkbox) => checkbox.value);
         const ratingType = document.getElementById("ratingType").value;
 
         const ratings = [];
+        let isValid = true;
+
         ratingsTableBody.querySelectorAll("tr").forEach((row) => {
             const studentId = row.getAttribute("data-student-id");
             const ratingData = { student_id: studentId };
 
             row.querySelectorAll("input").forEach((input) => {
                 const field = input.name.split("_")[0];
-                ratingData[field] = input.value;
+                const value = parseInt(input.value, 10);
+
+                if (isNaN(value) || value < 1 || value > 5) {
+                    input.classList.add("is-invalid");
+                    isValid = false;
+                } else {
+                    input.classList.remove("is-invalid");
+                    input.classList.add("is-valid");
+                    ratingData[field] = value;
+                }
             });
 
             ratings.push(ratingData);
         });
+
+        if (!isValid) {
+            showModal("error", "Validation Error", "Please ensure all ratings are between 1 and 5.");
+            return;
+        }
 
         fetch(`/ratings/${shortCode}/save-ratings/`, {
             method: "POST",
@@ -311,13 +361,17 @@
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    alert("Ratings saved successfully!");
+                    showModal("success", "Ratings Saved", "Student ratings have been successfully saved!");
                 } else {
-                    alert(`Error: ${data.error}`);
+                    showModal("error", "Error", data.error || "An unexpected error occurred.");
                 }
             })
-            .catch((error) => console.error("Error submitting ratings:", error));
+            .catch(() => {
+                showModal("error", "Error", "Failed to save ratings. Please try again.");
+            });
     });
 });
+
+
 </script>
 {% endblock %}

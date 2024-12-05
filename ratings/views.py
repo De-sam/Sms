@@ -10,7 +10,7 @@ from schools.models import Branch
 from classes.models import Class
 from students.models import Student
 from .models import Rating
-
+from django.db import transaction
 
 
 
@@ -113,68 +113,80 @@ def get_ratings(request, short_code):
 
 @csrf_exempt
 def save_ratings(request, short_code):
+    """
+    Save ratings for students based on the submitted data.
+    """
     print("DEBUG: Entered save_ratings view.")
-    print(f"DEBUG: Raw request body: {request.body}")  # Log the raw payload
-
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
     if request.method == "POST":
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            print(f"DEBUG: Parsed JSON data: {data}")  # Log parsed JSON
+            # Parse the JSON payload
+            raw_data = request.body.decode('utf-8')
+            print(f"DEBUG: Raw request body: {raw_data}")
+            data = json.loads(raw_data)
+            print(f"DEBUG: Parsed JSON data: {data}")
 
             session_id = data.get("session")
             term_id = data.get("term")
             branch_id = data.get("branch")
             class_ids = data.get("classes", [])
             rating_type = data.get("rating_type")
-            ratings = data.get("ratings", [])
+            ratings = data.get("ratings", [])  # List of ratings per student
 
             print(f"DEBUG: Filter criteria - Session: {session_id}, Term: {term_id}, Branch: {branch_id}, Rating Type: {rating_type}, Ratings: {ratings}")
 
+            # Validate required fields
             if not session_id or not term_id or not branch_id or not rating_type or not ratings:
                 return JsonResponse({"error": "Missing required fields."}, status=400)
 
+            # Validate session, term, and branch
             session = get_object_or_404(Session, id=session_id, school=school)
             term = get_object_or_404(Term, id=term_id, session=session)
             branch = get_object_or_404(Branch, id=branch_id, school=school)
 
-            for rating_data in ratings:
-                student_id = rating_data.get("student_id")
-                if not student_id:
-                    print("DEBUG: Missing student_id in ratings.")
-                    continue
+            # Process each rating
+            with transaction.atomic():  # Ensure all records are saved or none in case of an error
+                for rating_data in ratings:
+                    student_id = rating_data.get("student_id")
+                    if not student_id:
+                        print("DEBUG: Missing student_id in ratings.")
+                        continue
 
-                student = get_object_or_404(Student, id=student_id, branch=branch, current_session=session)
+                    # Fetch the student
+                    student = get_object_or_404(Student, id=student_id, branch=branch, current_session=session)
 
-                defaults = {}
-                if rating_type == "psychomotor":
-                    defaults.update({
-                        "coordination": rating_data.get("coordination"),
-                        "handwriting": rating_data.get("handwriting"),
-                        "sports": rating_data.get("sports"),
-                        "artistry": rating_data.get("artistry"),
-                        "verbal_fluency": rating_data.get("verbal_fluency"),
-                        "games": rating_data.get("games"),
-                    })
-                elif rating_type == "behavioral":
-                    defaults.update({
-                        "punctuality": rating_data.get("punctuality"),
-                        "attentiveness": rating_data.get("attentiveness"),
-                        "obedience": rating_data.get("obedience"),
-                        "leadership": rating_data.get("leadership"),
-                        "emotional_stability": rating_data.get("emotional_stability"),
-                        "teamwork": rating_data.get("teamwork"),
-                    })
+                    # Prepare fields for update or create
+                    defaults = {}
+                    if rating_type == "psychomotor":
+                        defaults.update({
+                            "coordination": rating_data.get("coordination") or None,
+                            "handwriting": rating_data.get("handwriting") or None,
+                            "sports": rating_data.get("sports") or None,
+                            "artistry": rating_data.get("artistry") or None,
+                            "verbal_fluency": rating_data.get("verbal") or None,
+                            "games": rating_data.get("games") or None,
+                        })
+                    elif rating_type == "behavioral":
+                        defaults.update({
+                            "punctuality": rating_data.get("punctuality") or None,
+                            "attentiveness": rating_data.get("attentiveness") or None,
+                            "obedience": rating_data.get("obedience") or None,
+                            "leadership": rating_data.get("leadership") or None,
+                            "emotional_stability": rating_data.get("emotional") or None,  # Map "emotional" to "emotional_stability"
+                            "teamwork": rating_data.get("teamwork") or None,
+                        })
 
-                Rating.objects.update_or_create(
-                    student=student,
-                    session=session,
-                    term=term,
-                    branch=branch,
-                    rating_type=rating_type,
-                    defaults=defaults
-                )
+                    # Save or update the rating
+                    rating_obj, created = Rating.objects.update_or_create(
+                        student=student,
+                        session=session,
+                        term=term,
+                        branch=branch,
+                        rating_type=rating_type,
+                        defaults=defaults
+                    )
+                    print(f"DEBUG: {'Created' if created else 'Updated'} rating for student {student_id}. Data: {defaults}")
 
             print("DEBUG: Ratings saved successfully.")
             return JsonResponse({"success": True, "message": "Ratings saved successfully."}, status=200)
