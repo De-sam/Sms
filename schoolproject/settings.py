@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'comments.apps.CommentsConfig',
     'ratings.apps.RatingsConfig',
     'attendance.apps.AttendanceConfig',
     'students.apps.StudentsConfig',
@@ -162,7 +164,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 #celery 
-from celery.schedules import crontab
+
 
 # Use Django's database as the result backend
 CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Still using Redis for broker

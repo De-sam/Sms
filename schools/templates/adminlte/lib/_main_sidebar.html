@@ -181,13 +181,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Nur)
+                            <a href="{% url 'filter_ratings' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                 Ratings
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> End of Term (Sec)
+                            <a href="{% url 'filter_comments' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                Student's comment
                             </a>
                         </li>
                     </ul>

@@ -6,17 +6,17 @@
     <div class="card card-outline card-primary">
         <div id="cardHeader" class="card-header bg-primary text-white">
             <h3 class="card-title">
-                <i class="fas fa-star"></i> Manage Student Ratings
+                <i class="fas fa-comment"></i> Manage Student Comments
             </h3>
         </div>
         <div class="card-body">
             <!-- Filters -->
-            <form id="ratingsFilterForm" method="GET">
+            <form id="commentsFilterForm" method="GET">
                 {% csrf_token %}
 
                 <div class="row mb-3">
                     <!-- Session -->
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="session">Session</label>
                             <select id="session" name="session" class="form-control" required>
@@ -25,7 +25,7 @@
                         </div>
                     </div>
                     <!-- Term -->
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="term">Term</label>
                             <select id="term" name="term" class="form-control" required disabled>
@@ -33,18 +33,8 @@
                             </select>
                         </div>
                     </div>
-                    <!-- Rating Type -->
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="ratingType">Rating Type</label>
-                            <select id="ratingType" name="ratingType" class="form-control" required>
-                                <option value="psychomotor">Psychomotor</option>
-                                <option value="behavioral">Behavioral</option>
-                            </select>
-                        </div>
-                    </div>
                     <!-- Branch -->
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="branch">Branch</label>
                             <select id="branch" name="branch" class="form-control" required>
@@ -58,52 +48,30 @@
                 <div class="form-group mb-3">
                     <label for="classes">Class(es)</label>
                     <div id="classes" class="bg-light p-3 rounded">
-                        <!-- Classes will be dynamically populated -->
+                        <!-- Classes will be dynamically populated in rows of 3 -->
                     </div>
                 </div>
 
                 <button type="button" class="btn btn-primary" id="filterButton">Filter</button>
             </form>
             <hr>
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header d-flex align-items-center">
-                    <i class="fas fa-info-circle me-2"></i> Rating Guide
-                    <button class="btn btn-light btn-sm ms-auto" data-bs-toggle="collapse" data-bs-target="#ratingGuideContent">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                </div>
-                <div id="ratingGuideContent" class="collapse">
-                    <div class="card-body">
-                        <p class="card-text">
-                            Enter ratings between <strong>1</strong> and <strong>5</strong>, where:
-                        </p>
-                        <ul>
-                            <li><strong>1</strong> - Poor</li>
-                            <li><strong>2</strong> - Below Average</li>
-                            <li><strong>3</strong> - Average</li>
-                            <li><strong>4</strong> - Good</li>
-                            <li><strong>5</strong> - Excellent</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Scrollable Ratings Table -->
-            <div class="table-responsive" style="overflow-x: auto; overflow-y: auto; max-height: 400px; position: relative;">
-                <table class="table table-bordered mt-3" id="ratingsTable" style="min-width: 1200px;">
+
+            <!-- Scrollable Comments Table -->
+            <div class="table-responsive" style="overflow-y: auto; max-height: 400px; position: relative;">
+                <table class="table table-bordered mt-3" id="commentsTable">
                     <thead style="position: sticky; top: 0; background-color: white; z-index: 2;">
-                        <tr id="ratingsTableHeader">
-                            <th style="position: sticky; left: 0; background-color: white; z-index: 3;">Student Name</th>
-                            <!-- Dynamic header for ratings fields -->
+                        <tr id="commentsTableHeader">
+                            <th>Student Name</th>
+                            <th>Comments</th>
                         </tr>
                     </thead>
-                    <tbody id="ratingsTableBody">
+                    <tbody id="commentsTableBody">
                         <!-- Dynamically populated student data -->
                     </tbody>
                 </table>
             </div>
 
-            <button type="button" class="btn btn-success mt-3" id="submitRatingsButton">Save Ratings</button>
+            <button type="button" class="btn btn-success mt-3" id="submitCommentsButton">Save Comments</button>
         </div>
     </div>
 </div>
@@ -123,6 +91,18 @@
         </div>
     </div>
 </div>
+
+<!-- CSS for Validation Feedback -->
+<style>
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .is-valid {
+        border-color: #28a745;
+    }
+</style>
+
 <!-- JavaScript -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -137,10 +117,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const termSelect = document.getElementById("term");
     const branchSelect = document.getElementById("branch");
     const classesContainer = document.getElementById("classes");
-    const ratingsTableHeader = document.getElementById("ratingsTableHeader");
-    const ratingsTableBody = document.getElementById("ratingsTableBody");
+    const commentsTableHeader = document.getElementById("commentsTableHeader");
+    const commentsTableBody = document.getElementById("commentsTableBody");
     const filterButton = document.getElementById("filterButton");
-    const submitRatingsButton = document.getElementById("submitRatingsButton");
+    const submitCommentsButton = document.getElementById("submitCommentsButton");
 
     // Utility function to get CSRF token
     function getCSRFToken() {
@@ -171,8 +151,8 @@ document.addEventListener("DOMContentLoaded", function () {
         modalElement.show();
     }
 
-    // Fetch and populate sessions
-    fetch(`/ratings/${shortCode}/get-sessions/`)
+    // Fetch sessions
+    fetch(`/comments/${shortCode}/get-sessions/`)
         .then((response) => response.json())
         .then((data) => {
             if (data.sessions) {
@@ -185,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-    // Fetch terms based on session selection
+    // Fetch terms when session changes
     sessionSelect.addEventListener("change", function () {
         const sessionId = sessionSelect.value;
 
@@ -193,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
             termSelect.disabled = false;
             termSelect.innerHTML = '<option value="">Select Term</option>';
 
-            fetch(`/ratings/${shortCode}/get-terms/${sessionId}/`)
+            fetch(`/comments/${shortCode}/get-terms/${sessionId}/`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.terms) {
@@ -212,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Fetch branches
-    fetch(`/ratings/${shortCode}/get-branches/`)
+    fetch(`/comments/${shortCode}/get-branches/`)
         .then((response) => response.json())
         .then((data) => {
             if (data.branches) {
@@ -225,14 +205,14 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-    // Fetch and display classes based on branch selection
+    // Fetch classes when branch changes
     branchSelect.addEventListener("change", function () {
         const branchId = branchSelect.value;
 
         if (branchId) {
             classesContainer.innerHTML = "";
 
-            fetch(`/ratings/${shortCode}/get-classes/${branchId}/`)
+            fetch(`/comments/${shortCode}/get-classes/${branchId}/`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.classes) {
@@ -258,143 +238,104 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Filter ratings
+    // Filter students for comments
     filterButton.addEventListener("click", function () {
         const session = sessionSelect.value;
         const term = termSelect.value;
         const branch = branchSelect.value;
-        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map((checkbox) => checkbox.value);
-        const ratingType = document.getElementById("ratingType").value;
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map(cb => cb.value);
 
         if (!session || !term || !branch || classes.length === 0) {
-            showModal("warning", "Incomplete Fields", "Please complete all fields before filtering.");
+            showModal("warning", "Incomplete Fields", "Please fill in all fields.");
             return;
         }
 
-        fetch(`/ratings/${shortCode}/get-ratings/`, {
+        fetch(`/comments/${shortCode}/get-comments/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrfToken,
             },
-            body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType }),
+            body: JSON.stringify({ session, term, branch, classes }),
         })
-            .then((response) => response.json())
-            .then((data) => {
-                ratingsTableHeader.innerHTML = `
-                    <th style="position: sticky; left: 0; background-color: white; z-index: 3;">Student Name</th>
-                    ${
-                        ratingType === "psychomotor"
-                            ? `<th>Coordination</th>
-                               <th>Handwriting</th>
-                               <th>Sports</th>
-                               <th>Artistry</th>
-                               <th>Verbal Fluency</th>
-                               <th>Games</th>`
-                            : `<th>Punctuality</th>
-                               <th>Attentiveness</th>
-                               <th>Obedience</th>
-                               <th>Leadership</th>
-                               <th>Emotional Stability</th>
-                               <th>Teamwork</th>
-                               <th>Neatness</th>`
-                    }
-                `;
-                ratingsTableBody.innerHTML = "";
+            .then(response => response.json())
+            .then(data => {
+                commentsTableBody.innerHTML = "";
+
                 if (data.students) {
-                    data.students.forEach((student) => {
+                    data.students.forEach(student => {
                         const row = document.createElement("tr");
-                        row.setAttribute("data-student-id", student.id);
 
                         const nameCell = document.createElement("td");
-                        nameCell.style.position = "sticky";
-                        nameCell.style.left = "0";
-                        nameCell.style.backgroundColor = "white";
                         nameCell.textContent = `${student.first_name} ${student.last_name}`;
                         row.appendChild(nameCell);
 
-                        Object.keys(student)
-                            .filter((key) => key !== "id" && key !== "first_name" && key !== "last_name")
-                            .forEach((field) => {
-                                const fieldCell = document.createElement("td");
-                                const input = document.createElement("input");
-                                input.type = "number";
-                                input.name = `${field}_${student.id}`;
-                                input.value = student[field] || "";
-                                input.min = 1;
-                                input.max = 5;
-                                input.classList.add("form-control");
-                                fieldCell.appendChild(input);
-                                row.appendChild(fieldCell);
-                            });
+                        const commentCell = document.createElement("td");
+                        const textarea = document.createElement("textarea");
+                        textarea.name = `comment_${student.id}`;
+                        textarea.value = student.comment_text || "";
+                        textarea.classList.add("form-control");
+                        commentCell.appendChild(textarea);
+                        row.appendChild(commentCell);
 
-                        ratingsTableBody.appendChild(row);
+                        commentsTableBody.appendChild(row);
                     });
                 } else {
-                    ratingsTableBody.innerHTML = `<tr><td colspan="7">No students found.</td></tr>`;
+                    commentsTableBody.innerHTML = `<tr><td colspan="2">No students found.</td></tr>`;
                 }
             });
     });
 
-    // Save ratings
-    submitRatingsButton.addEventListener("click", function () {
+    // Save comments
+    submitCommentsButton.addEventListener("click", function () {
         const session = sessionSelect.value;
         const term = termSelect.value;
         const branch = branchSelect.value;
-        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map((checkbox) => checkbox.value);
-        const ratingType = document.getElementById("ratingType").value;
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map(cb => cb.value);
 
-        const ratings = [];
         let isValid = true;
+        const comments = Array.from(commentsTableBody.querySelectorAll("tr")).map(row => {
+            const textarea = row.querySelector("textarea");
+            const studentId = textarea.name.split("_")[1];
+            const commentText = textarea.value.trim();
 
-        ratingsTableBody.querySelectorAll("tr").forEach((row) => {
-            const studentId = row.getAttribute("data-student-id");
-            const ratingData = { student_id: studentId };
+            if (!commentText) {
+                textarea.classList.add("is-invalid");
+                isValid = false;
+            } else {
+                textarea.classList.remove("is-invalid");
+                textarea.classList.add("is-valid");
+            }
 
-            row.querySelectorAll("input").forEach((input) => {
-                const field = input.name.split("_")[0];
-                const value = parseInt(input.value, 10);
-
-                if (isNaN(value) || value < 1 || value > 5) {
-                    input.classList.add("is-invalid");
-                    isValid = false;
-                } else {
-                    input.classList.remove("is-invalid");
-                    input.classList.add("is-valid");
-                    ratingData[field] = value;
-                }
-            });
-
-            ratings.push(ratingData);
+            return { student_id: studentId, comment_text: commentText };
         });
 
         if (!isValid) {
-            showModal("error", "Validation Error", "Please ensure all ratings are between 1 and 5.");
+            showModal("warning", "Validation Error", "Please fill out all comments before saving.");
             return;
         }
 
-        fetch(`/ratings/${shortCode}/save-ratings/`, {
+        fetch(`/comments/${shortCode}/save-comments/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrfToken,
             },
-            body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType, ratings }),
+            body: JSON.stringify({ session, term, branch, classes, comments }),
         })
-            .then((response) => response.json())
-            .then((data) => {
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
-                    showModal("success", "Ratings Saved", "Student ratings have been successfully saved!");
+                    showModal("success", "Comments Saved", "All comments have been successfully saved!");
+                    commentsTableBody.querySelectorAll("textarea").forEach(textarea => {
+                        textarea.classList.remove("is-valid");
+                    });
                 } else {
-                    showModal("error", "Error", data.error || "An unexpected error occurred.");
+                    showModal("error", "Error Saving Comments", data.error || "An error occurred.");
                 }
-            })
-            .catch(() => {
-                showModal("error", "Error", "Failed to save ratings. Please try again.");
             });
     });
 });
-
 
 </script>
 {% endblock %}
