@@ -23,4 +23,7 @@ urlpatterns = [
 
     # Save Ratings (save submitted ratings data)
     path('<str:short_code>/save-ratings/', views.save_ratings, name='save_ratings'),
+
+    path('<short_code>/teacher/ratings/', views.record_teacher_ratings, name='record_teacher_ratings'),
+
 ]

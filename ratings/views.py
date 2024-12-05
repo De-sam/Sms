@@ -3,6 +3,8 @@ from academics.models import Session, Term
 from schools.models import Branch
 from landingpage.models import SchoolRegistration
 from utils.context_helpers import get_user_roles
+from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_required, teacher_required,admin_or_teacher_required
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -11,9 +13,13 @@ from classes.models import Class
 from students.models import Student
 from .models import Rating
 from django.db import transaction
+from students.models import Student
+from classes.models import Class, TeacherClassAssignment
 
 
 
+@login_required_with_short_code
+@admin_required
 def filter_students_for_ratings(request, short_code):
     """
     Render the template for filtering students based on session, term, branch, and class.
@@ -33,7 +39,8 @@ def filter_students_for_ratings(request, short_code):
     print("DEBUG: Context prepared with school and user roles.")
     return render(request, 'ratings/filter_ratings.html', context)
 
-
+@admin_or_teacher_required
+@login_required_with_short_code
 def get_ratings(request, short_code):
     """
     Fetch filtered students based on session, term, branch, classes, and rating type.
@@ -70,7 +77,7 @@ def get_ratings(request, short_code):
 
             # Define rating fields based on rating_type
             fields = {
-                        "psychomotor": ["coordination", "handwriting", "sports", "artistry", "verbal_fluency", "games", "neatness"],  # Add neatness here
+                        "psychomotor": ["coordination", "handwriting", "sports", "artistry", "verbal_fluency", "games", ],  # Add neatness here
                         "behavioral": ["punctuality", "attentiveness", "obedience", "leadership", "emotional_stability", "teamwork", "neatness"],  # Add neatness here
                     }.get(rating_type, [])
 
@@ -113,6 +120,8 @@ def get_ratings(request, short_code):
 
 
 @csrf_exempt
+@admin_or_teacher_required
+@login_required_with_short_code
 def save_ratings(request, short_code):
     """
     Save ratings for students based on the submitted data.
@@ -202,3 +211,56 @@ def save_ratings(request, short_code):
 
     print("DEBUG: Invalid request method.")
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+
+
+@login_required_with_short_code
+@teacher_required
+@transaction.atomic
+def record_teacher_ratings(request, short_code):
+    """
+    View for teachers to record ratings for students.
+    Filters data based on teacher's assignments.
+    """
+    user = request.user
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    # Fetch teacher's roles
+    user_roles = get_user_roles(user, school)
+
+    # Ensure the user is a teacher
+    if not user_roles.get('is_teacher', False):
+        return JsonResponse({'error': 'Access denied. Teachers only.'}, status=403)
+
+    # Fetch teacher assignments
+    teacher_assignments = TeacherClassAssignment.objects.filter(teacher=user.staff, branch__school=school)
+
+    # Filter data based on teacher's assignments
+    sessions = Session.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    terms = Term.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    branches = Branch.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+    assigned_classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).distinct()
+
+    # Debugging: Log teacher assignments and filtered data
+    print(f"Teacher Assignments for {user.username}:")
+    for assignment in teacher_assignments:
+        print(f"Branch: {assignment.branch}, Classes: {[cls.name for cls in assignment.assigned_classes.all()]}")
+
+    print(f"Filtered Data for {user.username}:")
+    print(f"Sessions: {[session.session_name for session in sessions]}")
+    print(f"Terms: {[term.term_name for term in terms]}")
+    print(f"Branches: {[branch.branch_name for branch in branches]}")
+    print(f"Classes: {[cls.name for cls in assigned_classes]}")
+
+    # Pass filtered data to the template
+    context = {
+        'school': school,
+        'sessions': sessions,
+        'terms': terms,
+        'branches': branches,
+        'classes': assigned_classes,
+        **user_roles,  # Add user roles to the context
+    }
+
+    return render(request, 'ratings/filter_ratings.html', context)
