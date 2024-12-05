@@ -70,9 +70,10 @@ def get_ratings(request, short_code):
 
             # Define rating fields based on rating_type
             fields = {
-                "psychomotor": ["coordination", "handwriting", "sports", "artistry", "verbal_fluency", "games"],
-                "behavioral": ["punctuality", "attentiveness", "obedience", "leadership", "emotional_stability", "teamwork"],
-            }.get(rating_type, [])
+                        "psychomotor": ["coordination", "handwriting", "sports", "artistry", "verbal_fluency", "games", "neatness"],  # Add neatness here
+                        "behavioral": ["punctuality", "attentiveness", "obedience", "leadership", "emotional_stability", "teamwork", "neatness"],  # Add neatness here
+                    }.get(rating_type, [])
+
 
             student_data = []
             for student in students:
@@ -166,7 +167,6 @@ def save_ratings(request, short_code):
                             "artistry": rating_data.get("artistry") or None,
                             "verbal_fluency": rating_data.get("verbal_fluency") or None,
                             "games": rating_data.get("games") or None,
-                            "neatness": rating_data.get("neatness") or None,  # Added
                         })
                     elif rating_type == "behavioral":
                         defaults.update({
