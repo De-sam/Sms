@@ -179,14 +179,14 @@ def save_ratings(request, short_code):
                         })
                     elif rating_type == "behavioral":
                         defaults.update({
-                            "punctuality": rating_data.get("punctuality") or None,
-                            "attentiveness": rating_data.get("attentiveness") or None,
-                            "obedience": rating_data.get("obedience") or None,
-                            "leadership": rating_data.get("leadership") or None,
-                            "emotional_stability": rating_data.get("emotional_stability") or None,
-                            "teamwork": rating_data.get("teamwork") or None,
-                            "neatness": rating_data.get("neatness") or None,  # Added
-                        })
+                        "punctuality": rating_data.get("punctuality") or None,
+                        "attentiveness": rating_data.get("attentiveness") or None,
+                        "obedience": rating_data.get("obedience") or None,
+                        "leadership": rating_data.get("leadership") or None,
+                        "emotional_stability": rating_data.get("emotional") or None,  # Map 'emotional' to 'emotional_stability'
+                        "teamwork": rating_data.get("teamwork") or None,
+                        "neatness": rating_data.get("neatness") or None,
+                    })
 
                     # Save or update the rating
                     rating_obj, created = Rating.objects.update_or_create(
