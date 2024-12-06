@@ -1,0 +1,79 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-outline card-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-list"></i> Result Structures
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if result_structures %}
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Session</th>
+                            <th>Term</th>
+                            <th>Branch</th>
+                            <th>CA Total</th>
+                            <th>Exam Total</th>
+                            <th>Conversion Total</th>
+                            <th>Created At</th>
+                            <th>Actions</th> <!-- New column -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for structure in result_structures %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ structure.session.session_name }}</td>
+                            <td>{{ structure.term.term_name }}</td>
+                            <td>{{ structure.branch.branch_name }}</td>
+                            <td>{{ structure.ca_total }}</td>
+                            <td>{{ structure.exam_total }}</td>
+                            <td>{{ structure.conversion_total }}</td>
+                            <td>{{ structure.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <!-- Add Components Action -->
+                                <a href="{% url 'add_result_components' school.short_code structure.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Add Components
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if result_structures.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ result_structures.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in result_structures.paginator.page_range %}
+                        <li class="page-item {% if result_structures.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if result_structures.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ result_structures.next_page_number }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <div class="alert alert-warning">
+                    No result structures found for this school.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

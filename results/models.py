@@ -24,10 +24,11 @@ class ResultComponent(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)  # Name of the component (e.g., "1st Test")
     max_marks = models.PositiveSmallIntegerField(null=True, blank=True)  # Maximum marks for this component
     order = models.PositiveSmallIntegerField(default=0, null=True, blank=True)  # Order of the component
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True)  # Optional subject-specific component
 
     def __str__(self):
-        return f"{self.name} ({self.max_marks} marks)"
-
+        subject_info = f" for {self.subject}" if self.subject else ""
+        return f"{self.name} ({self.max_marks} marks){subject_info}"
 
 class StudentResult(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results', null=True, blank=True)

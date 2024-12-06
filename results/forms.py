@@ -1,7 +1,8 @@
 from django import forms
 from .models import ResultStructure, ResultComponent
 from classes.models import Class
-
+from academics.models import Session, Term
+from schools.models import Branch
 
 class ResultStructureForm(forms.ModelForm):
     """
@@ -18,14 +19,55 @@ class ResultStructureForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if school:
-            # Dynamically filter sessions, terms, and branches based on the school
-            self.fields['session'].queryset = school.session_set.all()
-            self.fields['term'].queryset = school.term_set.none()  # Populate via AJAX
-            self.fields['branch'].queryset = school.branch_set.all()
+            # Filter sessions, branches, and classes based on the school
+            self.fields['session'].queryset = school.sessions.all()
+            self.fields['branch'].queryset = Branch.objects.filter(school=school)
             self.fields['classes'].queryset = Class.objects.none()  # Initially empty
 
-        # Add custom attributes for dynamic interactions
-        self.fields['classes'].widget.attrs.update({'class': 'form-check-input'})
+        # Handle dynamic filtering of terms
+        if 'session' in self.data:
+            try:
+                session_id = int(self.data.get('session'))
+                self.fields['term'].queryset = Term.objects.filter(session_id=session_id)
+            except (ValueError, TypeError):
+                self.fields['term'].queryset = Term.objects.none()
+        elif self.instance.pk:
+            # If editing an instance, populate terms based on the instance's session
+            self.fields['term'].queryset = Term.objects.filter(session=self.instance.session)
+
+        # Dynamically populate classes based on selected branch
+        if 'branch' in self.data:
+            try:
+                branch_id = int(self.data.get('branch'))
+                self.fields['classes'].queryset = Class.objects.filter(branches__id=branch_id)
+            except (ValueError, TypeError):
+                self.fields['classes'].queryset = Class.objects.none()
+
+    def clean(self):
+        """
+        Perform additional validation for CA, Exam totals, and their conversion.
+        """
+        cleaned_data = super().clean()
+
+        ca_total = cleaned_data.get('ca_total')
+        exam_total = cleaned_data.get('exam_total')
+        conversion_total = cleaned_data.get('conversion_total')
+
+        if ca_total is not None and exam_total is not None:
+            # Ensure CA and Exam totals sum to 100
+            if ca_total + exam_total != 100:
+                raise forms.ValidationError(
+                    "The total of CA and Exam marks must equal 100."
+                )
+
+            # Ensure conversion total does not exceed the CA total
+            if conversion_total and conversion_total > ca_total:
+                raise forms.ValidationError(
+                    "Conversion total cannot exceed the CA total."
+                )
+
+        return cleaned_data
+
 
 class ResultComponentForm(forms.ModelForm):
     """
@@ -35,17 +77,18 @@ class ResultComponentForm(forms.ModelForm):
 
     class Meta:
         model = ResultComponent
-        fields = ['name', 'max_marks']
+        fields = ['name', 'max_marks', 'subject']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Component Name'}),
             'max_marks': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Maximum Marks'}),
+            'subject': forms.Select(attrs={'class': 'form-control'}),  # Add dropdown for subjects
         }
 
-    def clean_maximum_marks(self):
+    def clean_max_marks(self):
         """
         Ensure maximum marks is a positive value.
         """
-        maximum_marks = self.cleaned_data.get('maximum_marks')
-        if maximum_marks <= 0:
+        max_marks = self.cleaned_data.get('max_marks')
+        if max_marks is not None and max_marks <= 0:
             raise forms.ValidationError("Maximum marks must be a positive value.")
-        return maximum_marks
+        return max_marks

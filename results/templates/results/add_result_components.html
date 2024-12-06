@@ -1,0 +1,116 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-outline card-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-cogs"></i> Add/Edit Components for {{ result_structure }}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" id="resultComponentForm">
+                {% csrf_token %}
+                <div id="componentFormSet">
+                    {% for form in formset %}
+                    <div class="row mb-3 component-form-row">
+                        <div class="col-md-3">
+                            <label for="{{ form.name.id_for_label }}">Component Name</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.max_marks.id_for_label }}">Max Marks</label>
+                            {{ form.max_marks }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.subject.id_for_label }}">Subject</label>
+                            <select name="{{ form.subject.name }}" id="{{ form.subject.id_for_label }}" class="form-control">
+                                <option value="">Select Subject</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if form.subject.value == subject.id %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-component">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="form-TOTAL_FORMS" value="{{ formset.total_form_count }}">
+                <input type="hidden" name="form-INITIAL_FORMS" value="{{ formset.initial_form_count }}">
+                <input type="hidden" name="form-MIN_NUM_FORMS" value="{{ formset.min_num_forms }}">
+                <input type="hidden" name="form-MAX_NUM_FORMS" value="{{ formset.max_num_forms }}">
+
+                <button type="button" class="btn btn-primary mt-3" id="addComponentButton">
+                    <i class="fas fa-plus"></i> Add Component
+                </button>
+                <button type="submit" class="btn btn-success mt-3">
+                    <i class="fas fa-save"></i> Save Components
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const formSetDiv = document.getElementById("componentFormSet");
+        const addComponentButton = document.getElementById("addComponentButton");
+        const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+        let totalForms = parseInt(totalFormsInput.value);
+
+        // Add a new component form row
+        function addComponentRow() {
+            const newRow = document.createElement("div");
+            newRow.classList.add("component-form-row", "row", "mb-3");
+
+            newRow.innerHTML = `
+                <div class="col-md-3">
+                    <label>Component Name</label>
+                    <input type="text" name="form-${totalForms}-name" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label>Max Marks</label>
+                    <input type="number" name="form-${totalForms}-max_marks" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Subject</label>
+                    <select name="form-${totalForms}-subject" class="form-control">
+                        <option value="">Select Subject</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-component">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            formSetDiv.appendChild(newRow);
+            totalForms++;
+            totalFormsInput.value = totalForms;
+        }
+
+        // Add new component row on button click
+        addComponentButton.addEventListener("click", addComponentRow);
+
+        // Remove a component row
+        formSetDiv.addEventListener("click", function (e) {
+            if (e.target.closest(".remove-component")) {
+                const row = e.target.closest(".component-form-row");
+                formSetDiv.removeChild(row);
+                totalForms--;
+                totalFormsInput.value = totalForms;
+            }
+        });
+    });
+</script>
+{% endblock %}
