@@ -9,9 +9,12 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
+from decouple import config
 from pathlib import Path
 from celery.schedules import crontab
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-va=luz2e6me254yc7*o8mju+!xg&!t(%iew!ibk06d!468=af8'
-
+SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 
 # Application definition
@@ -95,12 +97,35 @@ WSGI_APPLICATION = 'schoolproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+
+
+# Switch between PostgreSQL and SQLite based on USE_POSTGRES
+USE_POSTGRES = config('USE_POSTGRES', default=False, cast=bool)
+
+
+
+# Database configuration using dj-database-url
+if USE_POSTGRES:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': config('DATABASE_NAME'),
+            'USER': config('DATABASE_USER'),
+            'PASSWORD': config('DATABASE_PASSWORD'),
+            'HOST': config('DATABASE_HOST', default='localhost'),
+            'PORT': config('DATABASE_PORT', default=5432),
+        }
     }
-}
+
+else:
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    
 
 
 # Password validation
@@ -143,18 +168,12 @@ LOGIN_URL = 'login-page'
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 import os
 
+# Static and media files
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static'),
-# ]
-
-
-
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -182,9 +201,10 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587  # Gmail SMTP port
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'samsoncoded@gmail.com'  # Your Gmail address
-EMAIL_HOST_PASSWORD = 'ybul cuhh obfk jqcn'  # Your Gmail password or App Password (if 2-step verification is enabled)
+# Email configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+EMAIL_PORT = config('EMAIL_PORT', default=25, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
