@@ -1,6 +1,6 @@
 from django import forms
 from .models import ResultStructure, ResultComponent
-from classes.models import Class
+from classes.models import Class, Subject
 from academics.models import Session, Term
 from schools.models import Branch
 
@@ -12,36 +12,15 @@ class ResultStructureForm(forms.ModelForm):
 
     class Meta:
         model = ResultStructure
-        fields = ['session', 'term', 'branch', 'classes', 'ca_total', 'exam_total', 'conversion_total']
+        fields = ['branch', 'ca_total', 'exam_total', 'conversion_total']
 
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)  # Expect `school` to be passed during initialization
         super().__init__(*args, **kwargs)
 
         if school:
-            # Filter sessions, branches, and classes based on the school
-            self.fields['session'].queryset = school.sessions.all()
+            # Filter branches based on the school
             self.fields['branch'].queryset = Branch.objects.filter(school=school)
-            self.fields['classes'].queryset = Class.objects.none()  # Initially empty
-
-        # Handle dynamic filtering of terms
-        if 'session' in self.data:
-            try:
-                session_id = int(self.data.get('session'))
-                self.fields['term'].queryset = Term.objects.filter(session_id=session_id)
-            except (ValueError, TypeError):
-                self.fields['term'].queryset = Term.objects.none()
-        elif self.instance.pk:
-            # If editing an instance, populate terms based on the instance's session
-            self.fields['term'].queryset = Term.objects.filter(session=self.instance.session)
-
-        # Dynamically populate classes based on selected branch
-        if 'branch' in self.data:
-            try:
-                branch_id = int(self.data.get('branch'))
-                self.fields['classes'].queryset = Class.objects.filter(branches__id=branch_id)
-            except (ValueError, TypeError):
-                self.fields['classes'].queryset = Class.objects.none()
 
     def clean(self):
         """
@@ -68,21 +47,30 @@ class ResultStructureForm(forms.ModelForm):
 
         return cleaned_data
 
-
 class ResultComponentForm(forms.ModelForm):
     """
     Form for creating or updating components of a result structure.
-    Each component has a name and the maximum marks allocated to it.
     """
 
     class Meta:
         model = ResultComponent
-        fields = ['name', 'max_marks', 'subject']
+        fields = ['id', 'name', 'max_marks', 'subject']  # Include 'id' explicitly
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Component Name'}),
             'max_marks': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Maximum Marks'}),
-            'subject': forms.Select(attrs={'class': 'form-control'}),  # Add dropdown for subjects
+            'subject': forms.Select(attrs={'class': 'form-control'}),  # Dropdown for subjects
         }
+
+    def __init__(self, *args, **kwargs):
+        branch = kwargs.pop('branch', None)  # Pass the branch dynamically
+        super().__init__(*args, **kwargs)
+
+        if branch:
+            # Filter subjects by the given branch
+            self.fields['subject'].queryset = Subject.objects.filter(classes__branches=branch).distinct()
+        else:
+            # Default to an empty queryset if no branch is provided
+            self.fields['subject'].queryset = Subject.objects.none()
 
     def clean_max_marks(self):
         """
@@ -92,3 +80,40 @@ class ResultComponentForm(forms.ModelForm):
         if max_marks is not None and max_marks <= 0:
             raise forms.ValidationError("Maximum marks must be a positive value.")
         return max_marks
+
+
+class ScoreFilterForm(forms.Form):
+    session = forms.ModelChoiceField(queryset=Session.objects.all(), required=True, label="Session")
+    term = forms.ModelChoiceField(queryset=Term.objects.none(), required=True, label="Term")
+    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True, label="Branch")
+    subject = forms.ModelChoiceField(queryset=Subject.objects.none(), required=True, label="Subject")
+    classes = forms.ModelMultipleChoiceField(
+        queryset=Class.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        label="Classes"
+    )
+
+    def __init__(self, *args, **kwargs):
+        school = kwargs.pop('school', None)
+        super().__init__(*args, **kwargs)
+
+        if school:
+            self.fields['session'].queryset = Session.objects.filter(school=school)
+            self.fields['branch'].queryset = Branch.objects.filter(school=school)
+
+        if 'session' in self.data:
+            try:
+                session_id = int(self.data.get('session'))
+                self.fields['term'].queryset = Term.objects.filter(session_id=session_id)
+            except (ValueError, TypeError):
+                self.fields['term'].queryset = Term.objects.none()
+
+        if 'branch' in self.data:
+            try:
+                branch_id = int(self.data.get('branch'))
+                self.fields['subject'].queryset = Subject.objects.filter(classes__branches=branch_id).distinct()
+                self.fields['classes'].queryset = Class.objects.filter(branches=branch_id).distinct()
+            except (ValueError, TypeError):
+                self.fields['subject'].queryset = Subject.objects.none()
+                self.fields['classes'].queryset = Class.objects.none()

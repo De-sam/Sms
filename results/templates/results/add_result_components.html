@@ -2,113 +2,141 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Header Card -->
     <div class="card card-outline card-primary">
         <div class="card-header bg-primary text-white">
             <h3 class="card-title">
-                <i class="fas fa-cogs"></i> Add/Edit Components for {{ result_structure }}
+                <i class="fas fa-cogs"></i> Manage Components for {{ result_structure }}
             </h3>
         </div>
         <div class="card-body">
-            <form method="post" id="resultComponentForm">
+            <!-- Form for managing components -->
+            <form method="POST" id="componentForm">
                 {% csrf_token %}
-                <div id="componentFormSet">
-                    {% for form in formset %}
-                    <div class="row mb-3 component-form-row">
-                        <div class="col-md-3">
-                            <label for="{{ form.name.id_for_label }}">Component Name</label>
-                            {{ form.name }}
-                        </div>
-                        <div class="col-md-3">
-                            <label for="{{ form.max_marks.id_for_label }}">Max Marks</label>
-                            {{ form.max_marks }}
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ form.subject.id_for_label }}">Subject</label>
-                            <select name="{{ form.subject.name }}" id="{{ form.subject.id_for_label }}" class="form-control">
-                                <option value="">Select Subject</option>
-                                {% for subject in subjects %}
-                                <option value="{{ subject.id }}" {% if form.subject.value == subject.id %}selected{% endif %}>
-                                    {{ subject.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger btn-sm remove-component">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <input type="hidden" name="form-TOTAL_FORMS" value="{{ formset.total_form_count }}">
-                <input type="hidden" name="form-INITIAL_FORMS" value="{{ formset.initial_form_count }}">
-                <input type="hidden" name="form-MIN_NUM_FORMS" value="{{ formset.min_num_forms }}">
-                <input type="hidden" name="form-MAX_NUM_FORMS" value="{{ formset.max_num_forms }}">
+                {{ formset.management_form }}
+                
+                <table class="table table-bordered mt-3" id="componentTable">
+                    <thead>
+                        <tr>
+                            <th>Component Name</th>
+                            <th>Maximum Marks</th>
+                            <th>Subject (Optional)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr class="component-row">
+                            <td>
+                                {% if form.instance.pk %}
+                                     {{ form.id }}
+                                 {% endif %}   
+                                {{ form.name.errors }}
+                                {{ form.name }}
+                            </td>
+                            <td>
+                                {{ form.max_marks.errors }}
+                                {{ form.max_marks }}
+                            </td>
+                            <td>
+                                {{ form.subject.errors }}
+                                {{ form.subject }}
+                            </td>
+                            <td>
+                                <input type="hidden" name="{{ form.prefix }}-id" value="{{ form.instance.id }}">
+                                <button type="button" class="btn btn-danger btn-sm delete-button">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
-                <button type="button" class="btn btn-primary mt-3" id="addComponentButton">
-                    <i class="fas fa-plus"></i> Add Component
-                </button>
-                <button type="submit" class="btn btn-success mt-3">
-                    <i class="fas fa-save"></i> Save Components
-                </button>
+                <button type="button" id="addRowButton" class="btn btn-success mt-3">Add New Component</button>
+                <button type="submit" class="btn btn-primary mt-3">Save Components</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const formSetDiv = document.getElementById("componentFormSet");
-        const addComponentButton = document.getElementById("addComponentButton");
-        const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
-        let totalForms = parseInt(totalFormsInput.value);
+    document.addEventListener('DOMContentLoaded', function() {
+        const componentTable = document.getElementById('componentTable');
+        const addRowButton = document.getElementById('addRowButton');
+        const managementFormTotal = document.querySelector('#id_form-TOTAL_FORMS');
 
-        // Add a new component form row
-        function addComponentRow() {
-            const newRow = document.createElement("div");
-            newRow.classList.add("component-form-row", "row", "mb-3");
+        const preloadedSubjects = [
+            {% for subject in subjects %}
+            {
+                id: "{{ subject.id }}",
+                name: "{{ subject.name }}"
+            },
+            {% endfor %}
+        ];
 
-            newRow.innerHTML = `
-                <div class="col-md-3">
-                    <label>Component Name</label>
-                    <input type="text" name="form-${totalForms}-name" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label>Max Marks</label>
-                    <input type="number" name="form-${totalForms}-max_marks" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label>Subject</label>
-                    <select name="form-${totalForms}-subject" class="form-control">
-                        <option value="">Select Subject</option>
-                        {% for subject in subjects %}
-                        <option value="{{ subject.id }}">{{ subject.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger btn-sm remove-component">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-
-            formSetDiv.appendChild(newRow);
-            totalForms++;
-            totalFormsInput.value = totalForms;
+        // Function to generate subject options dynamically
+        function createSubjectOptions() {
+            return preloadedSubjects.map(subject => 
+                `<option value="${subject.id}">${subject.name}</option>`
+            ).join('');
         }
 
-        // Add new component row on button click
-        addComponentButton.addEventListener("click", addComponentRow);
+        // Function to add a new row dynamically
+        function addNewRow() {
+    const totalForms = parseInt(managementFormTotal.value, 10);
+    const newRow = document.createElement('tr');
+    newRow.classList.add('component-row');
 
-        // Remove a component row
-        formSetDiv.addEventListener("click", function (e) {
-            if (e.target.closest(".remove-component")) {
-                const row = e.target.closest(".component-form-row");
-                formSetDiv.removeChild(row);
-                totalForms--;
-                totalFormsInput.value = totalForms;
+    newRow.innerHTML = `
+        <td>
+            <input type="text" name="form-${totalForms}-name" class="form-control" placeholder="Enter Component Name">
+        </td>
+        <td>
+            <input type="number" name="form-${totalForms}-max_marks" class="form-control" placeholder="Enter Maximum Marks">
+        </td>
+        <td>
+            <select name="form-${totalForms}-subject" class="form-control">
+                <option value="">Select Subject (Optional)</option>
+                ${createSubjectOptions()}
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm delete-button">Remove</button>
+        </td>
+    `;
+
+    componentTable.querySelector('tbody').appendChild(newRow);
+    managementFormTotal.value = totalForms + 1;
+
+    newRow.querySelector('.delete-button').addEventListener('click', function () {
+        newRow.remove();
+        updateManagementForm();
+    });
+}
+
+
+
+        // Function to update management form fields when rows are modified
+        function updateManagementForm() {
+            const rows = componentTable.querySelectorAll('.component-row');
+            managementFormTotal.value = rows.length;
+
+            rows.forEach((row, index) => {
+                row.querySelectorAll('input, select').forEach(input => {
+                    const name = input.name.replace(/form-\d+-/, `form-${index}-`);
+                    input.name = name;
+                });
+            });
+        }
+
+        // Add new row event
+        addRowButton.addEventListener('click', addNewRow);
+
+        // Delete row event
+        componentTable.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-button')) {
+                const row = event.target.closest('.component-row');
+                row.remove();
+                updateManagementForm();
             }
         });
     });

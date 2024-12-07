@@ -14,23 +14,27 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Session</th>
-                            <th>Term</th>
                             <th>Branch</th>
+                            <th>Type</th> <!-- New column for branch type -->
                             <th>CA Total</th>
                             <th>Exam Total</th>
                             <th>Conversion Total</th>
                             <th>Created At</th>
-                            <th>Actions</th> <!-- New column -->
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for structure in result_structures %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td>{{ structure.session.session_name }}</td>
-                            <td>{{ structure.term.term_name }}</td>
                             <td>{{ structure.branch.branch_name }}</td>
+                            <td>
+                                {% if structure.branch.primary_school %}
+                                    Primary
+                                {% else %}
+                                    Secondary
+                                {% endif %}
+                            </td>
                             <td>{{ structure.ca_total }}</td>
                             <td>{{ structure.exam_total }}</td>
                             <td>{{ structure.conversion_total }}</td>
@@ -39,6 +43,11 @@
                                 <!-- Add Components Action -->
                                 <a href="{% url 'add_result_components' school.short_code structure.id %}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-edit"></i> Add Components
+                                </a>
+
+                                <!-- Edit Structure Action -->
+                                <a href="{% url 'edit_result_structure' school.short_code structure.id %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-pen"></i> Edit
                                 </a>
                             </td>
                         </tr>

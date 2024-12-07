@@ -4,7 +4,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from classes.models import TeacherClassAssignment,Class
 from schools.models import Branch
-
+from classes.models import Class, Subject
+from classes.models import TeacherClassAssignment,TeacherSubjectClassAssignment
 
 
 # Fetch sessions for a given school identified by the short_code
@@ -27,32 +28,32 @@ def get_terms(request, short_code, session_id):
 
 # Updated Function: Fetch branches for a given school with type indication
 def get_branches(request, short_code):
+    """
+    Fetch branches for a given school, filtered by user role.
+    """
     user = request.user
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    
-    # If user is a teacher, filter based on their assignments
+
     if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
-        teacher_assignments = TeacherClassAssignment.objects.filter(teacher=user.staff, branch__school=school)
-        branches = Branch.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
+        # Fetch branches explicitly assigned to the teacher
+        teacher = user.staff
+        teacher_assignments = TeacherClassAssignment.objects.filter(
+            teacher=teacher, branch__school=school
+        ).values_list('branch', flat=True).distinct()
+        branches = Branch.objects.filter(id__in=teacher_assignments)
     else:
-        # If the user is an admin, fetch all branches
+        # For admins or other authorized roles, fetch all branches for the school
         branches = Branch.objects.filter(school=school)
 
-    branches_data = []
-    for branch in branches:
-        # Determine branch type based on whether it is linked to primary or secondary school
-        if branch.primary_school:
-            branch_type = 'Primary'
-        elif branch.school:
-            branch_type = 'Secondary'
-        else:
-            branch_type = 'Unknown'
-
-        branches_data.append({
+    # Prepare branch data with types
+    branches_data = [
+        {
             'id': branch.id,
             'branch_name': branch.branch_name,
-            'branch_type': branch_type  # Add type to indicate if it's primary or secondary
-        })
+            'branch_type': 'Primary' if branch.primary_school else 'Secondary' if branch.school else 'Unknown'
+        }
+        for branch in branches
+    ]
 
     return JsonResponse({'branches': branches_data})
 
@@ -75,6 +76,84 @@ def get_classes_by_branch(request, short_code, branch_id):
         classes = Class.objects.filter(branches=branch).select_related('department').distinct()
 
     # Prepare the data to send as JSON response
+    classes_data = [
+        {
+            'id': cls.id,
+            'name': cls.name,
+            'department': cls.department.name if cls.department else 'No Department'
+        }
+        for cls in classes
+    ]
+
+    return JsonResponse({'classes': classes_data})
+
+
+
+def get_subjects_by_branch(request, short_code, branch_id):
+    """
+    Fetch subjects related to a given branch, with role-based filtering.
+    """
+    # Fetch the branch, ensuring it belongs to the correct school using short_code
+    branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
+    user = request.user
+
+    if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
+        # Filter subjects based on the teacher's assignments for the selected branch
+        teacher = user.staff
+        teacher_assignments = TeacherSubjectClassAssignment.objects.filter(
+            teacher=teacher,
+            branch=branch,
+            session_id=request.GET.get('session'),  # Ensure session is passed as a query parameter
+            term_id=request.GET.get('term')  # Ensure term is passed as a query parameter
+        ).select_related('subject')
+        
+        # Collect the assigned subjects
+        subjects = Subject.objects.filter(
+            teacher_assignments__in=teacher_assignments
+        ).distinct()
+    else:
+        # For admins, fetch all subjects related to classes in the branch
+        subjects = Subject.objects.filter(
+            classes__branches=branch
+        ).distinct()
+
+    # Prepare the response data
+    subjects_data = [{'id': subject.id, 'name': subject.name} for subject in subjects]
+    return JsonResponse({'subjects': subjects_data})
+
+def get_classes_by_subject(request, short_code, branch_id, subject_id):
+    """
+    Fetch classes for a given subject and branch combination, with role-based filtering.
+    """
+    branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
+    subject = get_object_or_404(Subject, id=subject_id)
+    session_id = request.GET.get('session')
+    term_id = request.GET.get('term')
+    user = request.user
+
+    if not session_id or not term_id:
+        return JsonResponse({'error': 'Session and term are required to fetch classes.'}, status=400)
+
+    if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
+        # Fetch classes assigned to the teacher for this subject and branch
+        teacher = user.staff
+        teacher_assignments = TeacherSubjectClassAssignment.objects.filter(
+            teacher=teacher,
+            branch=branch,
+            subject=subject,
+            session_id=session_id,
+            term_id=term_id
+        )
+        classes = Class.objects.filter(
+            teacher_subject_classes__in=teacher_assignments
+        ).select_related('department').distinct()
+    else:
+        # Fetch all classes for the branch and subject for admins
+        classes = Class.objects.filter(
+            branches=branch,
+            subjects=subject
+        ).select_related('department').distinct()
+
     classes_data = [
         {
             'id': cls.id,

@@ -3,16 +3,127 @@
 {% block content %}
 <div class="container mt-4">
     <div class="card card-outline card-primary">
-        <div class="card-header bg-primary text-white">
-            <h3 class="card-title"><i class="fas fa-cogs"></i> Create/Update Result Structure</h3>
+        <div id="cardHeader" class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-cogs"></i> Create Result Structure
+            </h3>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form id="resultStructureForm" method="POST">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-success">Save Structure</button>
+                
+                <!-- Branch Selection -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="branch">Branch</label>
+                            <select id="branch" name="branch" class="form-control" required>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Classes and Departments -->
+                <div class="mb-3">
+                    <label for="classes">Class(es)</label>
+                    <div id="classes" class="bg-light p-3 rounded">
+                        <!-- Classes with departments will be dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- CA Total, Exam Total, and Conversion -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="ca_total">CA Total</label>
+                            <input type="number" id="ca_total" name="ca_total" class="form-control" placeholder="Enter CA Total" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="exam_total">Exam Total</label>
+                            <input type="number" id="exam_total" name="exam_total" class="form-control" placeholder="Enter Exam Total" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="conversion_total">Conversion Total</label>
+                            <input type="number" id="conversion_total" name="conversion_total" class="form-control" placeholder="Enter Conversion Total" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success mt-3">Save Structure</button>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const branchSelect = document.getElementById('branch');
+        const classesContainer = document.getElementById('classes');
+
+        const shortCode = "{{ school.short_code }}";
+
+        // Fetch branches and display branch type
+        fetch(`/results/${shortCode}/get-branches/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.branches) {
+                    data.branches.forEach(branch => {
+                        const option = document.createElement('option');
+                        option.value = branch.id;
+                        option.textContent = `${branch.branch_name} (${branch.branch_type})`;
+                        branchSelect.appendChild(option);
+                    });
+                }
+            });
+
+        // Fetch classes and departments when branch changes
+        branchSelect.addEventListener('change', function () {
+            const branchId = branchSelect.value;
+
+            if (branchId) {
+                classesContainer.innerHTML = '';
+                fetch(`/results/${shortCode}/get-classes/${branchId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.classes) {
+                            const rows = Math.ceil(data.classes.length / 3);
+                            for (let i = 0; i < rows; i++) {
+                                const row = document.createElement('div');
+                                row.classList.add('row', 'mb-2');
+                                for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                                    const col = document.createElement('div');
+                                    col.classList.add('col-md-4');
+
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.name = 'classes';
+                                    checkbox.value = data.classes[j].id;
+                                    checkbox.classList.add('form-check-input');
+
+                                    const label = document.createElement('label');
+                                    label.innerHTML = `${data.classes[j].name} 
+                                        <span style="font-size: 0.9em; color: grey;">(${data.classes[j].department || 'No Department'})</span>`;
+                                    label.classList.add('form-check-label');
+
+                                    const checkboxContainer = document.createElement('div');
+                                    checkboxContainer.classList.add('form-check');
+                                    checkboxContainer.appendChild(checkbox);
+                                    checkboxContainer.appendChild(label);
+
+                                    col.appendChild(checkboxContainer);
+                                    row.appendChild(col);
+                                }
+                                classesContainer.appendChild(row);
+                            }
+                        }
+                    });
+            }
+        });
+    });
+</script>
 {% endblock %}
