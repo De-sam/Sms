@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,7 +119,7 @@ if USE_POSTGRES:
     }
 
 else:
-    
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -169,13 +170,26 @@ LOGIN_URL = 'login-page'
 import os
 
 # Static and media files
-STATIC_URL = '/static/'
+STATIC_URL = 'https://static-976r.onrender.com/'
 MEDIA_URL = '/media/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
+
+
+# # Determine environment
+# ENVIRONMENT = config('ENVIRONMENT', default='development')
+
+# if ENVIRONMENT == 'production':
+#     STATIC_URL = 'https://static-976r.onrender.com/'
+# else:
+#     STATIC_URL = '/static/'
+#     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
