@@ -172,7 +172,7 @@ import os
 
 # Static and media files
 # STATIC_URL = '/test/'
-STATIC_URL = 'https://static-976r.onrender.com/'
+STATIC_URL = 'https://static-gamma-nine.vercel.app/'
 MEDIA_URL = '/media/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfile')
