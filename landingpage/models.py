@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
-from PIL import Image
 
 class SchoolRegistration(models.Model):
     REFERRAL_SOURCES = [
@@ -18,7 +17,7 @@ class SchoolRegistration(models.Model):
     state = models.CharField(max_length=100)
     lga = models.CharField(max_length=100)
     short_code = models.CharField(max_length=50, unique=True)
-    logo = models.ImageField(default='default.jpeg',upload_to='logos')
+    logo = models.ImageField(default='https://res.cloudinary.com/<cloud_name>/image/upload/v123456789/default.jpg', upload_to='logos')
     theme_color1 = models.CharField(max_length=7)
     theme_color2 = models.CharField(max_length=7)
     username = models.CharField(max_length=100)
@@ -32,12 +31,12 @@ class SchoolRegistration(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['short_code']),  # Index for quick lookup by short code
-            models.Index(fields=['school_name']), # Index for querying schools by name
-            models.Index(fields=['state']),       # Index for filtering by state
-            models.Index(fields=['lga']),         # Index for filtering by LGA
-            models.Index(fields=['email']),       # Index on unique email for quick lookups
-            models.Index(fields=['admin_user']),  # Index on foreign key for better join performance
+            models.Index(fields=['short_code']),
+            models.Index(fields=['school_name']),
+            models.Index(fields=['state']),
+            models.Index(fields=['lga']),
+            models.Index(fields=['email']),
+            models.Index(fields=['admin_user']),
         ]
 
     @classmethod
@@ -61,17 +60,10 @@ class SchoolRegistration(models.Model):
             self.short_code = self.generate_shortcode(self.school_name)
         super(SchoolRegistration, self).save(*args, **kwargs)
 
-        if self.logo:
-            img = Image.open(self.logo.path)
-            if img.height > 300 or img.width > 300:
-                output_size = (300, 300)
-                img.thumbnail(output_size)
-                img.save(self.logo.path)
-
     def __str__(self):
-        return (f"ID: {self.school_id},"
-                f"School: {self.school_name}, State: {self.state}, LGA: {self.lga},"
-                f"Admin: {self.first_name} {self.last_name},"
+        return (f"ID: {self.school_id}, "
+                f"School: {self.school_name}, State: {self.state}, LGA: {self.lga}, "
+                f"Admin: {self.first_name} {self.last_name}, "
                 f"Phone: {self.admin_phone_number}, "
                 f"Short Code: {self.short_code}")
 
