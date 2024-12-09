@@ -14,7 +14,7 @@ from django.http import QueryDict
 from .forms import ScoreFilterForm
 from students.models import Student
 from schools.models import Branch
-from .models import ResultComponent
+from .models import ResultComponent,StudentFinalResult
 from django.db.models import Q
 from academics.models import Session, Term
 import json
@@ -236,6 +236,10 @@ def get_student_scores(request, short_code):
 
             # Fetch result structure for the branch
             result_structure = get_object_or_404(ResultStructure, branch=branch)
+            
+            # Print conversion total and exam total for debugging
+            print(f"DEBUG: Conversion Total is {result_structure.conversion_total}")
+            print(f"DEBUG: Exam Total is {result_structure.exam_total}")
 
             # Fetch students in the selected classes
             students = Student.objects.filter(
@@ -250,10 +254,6 @@ def get_student_scores(request, short_code):
             ).filter(
                 Q(subject=subject) | Q(subject__isnull=True)  # Include components with no subject
             )
-
-            # Debug: Print component names in the terminal
-            for component in components:
-                print(f"Component Name: {component.name}, Subject: {component.subject}")
 
             # Prepare data for the response
             student_data = []
@@ -283,7 +283,8 @@ def get_student_scores(request, short_code):
                     {"id": component.id, "name": component.name, "max_marks": component.max_marks}
                     for component in components
                 ],
-                "conversion_total": result_structure.conversion_total,
+                "conversion_total": result_structure.conversion_total,  # Pass the conversion total here
+                "exam_total": result_structure.exam_total,  # Pass the total exam score here
             }, status=200)
 
         except json.JSONDecodeError:
@@ -294,64 +295,71 @@ def get_student_scores(request, short_code):
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
+
 @csrf_exempt
 @transaction.atomic
 def save_student_scores(request, short_code):
-    """
-    Save scores for students based on the submitted data.
-    """
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
-
     if request.method == "POST":
         try:
-            data = json.loads(request.body.decode("utf-8"))
+            data = json.loads(request.body)
             session_id = data.get("session")
             term_id = data.get("term")
+            branch_id = data.get("branch")
+            subject_id = data.get("subject")
             scores = data.get("scores", [])
 
-            # Validate input
-            if not session_id or not term_id or not scores:
+            if not session_id or not term_id or not branch_id or not subject_id:
                 return JsonResponse({"error": "Missing required fields."}, status=400)
 
-            session = get_object_or_404(Session, id=session_id, school=school)
-            term = get_object_or_404(Term, id=term_id, session=session)
+            session = Session.objects.get(id=session_id)
+            term = Term.objects.get(id=term_id)
+            branch = Branch.objects.get(id=branch_id)
+            subject = Subject.objects.get(id=subject_id)
 
-            # Process scores
-            for score_data in scores:
-                student_id = score_data.get("student_id")
-                component_scores = score_data.get("components", [])
-                converted_ca = score_data.get("converted_ca")
-                exam_score = score_data.get("exam_score")
+            for score in scores:
+                student_id = score.get("student_id")
+                converted_ca = score.get("converted_ca", 0)
+                exam_score = score.get("exam_score", 0)
 
-                student = get_object_or_404(Student, id=student_id, current_session=session)
+                if not isinstance(student_id, int) or not isinstance(converted_ca, (int, float)) or not isinstance(exam_score, (int, float)):
+                    return JsonResponse({"error": "Invalid data format."}, status=400)
 
-                # Save individual component scores
-                for component_score in component_scores:
-                    component_id = component_score.get("component_id")
-                    score = component_score.get("score")
+                student = Student.objects.get(id=student_id)
+                total_score = converted_ca + exam_score
 
-                    component = get_object_or_404(ResultComponent, id=component_id)
-                    StudentResult.objects.update_or_create(
-                        student=student,
-                        component=component,
-                        defaults={"score": score}
-                    )
-
-                # Calculate and save the total score
-                total_ca = sum(int(cs.get("score", 0)) for cs in component_scores)
-                total_score = total_ca + int(exam_score or 0)
-                StudentResult.objects.update_or_create(
+                StudentFinalResult.objects.update_or_create(
                     student=student,
+                    session=session,
+                    term=term,
+                    branch=branch,
+                    subject=subject,
                     defaults={
                         "converted_ca": converted_ca,
                         "exam_score": exam_score,
-                        "total_score": total_score
+                        "total_score": total_score,
                     }
                 )
 
-            return JsonResponse({"success": True, "message": "Scores saved successfully."}, status=200)
+            return JsonResponse({"success": True, "message": "Scores saved successfully."})
 
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            print(f"Error saving student scores: {str(e)}")
+            return JsonResponse({"error": "An unexpected error occurred."}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+def calculate_grade(total_score):
+    """
+    Calculate grade based on total score.
+    """
+    if total_score >= 70:
+        return "A"
+    elif total_score >= 60:
+        return "B"
+    elif total_score >= 50:
+        return "C"
+    elif total_score >= 40:
+        return "D"
+    else:
+        return "F"
