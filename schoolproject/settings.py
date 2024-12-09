@@ -101,33 +101,21 @@ WSGI_APPLICATION = 'schoolproject.wsgi.application'
 
 
 
-# Switch between PostgreSQL and SQLite based on USE_POSTGRES
-USE_POSTGRES = config('USE_POSTGRES', default=False, cast=bool)
-
 
 
 # Database configuration using dj-database-url
-if USE_POSTGRES:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': config('DATABASE_NAME'),
-            'USER': config('DATABASE_USER'),
-            'PASSWORD': config('DATABASE_PASSWORD'),
-            'HOST': config('DATABASE_HOST', default='localhost'),
-            'PORT': config('DATABASE_PORT', default=5432),
-        }
-    }
 
-else:
+DATABASES = {
+'default': {
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': config('DATABASE_NAME'),
+    'USER': config('DATABASE_USER'),
+    'PASSWORD': config('DATABASE_PASSWORD'),
+    'HOST': config('DATABASE_HOST', default='localhost'),
+    'PORT': config('DATABASE_PORT', default=5432),
+}
+}
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-    
 
 
 # Password validation
@@ -187,14 +175,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-# # Determine environment
-# ENVIRONMENT = config('ENVIRONMENT', default='development')
-
-# if ENVIRONMENT == 'production':
-#     STATIC_URL = 'https://static-976r.onrender.com/'
-# else:
-#     STATIC_URL = '/static/'
-#     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
