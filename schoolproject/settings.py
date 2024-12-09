@@ -186,12 +186,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #celery 
 
 
-# Use Django's database as the result backend
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Still using Redis for broker
-CELERY_RESULT_BACKEND = 'django-db'
+# Redis and Celery Configuration
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
 
 # Celery Beat Schedule
 CELERY_BEAT_SCHEDULE = {
