@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ResultStructure, ResultComponent
+from .models import ResultStructure, ResultComponent, StudentResult,StudentFinalResult
 
 class ResultComponentInline(admin.TabularInline):
     model = ResultComponent
@@ -19,3 +19,44 @@ class ResultComponentAdmin(admin.ModelAdmin):
     list_display = ('name', 'structure', 'max_marks', 'subject', 'created_at')
     search_fields = ('name', 'structure__branch__branch_name', 'subject__name')
     list_filter = ('structure', 'subject')
+
+@admin.register(StudentResult)
+class StudentResultAdmin(admin.ModelAdmin):
+    list_display = ('student', 'component', 'score', 'converted_ca', 'exam_score', 'total_score', 'created_at')
+    search_fields = ('student__first_name', 'student__last_name', 'component__name')
+    list_filter = ('component__structure', 'component', 'student')
+    ordering = ('-created_at',)  # Order by most recent first
+    actions = ['remove_duplicates']
+
+    def remove_duplicates(self, request, queryset):
+        """
+        Custom admin action to remove duplicate StudentResult entries.
+        """
+        from collections import defaultdict
+        duplicates = defaultdict(list)
+
+        for result in queryset:
+            duplicates[(result.student_id, result.component_id)].append(result)
+
+        removed_count = 0
+        for (student_id, component_id), results in duplicates.items():
+            if len(results) > 1:
+                # Keep the first result and delete others
+                results_to_delete = results[1:]
+                removed_count += len(results_to_delete)
+                for result in results_to_delete:
+                    result.delete()
+
+        self.message_user(request, f"Removed {removed_count} duplicate StudentResult entries.")
+
+    remove_duplicates.short_description = "Remove duplicate StudentResult entries"
+
+
+@admin.register(StudentFinalResult)
+class StudentFinalResultAdmin(admin.ModelAdmin):
+    list_display = ('student', 'branch', 'session', 'term', 'subject', 'converted_ca', 'exam_score', 'total_score', 'grade', 'created_at')
+    search_fields = ('student__first_name', 'student__last_name', 'branch__branch_name', 'subject__name', 'session__session_name', 'term__term_name')
+    list_filter = ('branch', 'session', 'term', 'subject')
+    ordering = ('-created_at',)  # Order by most recent first
+
+

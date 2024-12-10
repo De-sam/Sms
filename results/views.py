@@ -311,34 +311,88 @@ def save_student_scores(request, short_code):
             if not session_id or not term_id or not branch_id or not subject_id:
                 return JsonResponse({"error": "Missing required fields."}, status=400)
 
-            session = Session.objects.get(id=session_id)
-            term = Term.objects.get(id=term_id)
-            branch = Branch.objects.get(id=branch_id)
-            subject = Subject.objects.get(id=subject_id)
+            # Fetch related objects
+            session = Session.objects.only('id').get(id=session_id)
+            term = Term.objects.only('id').get(id=term_id)
+            branch = Branch.objects.only('id').get(id=branch_id)
+            subject = Subject.objects.only('id').get(id=subject_id)
+            result_structure = ResultStructure.objects.only('id', 'conversion_total', 'exam_total').get(branch=branch)
 
+            # Fetch components for the structure and subject
+            components = ResultComponent.objects.filter(
+                structure=result_structure
+            ).filter(
+                Q(subject=subject) | Q(subject__isnull=True)
+            ).only('id', 'max_marks')
+
+            # Pre-compute max_score for all components
+            max_score = sum([component.max_marks for component in components])
+            conversion_total = result_structure.conversion_total
+
+            # Prepare component ID to max marks mapping for fast lookups
+            component_max_marks = {component.id: component.max_marks for component in components}
+
+            # Process each student's score
+            final_results = []  # Collect final results for batch processing
+            component_scores_bulk = []  # Collect component scores for batch processing
             for score in scores:
                 student_id = score.get("student_id")
-                converted_ca = score.get("converted_ca", 0)
-                exam_score = score.get("exam_score", 0)
+                submitted_converted_ca = float(score.get("converted_ca", 0))
+                exam_score = float(score.get("exam_score", 0))
 
-                if not isinstance(student_id, int) or not isinstance(converted_ca, (int, float)) or not isinstance(exam_score, (int, float)):
-                    return JsonResponse({"error": "Invalid data format."}, status=400)
+                # Extract component scores from the payload
+                component_scores = {
+                    int(key.split("_")[1]): value for key, value in score.items() if key.startswith("component_")
+                }
 
-                student = Student.objects.get(id=student_id)
-                total_score = converted_ca + exam_score
+                # Recalculate Converted CA
+                total_score = sum(component_scores.values())
+                recalculated_converted_ca = (total_score / max_score) * conversion_total if max_score > 0 else 0
 
-                StudentFinalResult.objects.update_or_create(
+                # Validate the recalculated score
+                if round(recalculated_converted_ca, 2) != round(submitted_converted_ca, 2):
+                    return JsonResponse({
+                        "error": f"Validation failed for student ID {student_id}. Converted CA mismatch."
+                    }, status=400)
+
+                # Save or update component scores
+                student = Student.objects.only('id').get(id=student_id)
+                for component_id, score_value in component_scores.items():
+                    component_scores_bulk.append(
+                        StudentResult(
+                            student=student,
+                            component_id=component_id,
+                            score=score_value,
+                            converted_ca=recalculated_converted_ca,
+                            exam_score=exam_score,
+                            total_score=recalculated_converted_ca + exam_score,
+                        )
+                    )
+
+                # Prepare final results for batch processing
+                final_results.append(StudentFinalResult(
                     student=student,
                     session=session,
                     term=term,
                     branch=branch,
                     subject=subject,
-                    defaults={
-                        "converted_ca": converted_ca,
-                        "exam_score": exam_score,
-                        "total_score": total_score,
-                    }
-                )
+                    converted_ca=recalculated_converted_ca,
+                    exam_score=exam_score,
+                    total_score=recalculated_converted_ca + exam_score,
+                    grade=calculate_grade(recalculated_converted_ca + exam_score),
+                ))
+
+            # Batch save component scores
+            StudentResult.objects.bulk_create(
+                component_scores_bulk,
+                ignore_conflicts=True  # Avoid duplicating existing records
+            )
+
+            # Batch save final results
+            StudentFinalResult.objects.bulk_create(
+                final_results,
+                ignore_conflicts=True  # Avoid duplicating existing records
+            )
 
             return JsonResponse({"success": True, "message": "Scores saved successfully."})
 

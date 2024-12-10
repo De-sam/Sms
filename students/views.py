@@ -318,7 +318,7 @@ def student_list(request, short_code):
         print(f"Filtering by departments: {department_filters}")  # Debugging log
         students = students.filter(student_class__department__name__in=department_filters)
     # Pagination
-    paginator = Paginator(students, 50)
+    paginator = Paginator(students, 20)
     page = request.GET.get('page')
 
     try:

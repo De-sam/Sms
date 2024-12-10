@@ -192,6 +192,12 @@
                                 Student's comment
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{% url 'filter_scores' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                Student's scores
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 
@@ -250,13 +256,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Dummy Item 2
+                            <a href="{% url 'create_result_structure' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                set result structure
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> Dummy Item 3
+                            <a href="{% url 'list_result_structures' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i> 
+                                structure list
                             </a>
                         </li>
                         <li class="nav-item">
