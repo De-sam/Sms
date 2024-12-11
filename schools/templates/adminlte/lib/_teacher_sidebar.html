@@ -104,6 +104,12 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
+                        <a href="{% url 'add-student' school.short_code %}" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            Add students
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{% url 'record_teacher_attendance' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
                             Attendance

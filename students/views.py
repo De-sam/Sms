@@ -1,5 +1,5 @@
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required
+from utils.permissions import admin_required,admin_or_teacher_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -92,7 +92,7 @@ def delete_parent(request, short_code, parent_id):
         return redirect('parent_guardian_list', short_code=short_code)
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 @transaction.atomic
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -318,7 +318,7 @@ def student_list(request, short_code):
         print(f"Filtering by departments: {department_filters}")  # Debugging log
         students = students.filter(student_class__department__name__in=department_filters)
     # Pagination
-    paginator = Paginator(students, 20)
+    paginator = Paginator(students, 10)
     page = request.GET.get('page')
 
     try:
