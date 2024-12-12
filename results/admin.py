@@ -59,6 +59,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'branch',
         'session',
         'term',
+        'student_class',  # Added field
         'subject',
         'converted_ca',
         'exam_score',
@@ -73,6 +74,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'student__first_name',
         'student__last_name',
         'branch__branch_name',
+        'student_class__name',  # Added field
         'subject__name',
         'session__session_name',
         'term__term_name'
@@ -81,6 +83,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'branch',
         'session',
         'term',
+        'student_class',  # Added field
         'subject',
         'grade'  # Added filter by grade
     )
@@ -92,7 +95,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         Optimize the queryset by prefetching related fields.
         """
         queryset = super().get_queryset(request)
-        return queryset.select_related('student', 'branch', 'session', 'term', 'subject')
+        return queryset.select_related('student', 'branch', 'session', 'term', 'subject', 'student_class')
 
     def has_change_permission(self, request, obj=None):
         """

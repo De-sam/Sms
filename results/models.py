@@ -91,6 +91,13 @@ class StudentFinalResult(models.Model):
         on_delete=models.CASCADE, 
         related_name="final_results"
     )
+    student_class = models.ForeignKey(  # New field added
+        Class,
+        on_delete=models.CASCADE,
+        related_name="final_results",
+         null=True, 
+        blank=True
+    )
     converted_ca = models.PositiveIntegerField(null=True, blank=True)  # Permanent converted CA
     exam_score = models.PositiveIntegerField(null=True, blank=True)  # Permanent exam score
     total_score = models.PositiveIntegerField(null=True, blank=True)  # Sum of CA and exam
