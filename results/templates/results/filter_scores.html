@@ -433,33 +433,45 @@
 
         // Validate input fields and calculate converted CA
         scoresForm.addEventListener("input", function (event) {
-            const target = event.target;
+    const target = event.target;
 
-            // Check if the modified input is a component score or exam score
-            if (target.name.startsWith("component-") || target.name.startsWith("exam-score-")) {
-                const studentRow = target.closest("tr"); // Find the row of the current student
-                const componentInputs = studentRow.querySelectorAll("input[name^='component']");
-                const convertedCAField = studentRow.querySelector("input[name^='converted-ca']");
+    // Validate the input
+    if (target.name.startsWith("component-") || target.name.startsWith("exam-score-")) {
+        const max = parseFloat(target.placeholder.replace("Max: ", "")) || 0;
+        const score = parseFloat(target.value) || 0;
 
-                let totalScore = 0;
-                let maxScore = 0;
+        // If the score exceeds the max value, show an error and reset the field
+        if (score > max) {
+            alert(`Score cannot exceed the maximum of ${max}.`);
+            target.value = ""; // Clear the invalid input
+            return; // Exit the function early
+        }
 
-                componentInputs.forEach(input => {
-                    const score = parseFloat(input.value) || 0; // Retain existing value if unchanged
-                    const max = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
-                    totalScore += score;
-                    maxScore += max;
-                });
+        // Find the student's row to recalculate Converted CA
+        const studentRow = target.closest("tr");
+        const componentInputs = studentRow.querySelectorAll("input[name^='component']");
+        const convertedCAField = studentRow.querySelector("input[name^='converted-ca']");
 
-                // Recalculate and update only the `Converted CA` field
-                if (maxScore > 0) {
-                    const convertedCA = (totalScore / maxScore) * conversionTotal;
-                    convertedCAField.value = convertedCA.toFixed(2); // Update only the converted CA field
-                } else {
-                    convertedCAField.value = ""; // Clear field if no scores entered
-                }
-            }
+        let totalScore = 0;
+        let maxScore = 0;
+
+        // Recalculate total component scores
+        componentInputs.forEach(input => {
+            const componentScore = parseFloat(input.value) || 0;
+            const componentMax = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
+            totalScore += componentScore;
+            maxScore += componentMax;
         });
+
+        // Recalculate and update only the Converted CA field
+        if (maxScore > 0) {
+            const convertedCA = (totalScore / maxScore) * conversionTotal;
+            convertedCAField.value = convertedCA.toFixed(2); // Update Converted CA
+        } else {
+            convertedCAField.value = ""; // Clear the field if no scores are entered
+        }
+    }
+});
 
         // Save scores
         document.getElementById("saveScoresButton").addEventListener("click", function () {
