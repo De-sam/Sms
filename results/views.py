@@ -24,7 +24,8 @@ from django.db import transaction
 from classes.models import Class, Subject
 from .models import ResultStructure, ResultComponent, StudentAverageResult
 import json
-from django.db.models import Max, Min
+from django.db.models import Sum, Avg, Max, Min
+
 
 @login_required_with_short_code
 @admin_required
@@ -296,6 +297,8 @@ def get_student_scores(request, short_code):
 
 
 
+from django.db.models import Sum, Avg, Max, Min
+
 @transaction.atomic
 def save_student_scores(request, short_code):
     if request.method == "POST":
@@ -315,6 +318,7 @@ def save_student_scores(request, short_code):
             session = Session.objects.get(id=session_id)
             term = Term.objects.get(id=term_id)
             branch = Branch.objects.get(id=branch_id)
+            subject = Subject.objects.get(id=subject_id)
 
             # Process scores and save/update results
             for score in scores:
@@ -327,7 +331,7 @@ def save_student_scores(request, short_code):
                     session=session,
                     term=term,
                     branch=branch,
-                    subject_id=subject_id,
+                    subject=subject,
                     defaults={
                         "converted_ca": score["converted_ca"],
                         "exam_score": score["exam_score"],
@@ -337,16 +341,34 @@ def save_student_scores(request, short_code):
                     },
                 )
 
+            # Update highest, lowest, and average scores for the subject
+            results = StudentFinalResult.objects.filter(
+                session=session,
+                term=term,
+                branch=branch,
+                subject=subject,
+            )
+            highest_score = results.aggregate(Max("total_score"))["total_score__max"] or 0
+            lowest_score = results.aggregate(Min("total_score"))["total_score__min"] or 0
+            average_score = results.aggregate(Avg("total_score"))["total_score__avg"] or 0
+
+            # Update all final results for the subject with the computed values
+            results.update(
+                highest_score=highest_score,
+                lowest_score=lowest_score,
+                average_score=round(average_score, 2),
+            )
+
             # Calculate and save/update student averages
             students = Student.objects.filter(
-                student_final_results__session=session,
-                student_final_results__term=term,
-                student_final_results__branch=branch,
+                final_results__session=session,
+                final_results__term=term,
+                final_results__branch=branch,
             ).distinct()
 
             for student in students:
                 # Fetch all final results for the student in the given session and term
-                results = StudentFinalResult.objects.filter(
+                student_results = StudentFinalResult.objects.filter(
                     student=student,
                     session=session,
                     term=term,
@@ -354,12 +376,12 @@ def save_student_scores(request, short_code):
                 )
 
                 # Calculate total scores
-                total_score_obtained = results.aggregate(total_obtained=Sum("total_score"))["total_obtained"] or 0
-                total_subjects = results.count()
+                total_score_obtained = student_results.aggregate(total_obtained=Sum("total_score"))["total_obtained"] or 0
+                total_subjects = student_results.count()
                 total_score_maximum = total_subjects * 100  # Assuming max score per subject is 100
 
                 # Save or update average results
-                average_result, created = StudentAverageResult.objects.update_or_create(
+                StudentAverageResult.objects.update_or_create(
                     student=student,
                     session=session,
                     term=term,
@@ -377,6 +399,7 @@ def save_student_scores(request, short_code):
 
         except Exception as e:
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
 
 def calculate_grade(total_score):
     """
