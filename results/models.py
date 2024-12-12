@@ -116,32 +116,35 @@ class StudentFinalResult(models.Model):
 
     def save(self, *args, **kwargs):
         # Check for existing records with the same unique constraints
-        existing_record = StudentFinalResult.objects.filter(
-            student=self.student,
-            session=self.session,
-            term=self.term,
-            branch=self.branch,
-            student_class=self.student_class,
-            subject=self.subject
-        ).first()
+        if not self.pk:  # Only check for existing records if this is a new instance
+            existing_record = StudentFinalResult.objects.filter(
+                student=self.student,
+                session=self.session,
+                term=self.term,
+                branch=self.branch,
+                student_class=self.student_class,
+                subject=self.subject
+            ).first()
 
-        if existing_record:
-            # Update the existing record with new data
-            existing_record.converted_ca = self.converted_ca
-            existing_record.exam_score = self.exam_score
-            existing_record.total_score = self.total_score
-            existing_record.grade = self.grade
-            existing_record.remarks = self.remarks
-            existing_record.highest_score = self.highest_score
-            existing_record.lowest_score = self.lowest_score
-            existing_record.average_score = self.average_score
-            existing_record.save()
-        else:
-            # No existing record, proceed with normal save
-            super().save(*args, **kwargs)
+            if existing_record:
+                # Update the existing record fields
+                existing_record.converted_ca = self.converted_ca
+                existing_record.exam_score = self.exam_score
+                existing_record.total_score = self.total_score
+                existing_record.grade = self.grade
+                existing_record.remarks = self.remarks
+                existing_record.highest_score = self.highest_score
+                existing_record.lowest_score = self.lowest_score
+                existing_record.average_score = self.average_score
+                existing_record.save(update_fields=[
+                    "converted_ca", "exam_score", "total_score", "grade", "remarks",
+                    "highest_score", "lowest_score", "average_score"
+                ])
+                return  # Exit to prevent saving the duplicate record
 
-    def __str__(self):
-        return f"{self.student} - {self.subject} ({self.session.session_name} - {self.term.term_name})"
+        # Proceed with the default save behavior for new or updated records
+        super().save(*args, **kwargs)
+
 
 class StudentAverageResult(models.Model):
     student = models.ForeignKey(
