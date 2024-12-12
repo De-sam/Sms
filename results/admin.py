@@ -59,43 +59,42 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'branch',
         'session',
         'term',
-        'student_class',  # Added field
         'subject',
         'converted_ca',
         'exam_score',
         'total_score',
         'grade',
-        'highest_score',  # New field
-        'lowest_score',   # New field
-        'average_score',  # New field
-        'created_at'
+        'remarks',  # New field included
+        'highest_score',  # Existing field
+        'lowest_score',   # Existing field
+        'average_score',  # Existing field
+        'created_at',
     )
     search_fields = (
         'student__first_name',
         'student__last_name',
         'branch__branch_name',
-        'student_class__name',  # Added field
         'subject__name',
         'session__session_name',
-        'term__term_name'
+        'term__term_name',
+        'remarks',  # Allow search by remarks
     )
     list_filter = (
         'branch',
         'session',
         'term',
-        'student_class',  # Added field
         'subject',
-        'grade'  # Added filter by grade
+        'grade',  # Added filter by grade
     )
     ordering = ('-created_at',)  # Order by most recent first
-    readonly_fields = ('highest_score', 'lowest_score', 'average_score')  # Make new fields read-only
+    readonly_fields = ('highest_score', 'lowest_score', 'average_score')  # Make existing fields read-only
 
     def get_queryset(self, request):
         """
         Optimize the queryset by prefetching related fields.
         """
         queryset = super().get_queryset(request)
-        return queryset.select_related('student', 'branch', 'session', 'term', 'subject', 'student_class')
+        return queryset.select_related('student', 'branch', 'session', 'term', 'subject')
 
     def has_change_permission(self, request, obj=None):
         """
@@ -105,6 +104,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
             readonly_fields = self.readonly_fields
             self.readonly_fields = ('highest_score', 'lowest_score', 'average_score')
         return super().has_change_permission(request, obj)
+
 
 @admin.register(StudentAverageResult)
 class StudentAverageResultAdmin(admin.ModelAdmin):
@@ -121,5 +121,4 @@ class StudentAverageResultAdmin(admin.ModelAdmin):
     search_fields = ("student__first_name", "student__last_name", "session__session_name", "term__term_name")
     list_filter = ("session", "term", "branch")
     ordering = ("-created_at",)
-
 
