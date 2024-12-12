@@ -91,11 +91,11 @@ class StudentFinalResult(models.Model):
         on_delete=models.CASCADE, 
         related_name="final_results"
     )
-    student_class = models.ForeignKey(  # New field added
+    student_class = models.ForeignKey(  
         Class,
         on_delete=models.CASCADE,
         related_name="final_results",
-         null=True, 
+        null=True, 
         blank=True
     )
     converted_ca = models.PositiveIntegerField(null=True, blank=True)  # Permanent converted CA
@@ -108,6 +108,37 @@ class StudentFinalResult(models.Model):
     average_score = models.FloatField(null=True, blank=True)  # Average score in the subject
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('student', 'session', 'term', 'branch', 'student_class', 'subject')
+        verbose_name = "Student Final Result"
+        verbose_name_plural = "Student Final Results"
+
+    def save(self, *args, **kwargs):
+        # Check for existing records with the same unique constraints
+        existing_record = StudentFinalResult.objects.filter(
+            student=self.student,
+            session=self.session,
+            term=self.term,
+            branch=self.branch,
+            student_class=self.student_class,
+            subject=self.subject
+        ).first()
+
+        if existing_record:
+            # Update the existing record with new data
+            existing_record.converted_ca = self.converted_ca
+            existing_record.exam_score = self.exam_score
+            existing_record.total_score = self.total_score
+            existing_record.grade = self.grade
+            existing_record.remarks = self.remarks
+            existing_record.highest_score = self.highest_score
+            existing_record.lowest_score = self.lowest_score
+            existing_record.average_score = self.average_score
+            existing_record.save()
+        else:
+            # No existing record, proceed with normal save
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.student} - {self.subject} ({self.session.session_name} - {self.term.term_name})"
@@ -141,12 +172,37 @@ class StudentAverageResult(models.Model):
 
     def calculate_average(self):
         """
-        Calculate the average percentage and update the field.
+        Calculate the average percentage and update the field,
+        excluding subjects with zero scores.
         """
-        if self.total_score_maximum > 0:
-            self.average_percentage = (self.total_score_obtained / self.total_score_maximum) * 100
+        from results.models import StudentFinalResult  # Import here to avoid circular dependencies
+
+        # Fetch all results for the student with non-zero scores
+        student_results = StudentFinalResult.objects.filter(
+            student=self.student,
+            session=self.session,
+            term=self.term,
+            branch=self.branch,
+            total_score__gt=0  # Exclude results with zero scores
+        )
+
+        # Aggregate total scores
+        total_score_obtained = student_results.aggregate(Sum('total_score'))['total_score__sum'] or 0
+
+        # Count the number of subjects with non-zero scores
+        total_subjects = student_results.count()
+        total_score_maximum = total_subjects * 100  # Assuming max score per subject is 100
+
+        # Update the instance fields
+        self.total_score_obtained = total_score_obtained
+        self.total_score_maximum = total_score_maximum
+
+        # Calculate the average percentage
+        if total_score_maximum > 0:
+            self.average_percentage = (total_score_obtained / total_score_maximum) * 100
         else:
             self.average_percentage = 0
+
         self.save()
 
     def __str__(self):

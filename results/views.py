@@ -371,7 +371,7 @@ def save_student_scores(request, short_code):
 
 def update_class_scores(session, term, branch, student_class, subject):
     """
-    Update the highest, lowest, and average scores for a given class.
+    Update the highest, lowest (ignoring zero), and average scores for a given class.
     """
     results = StudentFinalResult.objects.filter(
         session=session,
@@ -380,19 +380,23 @@ def update_class_scores(session, term, branch, student_class, subject):
         student_class=student_class,
         subject=subject,
     )
+
+    # Calculate the highest, lowest (excluding zeros), and average scores
     highest_score = results.aggregate(Max("total_score"))["total_score__max"] or 0
-    lowest_score = results.aggregate(Min("total_score"))["total_score__min"] or 0
+    lowest_score = results.exclude(total_score=0).aggregate(Min("total_score"))["total_score__min"] or 0
     average_score = results.aggregate(Avg("total_score"))["total_score__avg"] or 0
 
     # Update all final results for the class
     results.update(
         highest_score=highest_score,
         lowest_score=lowest_score,
-        average_score=round(average_score, 2),
+        average_score=round(average_score, 2) if average_score else 0,
     )
 
     # Update student averages for the class
     update_student_averages(session, term, branch, student_class)
+
+    
 
 
 def update_student_averages(session, term, branch, student_class):
