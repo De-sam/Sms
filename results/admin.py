@@ -54,9 +54,53 @@ class StudentResultAdmin(admin.ModelAdmin):
 
 @admin.register(StudentFinalResult)
 class StudentFinalResultAdmin(admin.ModelAdmin):
-    list_display = ('student', 'branch', 'session', 'term', 'subject', 'converted_ca', 'exam_score', 'total_score', 'grade', 'created_at')
-    search_fields = ('student__first_name', 'student__last_name', 'branch__branch_name', 'subject__name', 'session__session_name', 'term__term_name')
-    list_filter = ('branch', 'session', 'term', 'subject')
+    list_display = (
+        'student',
+        'branch',
+        'session',
+        'term',
+        'subject',
+        'converted_ca',
+        'exam_score',
+        'total_score',
+        'grade',
+        'highest_score',  # New field
+        'lowest_score',   # New field
+        'average_score',  # New field
+        'created_at'
+    )
+    search_fields = (
+        'student__first_name',
+        'student__last_name',
+        'branch__branch_name',
+        'subject__name',
+        'session__session_name',
+        'term__term_name'
+    )
+    list_filter = (
+        'branch',
+        'session',
+        'term',
+        'subject',
+        'grade'  # Added filter by grade
+    )
     ordering = ('-created_at',)  # Order by most recent first
+    readonly_fields = ('highest_score', 'lowest_score', 'average_score')  # Make new fields read-only
+
+    def get_queryset(self, request):
+        """
+        Optimize the queryset by prefetching related fields.
+        """
+        queryset = super().get_queryset(request)
+        return queryset.select_related('student', 'branch', 'session', 'term', 'subject')
+
+    def has_change_permission(self, request, obj=None):
+        """
+        Allow change permissions but restrict modifications to read-only fields.
+        """
+        if obj:
+            readonly_fields = self.readonly_fields
+            self.readonly_fields = ('highest_score', 'lowest_score', 'average_score')
+        return super().has_change_permission(request, obj)
 
 
