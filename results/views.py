@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from classes.models import Class, Subject
-from .models import ResultStructure, ResultComponent, StudentAverageResult
+from .models import ResultStructure, ResultComponent, StudentAverageResult,StudentResult
 import json
 from django.db.models import Sum, Avg, Max, Min
 
@@ -213,6 +213,7 @@ def filter_students_for_scores(request, short_code):
 def get_student_scores(request, short_code):
     """
     Fetch students and result components for score entry based on filters.
+    Include existing scores for students if available.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -259,12 +260,22 @@ def get_student_scores(request, short_code):
             # Prepare data for the response
             student_data = []
             for student in students:
+                # Check if scores exist for this student, subject, session, term, and branch
+                final_result = StudentFinalResult.objects.filter(
+                    student=student,
+                    session=session,
+                    term=term,
+                    branch=branch,
+                    subject=subject,
+                    student_class=student.student_class
+                ).first()
+
                 student_components = [
                     {
                         "component_id": component.id,
                         "component_name": component.name,
                         "max_marks": component.max_marks,
-                        "score": "",  # Placeholder for score input
+                        "score": "",  # Placeholder for component score (can be updated if needed)
                     }
                     for component in components
                 ]
@@ -274,8 +285,8 @@ def get_student_scores(request, short_code):
                     "first_name": student.first_name,
                     "last_name": student.last_name,
                     "components": student_components,
-                    "converted_ca": "",  # Placeholder for converted CA
-                    "exam_score": ""  # Placeholder for exam score
+                    "converted_ca": final_result.converted_ca if final_result else "",  # Existing CA
+                    "exam_score": final_result.exam_score if final_result else "",  # Existing Exam Score
                 })
 
             return JsonResponse({
@@ -297,7 +308,7 @@ def get_student_scores(request, short_code):
 
 
 
-from django.db.models import Sum, Avg, Max, Min
+
 
 @transaction.atomic
 def save_student_scores(request, short_code):

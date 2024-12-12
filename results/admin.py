@@ -22,11 +22,11 @@ class ResultComponentAdmin(admin.ModelAdmin):
 
 @admin.register(StudentResult)
 class StudentResultAdmin(admin.ModelAdmin):
-    list_display = ('student', 'component', 'score', 'converted_ca', 'exam_score', 'total_score', 'created_at')
+    list_display = ('student', 'component', 'score', 'created_at', 'updated_at')
     search_fields = ('student__first_name', 'student__last_name', 'component__name')
-    list_filter = ('component__structure', 'component', 'student')
-    ordering = ('-created_at',)  # Order by most recent first
-    actions = ['remove_duplicates']
+    list_filter = ('component',)
+    ordering = ('-created_at',)
+
 
     def remove_duplicates(self, request, queryset):
         """
@@ -56,6 +56,7 @@ class StudentResultAdmin(admin.ModelAdmin):
 class StudentFinalResultAdmin(admin.ModelAdmin):
     list_display = (
         'student',
+        'student_class',  # New field included
         'branch',
         'session',
         'term',
@@ -64,7 +65,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'exam_score',
         'total_score',
         'grade',
-        'remarks',  # New field included
+        'remarks',  # Existing field
         'highest_score',  # Existing field
         'lowest_score',   # Existing field
         'average_score',  # Existing field
@@ -77,14 +78,16 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         'subject__name',
         'session__session_name',
         'term__term_name',
+        'student_class__name',  # Allow search by class name
         'remarks',  # Allow search by remarks
     )
     list_filter = (
         'branch',
+        'student_class',  # Added filter by class
         'session',
         'term',
         'subject',
-        'grade',  # Added filter by grade
+        'grade',  # Existing filter by grade
     )
     ordering = ('-created_at',)  # Order by most recent first
     readonly_fields = ('highest_score', 'lowest_score', 'average_score')  # Make existing fields read-only
@@ -94,7 +97,7 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
         Optimize the queryset by prefetching related fields.
         """
         queryset = super().get_queryset(request)
-        return queryset.select_related('student', 'branch', 'session', 'term', 'subject')
+        return queryset.select_related('student', 'branch', 'session', 'term', 'subject', 'student_class')
 
     def has_change_permission(self, request, obj=None):
         """

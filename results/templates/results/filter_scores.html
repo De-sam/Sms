@@ -355,11 +355,11 @@
 
         // Fetch students and scores when filter is applied
         document.getElementById('filterButton').addEventListener('click', function () {
-             // Show the "Wait a moment..." message
+            // Show the "Wait a moment..." message
             loadingMessage.classList.remove('d-none');
             scoresContainer.classList.add('d-none'); // Hide scores container
 
-           
+
             const session = sessionSelect.value;
             const term = termSelect.value;
             const branch = branchSelect.value;
@@ -410,16 +410,20 @@
                                 <td>${student.first_name} ${student.last_name}</td>
                                 ${student.components.map(c => `
                                     <td>
-                                        <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" placeholder="Max: ${c.max_marks}">
+                                         <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" value="${c.score || ''}" placeholder="Max: ${c.max_marks}">
                                     </td>`).join('')}
-                                <td><input type="number" name="converted-ca-${student.id}" class="form-control" readonly></td>
-                                <td><input type="number" name="exam-score-${student.id}" class="form-control"></td>
+                                <td>
+                                    <input type="number" name="converted-ca-${student.id}" class="form-control" value="${student.converted_ca || ''}" readonly>
+                                </td>
+                                <td>
+                                     <input type="number" name="exam-score-${student.id}" class="form-control" value="${student.exam_score || ''}">
+                                </td>
                             </tr>`;
                             studentsTableBody.innerHTML += row;
                         });
                     }
 
-                   scoresContainer.classList.remove('d-none'); // Show scores container
+                    scoresContainer.classList.remove('d-none'); // Show scores container
                     loadingMessage.classList.add('d-none'); // Hide the loading message;
 
                     // Fetch exam total after loading students
@@ -431,159 +435,132 @@
         scoresForm.addEventListener("input", function (event) {
             const target = event.target;
 
-            // Validate component score fields
-            if (target.name.startsWith("component-")) {
-                const max = parseFloat(target.placeholder.replace("Max: ", "")) || 0;
-                const score = parseFloat(target.value) || 0;
-
-                if (score > max) {
-                    invalidInput = target;
-                    validationMessage.textContent = `Score cannot exceed the maximum of ${max}.`;
-                    validationModal.show();
-                    target.value = ""; // Clear the field immediately
-                    return;
-                }
-            }
-
-            // Validate exam score fields
-            if (target.name.startsWith("exam-score-")) {
-                const score = parseFloat(target.value) || 0;
-
-                if (examTotal !== null && score > examTotal) {
-                    invalidInput = target;
-                    validationMessage.textContent = `Exam score cannot exceed the maximum of ${examTotal}.`;
-                    validationModal.show();
-                    target.value = ""; // Clear the field immediately
-                    return;
-                }
-            }
-
-            // Calculate and update converted CA in real time
-            const studentRows = document.querySelectorAll("#studentsTableBody tr");
-            studentRows.forEach(row => {
-                const componentInputs = row.querySelectorAll("input[name^='component']");
-                const convertedCAField = row.querySelector("input[name^='converted-ca']");
+            // Check if the modified input is a component score or exam score
+            if (target.name.startsWith("component-") || target.name.startsWith("exam-score-")) {
+                const studentRow = target.closest("tr"); // Find the row of the current student
+                const componentInputs = studentRow.querySelectorAll("input[name^='component']");
+                const convertedCAField = studentRow.querySelector("input[name^='converted-ca']");
 
                 let totalScore = 0;
                 let maxScore = 0;
 
                 componentInputs.forEach(input => {
-                    const score = parseFloat(input.value) || 0;
+                    const score = parseFloat(input.value) || 0; // Retain existing value if unchanged
                     const max = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
                     totalScore += score;
                     maxScore += max;
                 });
 
+                // Recalculate and update only the `Converted CA` field
                 if (maxScore > 0) {
                     const convertedCA = (totalScore / maxScore) * conversionTotal;
-                    convertedCAField.value = convertedCA.toFixed(2); // Display converted CA in real time
+                    convertedCAField.value = convertedCA.toFixed(2); // Update only the converted CA field
                 } else {
                     convertedCAField.value = ""; // Clear field if no scores entered
                 }
-            });
-        });
-
-        // Prevent navigating to other fields until corrected
-        validationModal._element.addEventListener("hidden.bs.modal", function () {
-            if (invalidInput) {
-                invalidInput.focus();
             }
         });
 
         // Save scores
-document.getElementById("saveScoresButton").addEventListener("click", function () {
-    const data = { scores: [], session: null, term: null, branch: null, subject: null };
+        document.getElementById("saveScoresButton").addEventListener("click", function () {
+            const data = { scores: [], session: null, term: null, branch: null, subject: null };
 
-    // Fetch session, term, branch, and subject from the filter form
-    data.session = sessionSelect.value;
-    data.term = termSelect.value;
-    data.branch = branchSelect.value;
-    data.subject = subjectSelect.value;
+            // Fetch session, term, branch, and subject from the filter form
+            data.session = sessionSelect.value;
+            data.term = termSelect.value;
+            data.branch = branchSelect.value;
+            data.subject = subjectSelect.value;
 
-    // Validate that required fields are filled
-    if (!data.session || !data.term || !data.branch || !data.subject) {
-        alert("Please ensure all filter fields (Session, Term, Branch, Subject) are selected.");
-        return;
-    }
-
-    // Gather student scores
-    const studentRows = document.querySelectorAll("#studentsTableBody tr");
-    studentRows.forEach(row => {
-        const studentId = row.querySelector("input[name^='converted-ca']").name.split("-")[2];
-        const convertedCAField = row.querySelector("input[name^='converted-ca']");
-        const examScoreField = row.querySelector("input[name^='exam-score']");
-        const componentInputs = row.querySelectorAll("input[name^='component']");
-
-        const components = {};
-        componentInputs.forEach(input => {
-            const componentId = input.name.split("-")[2];
-            components[`component_${componentId}`] = parseFloat(input.value) || 0;
-        });
-
-        data.scores.push({
-            student_id: studentId,
-            converted_ca: parseFloat(convertedCAField.value) || 0,
-            exam_score: parseFloat(examScoreField.value) || 0,
-            ...components,
-        });
-    });
-
-    // Log the data payload
-    console.log(JSON.stringify(data, null, 2));
-
-    // Show the Processing Modal
-    const processingModal = new bootstrap.Modal(document.getElementById("processingModal"));
-    processingModal.show();
-
-    // Submit the data via AJAX
-    fetch(`/results/${shortCode}/save-student-scores/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify(data)
-    })
-        .then(response => response.json())
-        .then(data => {
-            processingModal.hide(); // Hide the Processing Modal
-            if (data.success) {
-                // Show the Success Modal
-                const successModal = new bootstrap.Modal(document.getElementById("successModal"));
-                successModal.show();
-            } else {
-                alert(data.error || "An error occurred while saving scores.");
+            // Validate that required fields are filled
+            if (!data.session || !data.term || !data.branch || !data.subject) {
+                alert("Please ensure all filter fields (Session, Term, Branch, Subject) are selected.");
+                return;
             }
-        })
-        .catch(error => {
-            processingModal.hide(); // Hide the Processing Modal
-            console.error("Error:", error);
-            alert("An unexpected error occurred. Please try again.");
+
+            // Gather student scores
+            const studentRows = document.querySelectorAll("#studentsTableBody tr");
+            studentRows.forEach(row => {
+                const studentId = row.querySelector("input[name^='converted-ca']").name.split("-")[2];
+                const convertedCAField = row.querySelector("input[name^='converted-ca']");
+                const examScoreField = row.querySelector("input[name^='exam-score']");
+                const componentInputs = row.querySelectorAll("input[name^='component']");
+
+                const components = {};
+                componentInputs.forEach(input => {
+                    const componentId = input.name.split("-")[2];
+                    components[`component_${componentId}`] = parseFloat(input.value) || 0;
+                });
+
+                data.scores.push({
+                    student_id: studentId,
+                    converted_ca: parseFloat(convertedCAField.value) || 0,
+                    exam_score: parseFloat(examScoreField.value) || 0,
+                    ...components,
+                });
+            });
+
+            // Log the data payload
+            console.log(JSON.stringify(data, null, 2));
+
+            // Show the Processing Modal
+            const processingModal = new bootstrap.Modal(document.getElementById("processingModal"));
+            processingModal.show();
+
+            // Submit the data via AJAX
+            fetch(`/results/${shortCode}/save-student-scores/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    processingModal.hide(); // Hide the Processing Modal
+                    if (data.success) {
+                        // Show the Success Modal
+                        const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+                        successModal.show();
+                    } else {
+                        alert(data.error || "An error occurred while saving scores.");
+                    }
+                })
+                .catch(error => {
+                    processingModal.hide(); // Hide the Processing Modal
+                    console.error("Error:", error);
+                    alert("An unexpected error occurred. Please try again.");
+                });
         });
-});
 
     });
 
 </script>
 <style>
     .table td input.form-control {
-    min-width: 120px;
-}
+        min-width: 120px;
+    }
 
 
-.table-container {
-    max-height: 400px; /* Set the maximum height of the table body */
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: auto; /* Enable horizontal scrolling */
-}
+    .table-container {
+        max-height: 400px;
+        /* Set the maximum height of the table body */
+        overflow-y: auto;
+        /* Enable vertical scrolling */
+        overflow-x: auto;
+        /* Enable horizontal scrolling */
+    }
 
-.table thead th {
-    position: sticky;
-    top: 0; /* Keeps the header at the top */
-    z-index: 1; /* Ensures the header stays above the body */
-    background-color: #ffffff; /* Match the header's background to the table */
-    border-bottom: 2px solid #dee2e6; /* Optional: Add a border for better visibility */
-}
-
+    .table thead th {
+        position: sticky;
+        top: 0;
+        /* Keeps the header at the top */
+        z-index: 1;
+        /* Ensures the header stays above the body */
+        background-color: #ffffff;
+        /* Match the header's background to the table */
+        border-bottom: 2px solid #dee2e6;
+        /* Optional: Add a border for better visibility */
+    }
 </style>
 {% endblock %}
