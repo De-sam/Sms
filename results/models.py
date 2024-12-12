@@ -97,8 +97,11 @@ class StudentFinalResult(models.Model):
     grade = models.CharField(max_length=5, null=True, blank=True)  # Grade (e.g., A, B, C)
     remarks = models.TextField(null=True, blank=True)  # Teacher's remarks
     highest_score = models.PositiveIntegerField(null=True, blank=True)  # Highest score in the subject
+    lowest_score = models.PositiveIntegerField(null=True, blank=True)  # Lowest score in the subject
+    average_score = models.FloatField(null=True, blank=True)  # Average score in the subject
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.student} - {self.subject} ({self.session.session_name} - {self.term.term_name})"
+

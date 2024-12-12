@@ -24,7 +24,7 @@ from django.db import transaction
 from classes.models import Class, Subject
 from .models import ResultStructure, ResultComponent, StudentResult
 import json
-
+from django.db.models import Max, Min
 
 @login_required_with_short_code
 @admin_required
@@ -332,9 +332,6 @@ def save_student_scores(request, short_code):
             # Prepare component ID to max marks mapping for fast lookups
             component_max_marks = {component.id: component.max_marks for component in components}
 
-            # Process each student's score
-            final_results = []  # Collect final results for batch processing
-            component_scores_bulk = []  # Collect component scores for batch processing
             for score in scores:
                 student_id = score.get("student_id")
                 submitted_converted_ca = float(score.get("converted_ca", 0))
@@ -355,43 +352,48 @@ def save_student_scores(request, short_code):
                         "error": f"Validation failed for student ID {student_id}. Converted CA mismatch."
                     }, status=400)
 
-                # Save or update component scores
+                # Fetch or create the final result record
                 student = Student.objects.only('id').get(id=student_id)
-                for component_id, score_value in component_scores.items():
-                    component_scores_bulk.append(
-                        StudentResult(
-                            student=student,
-                            component_id=component_id,
-                            score=score_value,
-                            converted_ca=recalculated_converted_ca,
-                            exam_score=exam_score,
-                            total_score=recalculated_converted_ca + exam_score,
-                        )
-                    )
-
-                # Prepare final results for batch processing
-                final_results.append(StudentFinalResult(
+                final_result, created = StudentFinalResult.objects.update_or_create(
                     student=student,
                     session=session,
                     term=term,
                     branch=branch,
                     subject=subject,
-                    converted_ca=recalculated_converted_ca,
-                    exam_score=exam_score,
-                    total_score=recalculated_converted_ca + exam_score,
-                    grade=calculate_grade(recalculated_converted_ca + exam_score),
-                ))
+                    defaults={
+                        "converted_ca": recalculated_converted_ca,
+                        "exam_score": exam_score,
+                        "total_score": recalculated_converted_ca + exam_score,
+                        "grade": calculate_grade(recalculated_converted_ca + exam_score),
+                        "remarks": generate_remark(calculate_grade(recalculated_converted_ca + exam_score)),
+                    },
+                )
 
-            # Batch save component scores
-            StudentResult.objects.bulk_create(
-                component_scores_bulk,
-                ignore_conflicts=True  # Avoid duplicating existing records
-            )
+                # Update or create component scores
+                for component_id, score_value in component_scores.items():
+                    StudentResult.objects.update_or_create(
+                        student=student,
+                        component_id=component_id,
+                        defaults={
+                            "score": score_value,
+                            "converted_ca": recalculated_converted_ca,
+                            "exam_score": exam_score,
+                            "total_score": recalculated_converted_ca + exam_score,
+                        }
+                    )
 
-            # Batch save final results
-            StudentFinalResult.objects.bulk_create(
-                final_results,
-                ignore_conflicts=True  # Avoid duplicating existing records
+            # Update highest, lowest, and average scores for the subject
+            highest_score = get_highest_score(subject_id, session_id, term_id, branch_id)
+            lowest_score = get_lowest_score(subject_id, session_id, term_id, branch_id)
+            average_score = get_average_score(subject_id, session_id, term_id, branch_id)
+
+            # Update the aggregate fields in the `StudentFinalResult` model
+            StudentFinalResult.objects.filter(
+                session=session, term=term, branch=branch, subject=subject
+            ).update(
+                highest_score=highest_score,
+                lowest_score=lowest_score,
+                average_score=average_score,
             )
 
             return JsonResponse({"success": True, "message": "Scores saved successfully."})
@@ -405,15 +407,145 @@ def save_student_scores(request, short_code):
 
 def calculate_grade(total_score):
     """
-    Calculate grade based on total score.
+    Calculate grade based on total score following the A1, B2 standard.
     """
-    if total_score >= 70:
-        return "A"
+    if total_score >= 75:
+        return "A1"  # Excellent
+    elif total_score >= 70:
+        return "B2"  # Very Good
+    elif total_score >= 65:
+        return "B3"  # Good
     elif total_score >= 60:
-        return "B"
+        return "C4"  # Credit
+    elif total_score >= 55:
+        return "C5"  # Credit
     elif total_score >= 50:
-        return "C"
+        return "C6"  # Credit
+    elif total_score >= 45:
+        return "D7"  # Pass
     elif total_score >= 40:
-        return "D"
+        return "E8"  # Pass
     else:
-        return "F"
+        return "F9"  # Fail
+
+def generate_remark(grade):
+    """
+    Generate a remark based on the grade.
+    """
+    remarks = {
+        "A1": "Excellent",
+        "B2": "Very Good",
+        "B3": "Good",
+        "C4": "Credit",
+        "C5": "Credit",
+        "C6": "Credit",
+        "D7": "Pass",
+        "E8": "Pass",
+        "F9": "Fail",
+    }
+    return remarks.get(grade, "No Remark Available")
+
+
+
+def get_highest_score(subject_id, session_id=None, term_id=None, branch_id=None):
+    """
+    Get the highest score for a specific subject.
+    
+    :param subject_id: ID of the subject
+    :param session_id: (Optional) ID of the session
+    :param term_id: (Optional) ID of the term
+    :param branch_id: (Optional) ID of the branch
+    :return: The highest score or None if no results are found
+    """
+    filters = {'subject_id': subject_id}
+    
+    if session_id:
+        filters['session_id'] = session_id
+    if term_id:
+        filters['term_id'] = term_id
+    if branch_id:
+        filters['branch_id'] = branch_id
+
+    highest_score = StudentFinalResult.objects.filter(**filters).aggregate(Max('total_score'))['total_score__max']
+    return highest_score
+
+
+def get_lowest_score(subject_id, session_id=None, term_id=None, branch_id=None):
+    """
+    Get the lowest score for a specific subject.
+    
+    :param subject_id: ID of the subject
+    :param session_id: (Optional) ID of the session
+    :param term_id: (Optional) ID of the term
+    :param branch_id: (Optional) ID of the branch
+    :return: The lowest score or None if no results are found
+    """
+    filters = {'subject_id': subject_id}
+    
+    if session_id:
+        filters['session_id'] = session_id
+    if term_id:
+        filters['term_id'] = term_id
+    if branch_id:
+        filters['branch_id'] = branch_id
+
+    lowest_score = StudentFinalResult.objects.filter(**filters).aggregate(Min('total_score'))['total_score__min']
+    return lowest_score
+
+from django.db.models import Avg
+
+def get_average_score(subject_id, session_id=None, term_id=None, branch_id=None):
+    """
+    Get the average score for a specific subject.
+
+    :param subject_id: ID of the subject
+    :param session_id: (Optional) ID of the session
+    :param term_id: (Optional) ID of the term
+    :param branch_id: (Optional) ID of the branch
+    :return: The average score (rounded to 2 decimal places) or None if no results are found
+    """
+    filters = {'subject_id': subject_id}
+    
+    if session_id:
+        filters['session_id'] = session_id
+    if term_id:
+        filters['term_id'] = term_id
+    if branch_id:
+        filters['branch_id'] = branch_id
+
+    average_score = StudentFinalResult.objects.filter(**filters).aggregate(Avg('total_score'))['total_score__avg']
+    
+    if average_score is not None:
+        return round(average_score, 2)
+    return None
+
+def get_student_average(student_id, session_id=None, term_id=None, branch_id=None):
+    """
+    Calculate a student's average score as a percentage.
+
+    :param student_id: ID of the student
+    :param session_id: (Optional) ID of the session
+    :param term_id: (Optional) ID of the term
+    :param branch_id: (Optional) ID of the branch
+    :return: Average percentage score or None if no scores are found
+    """
+    filters = {'student_id': student_id}
+    
+    if session_id:
+        filters['session_id'] = session_id
+    if term_id:
+        filters['term_id'] = term_id
+    if branch_id:
+        filters['branch_id'] = branch_id
+
+    # Fetch total scores obtained by the student
+    results = StudentFinalResult.objects.filter(**filters)
+    total_obtained = results.aggregate(total_obtained=Sum('total_score'))['total_obtained']
+
+    # Calculate maximum obtainable score
+    total_subjects = results.count()
+    max_obtainable = total_subjects * 100  # Assuming max score per subject is 100
+
+    if total_obtained is not None and max_obtainable > 0:
+        return round((total_obtained / max_obtainable) * 100, 2)  # Return percentage
+    return None
