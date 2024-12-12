@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ResultStructure, ResultComponent, StudentResult,StudentFinalResult
+from .models import ResultStructure, ResultComponent, StudentResult,StudentFinalResult,StudentAverageResult
 
 class ResultComponentInline(admin.TabularInline):
     model = ResultComponent
@@ -102,5 +102,21 @@ class StudentFinalResultAdmin(admin.ModelAdmin):
             readonly_fields = self.readonly_fields
             self.readonly_fields = ('highest_score', 'lowest_score', 'average_score')
         return super().has_change_permission(request, obj)
+
+@admin.register(StudentAverageResult)
+class StudentAverageResultAdmin(admin.ModelAdmin):
+    list_display = (
+        "student",
+        "session",
+        "term",
+        "branch",
+        "total_score_obtained",
+        "total_score_maximum",
+        "average_percentage",
+        "created_at",
+    )
+    search_fields = ("student__first_name", "student__last_name", "session__session_name", "term__term_name")
+    list_filter = ("session", "term", "branch")
+    ordering = ("-created_at",)
 
 

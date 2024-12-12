@@ -105,3 +105,42 @@ class StudentFinalResult(models.Model):
     def __str__(self):
         return f"{self.student} - {self.subject} ({self.session.session_name} - {self.term.term_name})"
 
+class StudentAverageResult(models.Model):
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="average_results"
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name="average_results"
+    )
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE,
+        related_name="average_results"
+    )
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name="average_results"
+    )
+    total_score_obtained = models.PositiveIntegerField(default=0)  # Sum of scores the student obtained
+    total_score_maximum = models.PositiveIntegerField(default=0)  # Total possible score
+    average_percentage = models.FloatField(null=True, blank=True)  # Calculated percentage
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def calculate_average(self):
+        """
+        Calculate the average percentage and update the field.
+        """
+        if self.total_score_maximum > 0:
+            self.average_percentage = (self.total_score_obtained / self.total_score_maximum) * 100
+        else:
+            self.average_percentage = 0
+        self.save()
+
+    def __str__(self):
+        return f"{self.student} - {self.session.session_name} ({self.term.term_name})"

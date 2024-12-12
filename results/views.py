@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from classes.models import Class, Subject
-from .models import ResultStructure, ResultComponent, StudentResult
+from .models import ResultStructure, ResultComponent, StudentAverageResult
 import json
 from django.db.models import Max, Min
 
@@ -296,7 +296,6 @@ def get_student_scores(request, short_code):
 
 
 
-@csrf_exempt
 @transaction.atomic
 def save_student_scores(request, short_code):
     if request.method == "POST":
@@ -308,102 +307,76 @@ def save_student_scores(request, short_code):
             subject_id = data.get("subject")
             scores = data.get("scores", [])
 
+            # Validate required fields
             if not session_id or not term_id or not branch_id or not subject_id:
                 return JsonResponse({"error": "Missing required fields."}, status=400)
 
             # Fetch related objects
-            session = Session.objects.only('id').get(id=session_id)
-            term = Term.objects.only('id').get(id=term_id)
-            branch = Branch.objects.only('id').get(id=branch_id)
-            subject = Subject.objects.only('id').get(id=subject_id)
-            result_structure = ResultStructure.objects.only('id', 'conversion_total', 'exam_total').get(branch=branch)
+            session = Session.objects.get(id=session_id)
+            term = Term.objects.get(id=term_id)
+            branch = Branch.objects.get(id=branch_id)
 
-            # Fetch components for the structure and subject
-            components = ResultComponent.objects.filter(
-                structure=result_structure
-            ).filter(
-                Q(subject=subject) | Q(subject__isnull=True)
-            ).only('id', 'max_marks')
-
-            # Pre-compute max_score for all components
-            max_score = sum([component.max_marks for component in components])
-            conversion_total = result_structure.conversion_total
-
-            # Prepare component ID to max marks mapping for fast lookups
-            component_max_marks = {component.id: component.max_marks for component in components}
-
+            # Process scores and save/update results
             for score in scores:
-                student_id = score.get("student_id")
-                submitted_converted_ca = float(score.get("converted_ca", 0))
-                exam_score = float(score.get("exam_score", 0))
+                student = Student.objects.get(id=score["student_id"])
+                total_score = score["converted_ca"] + score["exam_score"]
 
-                # Extract component scores from the payload
-                component_scores = {
-                    int(key.split("_")[1]): value for key, value in score.items() if key.startswith("component_")
-                }
-
-                # Recalculate Converted CA
-                total_score = sum(component_scores.values())
-                recalculated_converted_ca = (total_score / max_score) * conversion_total if max_score > 0 else 0
-
-                # Validate the recalculated score
-                if round(recalculated_converted_ca, 2) != round(submitted_converted_ca, 2):
-                    return JsonResponse({
-                        "error": f"Validation failed for student ID {student_id}. Converted CA mismatch."
-                    }, status=400)
-
-                # Fetch or create the final result record
-                student = Student.objects.only('id').get(id=student_id)
+                # Save or update final results
                 final_result, created = StudentFinalResult.objects.update_or_create(
                     student=student,
                     session=session,
                     term=term,
                     branch=branch,
-                    subject=subject,
+                    subject_id=subject_id,
                     defaults={
-                        "converted_ca": recalculated_converted_ca,
-                        "exam_score": exam_score,
-                        "total_score": recalculated_converted_ca + exam_score,
-                        "grade": calculate_grade(recalculated_converted_ca + exam_score),
-                        "remarks": generate_remark(calculate_grade(recalculated_converted_ca + exam_score)),
+                        "converted_ca": score["converted_ca"],
+                        "exam_score": score["exam_score"],
+                        "total_score": total_score,
+                        "grade": calculate_grade(total_score),
+                        "remarks": generate_remark(calculate_grade(total_score)),
                     },
                 )
 
-                # Update or create component scores
-                for component_id, score_value in component_scores.items():
-                    StudentResult.objects.update_or_create(
-                        student=student,
-                        component_id=component_id,
-                        defaults={
-                            "score": score_value,
-                            "converted_ca": recalculated_converted_ca,
-                            "exam_score": exam_score,
-                            "total_score": recalculated_converted_ca + exam_score,
-                        }
-                    )
+            # Calculate and save/update student averages
+            students = Student.objects.filter(
+                student_final_results__session=session,
+                student_final_results__term=term,
+                student_final_results__branch=branch,
+            ).distinct()
 
-            # Update highest, lowest, and average scores for the subject
-            highest_score = get_highest_score(subject_id, session_id, term_id, branch_id)
-            lowest_score = get_lowest_score(subject_id, session_id, term_id, branch_id)
-            average_score = get_average_score(subject_id, session_id, term_id, branch_id)
+            for student in students:
+                # Fetch all final results for the student in the given session and term
+                results = StudentFinalResult.objects.filter(
+                    student=student,
+                    session=session,
+                    term=term,
+                    branch=branch,
+                )
 
-            # Update the aggregate fields in the `StudentFinalResult` model
-            StudentFinalResult.objects.filter(
-                session=session, term=term, branch=branch, subject=subject
-            ).update(
-                highest_score=highest_score,
-                lowest_score=lowest_score,
-                average_score=average_score,
-            )
+                # Calculate total scores
+                total_score_obtained = results.aggregate(total_obtained=Sum("total_score"))["total_obtained"] or 0
+                total_subjects = results.count()
+                total_score_maximum = total_subjects * 100  # Assuming max score per subject is 100
+
+                # Save or update average results
+                average_result, created = StudentAverageResult.objects.update_or_create(
+                    student=student,
+                    session=session,
+                    term=term,
+                    branch=branch,
+                    defaults={
+                        "total_score_obtained": total_score_obtained,
+                        "total_score_maximum": total_score_maximum,
+                        "average_percentage": (total_score_obtained / total_score_maximum) * 100
+                        if total_score_maximum > 0
+                        else 0,
+                    },
+                )
 
             return JsonResponse({"success": True, "message": "Scores saved successfully."})
 
         except Exception as e:
-            print(f"Error saving student scores: {str(e)}")
-            return JsonResponse({"error": "An unexpected error occurred."}, status=500)
-
-    return JsonResponse({"error": "Invalid request method."}, status=405)
-
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
 def calculate_grade(total_score):
     """
