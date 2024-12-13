@@ -1,0 +1,226 @@
+{% extends "schools/base_dash.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-outline card-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-filter"></i> Filter Class Results
+            </h3>
+        </div>
+        <div class="card-body">
+            <form id="filterForm">
+                <div class="row">
+                    <!-- Session -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sessionSelect">Session</label>
+                            <select id="sessionSelect" class="form-control">
+                                <option value="">Select Session</option>
+                                {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Term -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="termSelect">Term</label>
+                            <select id="termSelect" class="form-control" disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Branch -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="branchSelect">Branch</label>
+                            <select id="branchSelect" class="form-control" disabled>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classes as Checkboxes -->
+                <div class="form-group mt-3">
+                    <label>Classes</label>
+                    <div id="classesContainer" class="bg-light p-3 rounded">
+                        <!-- Classes checkboxes will be dynamically added here -->
+                    </div>
+                </div>
+
+                <button type="button" id="fetchResultsButton" class="btn btn-primary mt-3">Fetch Results</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsContainer" class="card mt-4 d-none">
+        <div class="card-header bg-info text-white">
+            <h3 class="card-title">Class Results</h3>
+        </div>
+        <div class="card-body">
+            <div id="studentResultsContainer">
+                <!-- Student results will be dynamically populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const sessionSelect = document.getElementById("sessionSelect");
+        const termSelect = document.getElementById("termSelect");
+        const branchSelect = document.getElementById("branchSelect");
+        const fetchResultsButton = document.getElementById("fetchResultsButton");
+        const resultsContainer = document.getElementById("resultsContainer");
+        const studentResultsContainer = document.getElementById("studentResultsContainer");
+        const classesContainer = document.getElementById("classesContainer");
+
+        // Fetch terms based on session
+        sessionSelect.addEventListener("change", function () {
+            const sessionId = sessionSelect.value;
+            termSelect.disabled = !sessionId;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+
+            if (sessionId) {
+                fetch(`/results/{{ school.short_code }}/get-terms/${sessionId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.terms) {
+                            data.terms.forEach(term => {
+                                const option = document.createElement("option");
+                                option.value = term.id;
+                                option.textContent = term.term_name;
+                                termSelect.appendChild(option);
+                            });
+                        }
+                    });
+            }
+        });
+
+        // Fetch branches based on term
+        termSelect.addEventListener("change", function () {
+            const termId = termSelect.value;
+            branchSelect.disabled = !termId;
+            branchSelect.innerHTML = '<option value="">Select Branch</option>';
+
+            if (termId) {
+                fetch(`/results/{{ school.short_code }}/get-branches/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.branches) {
+                            data.branches.forEach(branch => {
+                                const option = document.createElement("option");
+                                option.value = branch.id;
+                                option.textContent = `${branch.branch_name} (${branch.branch_type})`;
+                                branchSelect.appendChild(option);
+                            });
+                        }
+                    });
+            }
+        });
+
+        // Fetch classes based on branch
+        branchSelect.addEventListener("change", function () {
+            const branchId = branchSelect.value;
+            classesContainer.innerHTML = "";
+
+            if (branchId) {
+                fetch(`/results/{{ school.short_code }}/get-classes/${branchId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.classes) {
+                            const rows = Math.ceil(data.classes.length / 3);
+                            for (let i = 0; i < rows; i++) {
+                                const rowDiv = document.createElement("div");
+                                rowDiv.classList.add("row", "mb-3");
+                                for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                                    const colDiv = document.createElement("div");
+                                    colDiv.classList.add("col-md-4");
+                                    colDiv.innerHTML = `
+                                        <div class="form-check">
+                                            <input type="checkbox" name="classes" value="${data.classes[j].id}" class="form-check-input">
+                                            <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department || 'No Department'})</label>
+                                        </div>
+                                    `;
+                                    rowDiv.appendChild(colDiv);
+                                }
+                                classesContainer.appendChild(rowDiv);
+                            }
+                        }
+                    });
+            }
+        });
+
+        // Fetch and display results grouped by student
+        fetchResultsButton.addEventListener("click", function () {
+            const session = sessionSelect.value;
+            const term = termSelect.value;
+            const branch = branchSelect.value;
+            const selectedClasses = Array.from(
+                document.querySelectorAll("input[name='classes']:checked")
+            ).map(cb => cb.value);
+
+            if (!session || !term || !branch || selectedClasses.length === 0) {
+                alert("Please fill in all the fields and select at least one class.");
+                return;
+            }
+
+            fetch(`/results/{{ school.short_code }}/fetch-class-results/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ session, term, branch, classes: selectedClasses })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    // Populate results grouped by student
+                    studentResultsContainer.innerHTML = "";
+                    data.students.forEach(student => {
+                        const studentSection = `
+                            <div class="mb-4">
+                                <h4>${student.student_name}</h4>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Converted CA</th>
+                                            <th>Exam Score</th>
+                                            <th>Total Score</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${student.subjects.map(subject => `
+                                            <tr>
+                                                <td>${subject.subject}</td>
+                                                <td>${subject.converted_ca}</td>
+                                                <td>${subject.exam_score}</td>
+                                                <td>${subject.total_score}</td>
+                                                <td>${subject.grade}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>`;
+                        studentResultsContainer.innerHTML += studentSection;
+                    });
+
+                    resultsContainer.classList.remove("d-none");
+                })
+                .catch(error => console.error("Error fetching results:", error));
+        });
+    });
+</script>
+{% endblock %}

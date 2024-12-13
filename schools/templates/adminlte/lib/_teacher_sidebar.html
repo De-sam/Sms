@@ -112,25 +112,31 @@
                     <li class="nav-item">
                         <a href="{% url 'record_teacher_attendance' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                            Attendance
+                            Enter Attendance
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'record_teacher_ratings' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                            Ratings
+                            Enter Ratings
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'filter_comments' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                            Student's comment
+                            Enter comments
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'filter_scores' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                            Student's scores
+                           Enter scores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'class_result_preview' school.short_code %}" class="nav-link">
+                            <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                            preview results
                         </a>
                     </li>
                 </ul>

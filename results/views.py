@@ -491,3 +491,89 @@ def generate_remark(grade):
         "F9": "Fail",
     }
     return remarks.get(grade, "No Remark Available")
+
+def render_class_result_preview(request, short_code):
+    """
+    Render the class result preview template.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    user_roles = get_user_roles(request.user, school)
+
+
+    context = {
+        'school': school,
+        'sessions': Session.objects.filter(school=school),
+        'terms': Term.objects.none(),
+        'branches': Branch.objects.filter(school=school),
+        **user_roles,
+    }
+    return render(request, "results/class_result_preview.html", context)
+
+@csrf_exempt
+def fetch_class_results(request, short_code):
+    """
+    Fetch and filter class results dynamically based on entered parameters.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            session_id = data.get("session")
+            term_id = data.get("term")
+            branch_id = data.get("branch")
+            class_ids = data.get("classes", [])
+
+            # Validate required parameters
+            if not (session_id and term_id and branch_id and class_ids):
+                return JsonResponse({"error": "Missing required filters."}, status=400)
+
+            # Fetch related objects
+            session = Session.objects.get(id=session_id)
+            term = Term.objects.get(id=term_id)
+            branch = Branch.objects.get(id=branch_id)
+
+            # Fetch students and their results
+            students = Student.objects.filter(
+                student_class__id__in=class_ids,
+                branch=branch
+            ).select_related("user")
+
+            results = StudentFinalResult.objects.filter(
+                session=session,
+                term=term,
+                branch=branch,
+                student_class__id__in=class_ids
+            ).select_related("subject", "student").order_by("student__last_name", "subject__name")
+
+            # Group results by student and subject
+            grouped_results = {}
+            for result in results:
+                if result.student_id not in grouped_results:
+                    grouped_results[result.student_id] = {
+                        "student": result.student,
+                        "subjects": []
+                    }
+                grouped_results[result.student_id]["subjects"].append({
+                    "subject": result.subject.name,
+                    "converted_ca": result.converted_ca,
+                    "exam_score": result.exam_score,
+                    "total_score": result.total_score,
+                    "grade": result.grade
+                })
+
+            # Prepare data for response
+            response_data = {
+                "students": [
+                    {
+                        "student_id": student_id,
+                        "student_name": f"{data['student'].first_name} {data['student'].last_name}",
+                        "subjects": data["subjects"]
+                    }
+                    for student_id, data in grouped_results.items()
+                ]
+            }
+
+            return JsonResponse(response_data, status=200)
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
