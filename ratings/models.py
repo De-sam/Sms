@@ -66,12 +66,7 @@ class Rating(models.Model):
         null=True, 
         blank=True
     )
-    neatness = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(5)], 
-        null=True, 
-        blank=True
-    )
-
+ 
     # Behavioral fields
     punctuality = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)], 

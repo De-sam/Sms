@@ -174,7 +174,7 @@ def save_ratings(request, short_code):
                             "handwriting": rating_data.get("handwriting") or None,
                             "sports": rating_data.get("sports") or None,
                             "artistry": rating_data.get("artistry") or None,
-                            "verbal_fluency": rating_data.get("verbal_fluency") or None,
+                            "verbal_fluency": rating_data.get("verbal") or None, 
                             "games": rating_data.get("games") or None,
                         })
                     elif rating_type == "behavioral":

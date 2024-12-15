@@ -791,10 +791,6 @@ def fetch_students_result(request, short_code):
                 session=session, term=term, branch=branch, student__in=students
             ).select_related("student")
 
-            ratings = Rating.objects.filter(
-                session=session, term=term, branch=branch, student__in=students
-            ).select_related("student")
-
             comments = Comment.objects.filter(
                 session=session, term=term, student__in=students
             ).select_related("student", "author")
@@ -840,6 +836,24 @@ def fetch_students_result(request, short_code):
                         if hasattr(result.student.user, "profile_picture") and result.student.user.profile_picture
                         else None
                     )
+                    # Fetch psychomotor and behavioral ratings for the student
+                    psychomotor_rating = Rating.objects.filter(
+                    rating_type='psychomotor',
+                    session=session, 
+                    term=term,
+                    branch=branch,
+                    student__in=students
+                    ).select_related("student").first()  
+
+
+                    behavioral_rating = Rating.objects.filter(
+                    rating_type='behavioral',
+                    session=session, 
+                    term=term, 
+                    branch=branch, 
+                    student__in=students
+                    ).select_related("student").first()  
+
 
                     grouped_results[result.student_id] = {
                         "first_name": result.student.first_name,
@@ -857,31 +871,25 @@ def fetch_students_result(request, short_code):
                         "lowest_score": None,
                         "average_score": None,
                         "average": avg_result,
-                        "rating": next(
-                            (
-                                {
-                                    "psychomotor": {
-                                        "coordination": rating.coordination,
-                                        "handwriting": rating.handwriting,
-                                        "sports": rating.sports,
-                                        "artistry": rating.artistry,
-                                        "verbal_fluency": rating.verbal_fluency,
-                                        "games": rating.games,
-                                        "neatness": rating.neatness,
-                                    },
-                                    "behavioral": {
-                                        "punctuality": rating.punctuality,
-                                        "attentiveness": rating.attentiveness,
-                                        "obedience": rating.obedience,
-                                        "leadership": rating.leadership,
-                                        "emotional_stability": rating.emotional_stability,
-                                        "teamwork": rating.teamwork,
-                                        "neatness": rating.neatness,
-                                    }
-                                }
-                                for rating in ratings if rating.student_id == result.student_id
-                            ), {}
-                        ),
+                        "rating": {
+                            "psychomotor": {
+                                "coordination": psychomotor_rating.coordination if psychomotor_rating else "N/A",
+                                "handwriting": psychomotor_rating.handwriting if psychomotor_rating else "N/A",
+                                "sports": psychomotor_rating.sports if psychomotor_rating else "N/A",
+                                "artistry": psychomotor_rating.artistry if psychomotor_rating else "N/A",
+                                "verbal_fluency": psychomotor_rating.verbal_fluency if psychomotor_rating else "N/A",
+                                "games": psychomotor_rating.games if psychomotor_rating else "N/A",
+                            },
+                            "behavioral": {
+                                "punctuality": behavioral_rating.punctuality if behavioral_rating else "N/A",
+                                "attentiveness": behavioral_rating.attentiveness if behavioral_rating else "N/A",
+                                "obedience": behavioral_rating.obedience if behavioral_rating else "N/A",
+                                "leadership": behavioral_rating.leadership if behavioral_rating else "N/A",
+                                "emotional_stability": behavioral_rating.emotional_stability if behavioral_rating else "N/A",
+                                "teamwork": behavioral_rating.teamwork if behavioral_rating else "N/A",
+                            }
+                        },
+
                         "comments": [
                             {
                                 "author": comment.author.get_full_name(),

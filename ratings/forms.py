@@ -58,7 +58,7 @@ class RatingForm(forms.ModelForm):
         model = Rating
         fields = [
             'coordination', 'handwriting', 'sports', 'artistry', 
-            'verbal_fluency', 'games', 'neatness',  # Psychomotor fields
+            'verbal_fluency', 'games',  # Psychomotor fields
             'punctuality', 'attentiveness', 'obedience', 
             'leadership', 'emotional_stability', 'teamwork', 'neatness',  # Behavioral fields
         ]
@@ -69,13 +69,13 @@ class RatingForm(forms.ModelForm):
             'artistry': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'verbal_fluency': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'games': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
-            'neatness': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),  # Added
+            'neatness': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'punctuality': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'attentiveness': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'obedience': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'leadership': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
             'emotional_stability': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
-            'teamwork': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5}),
+            'teamwork': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 5'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -84,18 +84,19 @@ class RatingForm(forms.ModelForm):
 
         # Show only relevant fields based on the rating type
         if rating_type == 'psychomotor':
-            self.fields['punctuality'].widget = forms.HiddenInput()
-            self.fields['attentiveness'].widget = forms.HiddenInput()
-            self.fields['obedience'].widget = forms.HiddenInput()
-            self.fields['leadership'].widget = forms.HiddenInput()
-            self.fields['emotional_stability'].widget = forms.HiddenInput()
-            self.fields['teamwork'].widget = forms.HiddenInput()
-        elif rating_type == 'behavioral':
-            self.fields['coordination'].widget = forms.HiddenInput()
-            self.fields['handwriting'].widget = forms.HiddenInput()
-            self.fields['sports'].widget = forms.HiddenInput()
-            self.fields['artistry'].widget = forms.HiddenInput()
-            self.fields['verbal_fluency'].widget = forms.HiddenInput()
-            self.fields['games'].widget = forms.HiddenInput()
+            psychomotor_fields = [
+                'coordination', 'handwriting', 'sports', 
+                'artistry', 'verbal_fluency', 'games'
+            ]
+            for field in self.fields:
+                if field not in psychomotor_fields:
+                    self.fields[field].widget = forms.HiddenInput()
 
-        # Neatness is shared across both types, so it remains visible for both
+        elif rating_type == 'behavioral':
+            behavioral_fields = [
+                'punctuality', 'attentiveness', 'obedience', 
+                'leadership', 'emotional_stability', 'teamwork', 'neatness'
+            ]
+            for field in self.fields:
+                if field not in behavioral_fields:
+                    self.fields[field].widget = forms.HiddenInput()
