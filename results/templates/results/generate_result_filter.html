@@ -198,7 +198,7 @@
                         const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
                         const studentCard = `
-                            <div class="card mb-1" style="max-width: 60%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <div class="card mb-1 school-details-card" style="max-width: 60%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                     <!-- School Details -->
                                     <div class="card-header d-flex align-items-center justify-content-between border rounded bg-light">
                                         <div class="d-flex align-items-center justify-content-center w-100">
@@ -269,8 +269,6 @@
                                         <div class="card-header bg-secondary text-white">
                                             <div class="score-details d-flex justify-content-center align-items-center text-center">
                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                       
                                                 <span><strong>Total Obtainable Score:</strong> ${student.max_obtainable_score}</span>
                                                 <span><strong>Total Obtained Score:</strong> ${student.obtained_score}</span>
                                                 <span><strong>Average Percentage:</strong> ${student.average.average_percentage.toFixed(2)}%</span>
@@ -312,7 +310,7 @@
                                             </table>
                                         </div>
                                         <!-- Psychomotor and Behavioral Ratings -->
-                                        <div class="mt-4">
+                                        <div class="mt-1">
                                             <h6 class="text-center text-primary">Psychomotor Ratings</h6>
                                             <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
                                                 <thead>
@@ -332,7 +330,7 @@
                                             </table>
                                         </div>
 
-                                        <div class="mt-4">
+                                        <div class="mt-1">
                                             <h6 class="text-center text-primary">Behavioral Ratings</h6>
                                             <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
                                                 <thead>
@@ -353,19 +351,18 @@
                                         </div>
 
                                         <!-- Comments -->
-                                        <div class="mt-4 text-left">
+                                        <div class="mt-1 text-left">
                                             <h6 class="text-primary">Teacher's Comment</h6>
                                             <p class="comment-text">${student.comments[0]?.text || "N/A"}</p>
                                             <h6 class="text-primary">${schoolCommentLabel}'s Comment</h6>
                                             <p class="comment-text">${student.principal_comment || "N/A"}</p>
                                         </div>
-
+                                         <!-- Resumption -->
+                                        <div class="mt-1 text-left next-term-section">
+                                         <strong class="text-muted">Next Term Begins: ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}</strong>
+                                        </div>
                                     </div>
-                                    <div class="next-term-section text-center">
-                                <span class="text-muted">
-                                    <strong>Next Term Begins: </strong>
-                                </span>
-                                <span class="badge badge-primary">${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}</span>
+                                    
                             </div>
                                 </div>
                             </div>
@@ -381,7 +378,6 @@
     });
 </script>
 <style>
-    /* Main CSS for Print Scaling */
 @media print {
     body {
         transform: scale(0.9); /* Scale down the entire page to 90% */
@@ -389,39 +385,86 @@
         margin: 0; /* Remove extra margins for better fit */
     }
 
-    /* Ensure cards and tables are well-scaled */
+    /* Cards */
     .card {
-        page-break-inside: avoid; /* Prevent cards from breaking between pages */
+        page-break-inside: avoid; /* Prevent breaking cards between pages */
         margin-bottom: 1rem; /* Add space between cards */
     }
 
+    /* Force a new page before the school details card */
+    .card.school-details-card {
+        page-break-before: always; /* Start a new page before this card */
+    }
+
+    /* Force a new page after the school resumption date */
+    .next-term-section {
+        page-break-after: always; /* Start a new page after this section */
+    }
+
+    /* Tables */
     .table-bordered {
         page-break-inside: avoid; /* Prevent tables from breaking between pages */
+        padding: 2px; /* Reduced padding for all table cells */
         font-size: 10px; /* Reduce font size slightly for better fit */
-        text-align: center; /* Ensure table text is centered */
-        margin: 0 auto; /* Center the table */
+        text-align: center; /* Center-align all text within the table */
+        margin: 0 auto; /* Ensure the table is horizontally centered */
+        border-collapse: collapse; /* Ensures no extra spacing between cells */
+        width: auto; /* Prevents the table from spanning the full width of the screen */
     }
 
-    .score-details {
-        display: flex; /* Ensure flexbox alignment */
-        justify-content: center; /* Center-align score details */
-        align-items: center; /* Vertically center items */
-        gap: 1rem; /* Add spacing between details */
-        font-size: 11px; /* Slightly smaller font size for compactness */
+    .table-bordered td,
+    .table-bordered th {
+        padding: 4px; /* Adjust top, bottom, left, and right padding */
     }
 
-    .comment-text {
-        font-size: 11px; /* Maintain smaller font size for comments */
-        text-align: justify; /* Align text for better readability */
-    }
-
-    /* Prevent headers and footers from breaking awkwardly */
+    /* Headers */
     .card-header {
+        text-align: center; /* Center-align text in the card header */
+        padding: 10px; /* Adjust padding for a balanced look */
         page-break-inside: avoid; /* Prevent breaking inside headers */
-        text-align: center; /* Center-align text */
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Ensure alignment and spacing */
+        gap: 5px; /* Adds uniform spacing between all items */
     }
 
-    /* General layout adjustments for print */
+    /* Images */
+    img {
+        max-width: 100%; /* Ensure images fit within their containers */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .card-header img.logo {
+        margin-right: 10px; /* Reduce spacing between the logo and the middle details */
+    }
+
+    .card-header img.profile-picture {
+        margin-left: 10px; /* Reduce spacing between the profile picture and the middle details */
+    }
+
+    /* Score Details */
+    .score-details {
+        display: flex; /* Flexbox for alignment */
+        justify-content: center; /* Horizontally center items */
+        align-items: center; /* Vertically center items */
+        gap: 1.5rem; /* Space between elements */
+        text-align: center; /* Center align text */
+        font-size: 12px; /* Adjust font size for clarity */
+        margin: 0; /* Remove unnecessary margins */
+    }
+
+    .score-details span {
+        text-align: center; /* Ensure each span's text is centered */
+    }
+
+    /* Comments */
+    .comment-text {
+        font-size: 11px; /* Reduce font size to 11px */
+        text-align: justify; /* Align text for better readability */
+        margin-bottom: 5px; /* Add some spacing between comments */
+    }
+
+    /* Layout adjustments for print */
     @page {
         size: auto; /* Adjust page size dynamically */
         margin: 1cm; /* Set consistent page margins */
@@ -432,29 +475,6 @@
     #filterForm {
         display: none !important; /* Exclude filter form and buttons from print */
     }
-
-    /* Adjust image scaling for print */
-    img {
-        max-width: 100%; /* Ensure images fit within their containers */
-        height: auto; /* Maintain aspect ratio */
-    }
-}
-
-    .table-bordered {
-    padding: 2px; /* Reduced padding for all table cells */
-    font-size: 11px;
-    text-align: center; /* Center-align all text within the table */
-    margin: 0 auto; /* Ensures the table is horizontally centered */
-}
-
-.table-bordered td,
-.table-bordered th {
-    padding: 4px; /* Adjust top, bottom, left, and right padding */
-}
-
-.table-bordered {
-    border-collapse: collapse; /* Ensures no extra spacing between cells */
-    width: auto; /* Prevents the table from spanning the full width of the screen */
 }
 
 .card {
@@ -464,13 +484,42 @@
     padding: 10px; /* Adjust padding for better aesthetics */
 }
 
+.comment-text {
+    font-size: 11px; /* Reduce font size to 11px */
+    text-align: justify; /* Align text for better readability */
+    margin-bottom: 5px; /* Add spacing between comments */
+}
+
+.score-details {
+    display: flex; /* Ensure flexbox alignment */
+    justify-content: center; /* Center-align score details */
+    align-items: center; /* Vertically center items */
+    gap: 1rem; /* Add spacing between details */
+    font-size: 11px; /* Slightly smaller font size for compactness */
+    text-align: center;
+}
+
+.table-bordered {
+    border-collapse: collapse; /* Ensures no extra spacing between cells */
+    width: auto; /* Prevents the table from spanning the full width of the screen */
+    font-size: 11px; /* Reduce font size for readability */
+    text-align: center; /* Center-align all text within the table */
+    margin: 0 auto; /* Center the table */
+    padding: 2px; /* Reduced padding for all table cells */
+}
+
+.table-bordered td,
+.table-bordered th {
+    padding: 4px; /* Adjust top, bottom, left, and right padding */
+}
+
 .card-header {
     text-align: center; /* Center-align text in the card header */
-}
-.card-header {
+    padding: 10px; /* Adjust padding for a balanced look */
     display: flex;
     align-items: center;
     justify-content: space-between; /* Ensure alignment and spacing */
+    gap: 5px; /* Adds uniform spacing between all items */
 }
 
 .card-header img.logo {
@@ -479,42 +528,6 @@
 
 .card-header img.profile-picture {
     margin-left: 10px; /* Reduce spacing between the profile picture and the middle details */
-}
-
-.card-header .school-details {
-    flex-grow: 1; /* Expand middle section to maintain balance */
-    text-align: center;
-}
-
-.card-header {
-    gap: 5px; /* Adds uniform spacing between all items */
-}
-
-
-.comment-text {
-    font-size: 11px; /* Reduce font size to 11px */
-    text-align: justify; /* Align text for better readability */
-    margin-bottom: 5px; /* Add some spacing between comments */
-}
-
-/* Simplified styles for score-details */
-.score-details {
-    display: flex; /* Flexbox for alignment */
-    justify-content: center; /* Horizontally center items */
-    align-items: center; /* Vertically center items */
-    gap: 1.5rem; /* Space between elements */
-    text-align: center; /* Center align text */
-}
-
-.score-details span {
-    font-size: 12px; /* Adjust font size for clarity */
-    text-align: center; /* Ensure each span's text is centered */
-    margin: 0; /* Remove unnecessary margins */
-}
-
-.card-header {
-    text-align: center; /* Center the text within the card header */
-    padding: 10px; /* Adjust padding for a balanced look */
 }
 
 
