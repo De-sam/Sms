@@ -1,0 +1,325 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Filter Form -->
+    <div class="card card-outline card-primary mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-filter"></i> Filter Results
+            </h3>
+        </div>
+        <div class="card-body">
+            <form id="filterForm">
+                <div class="row">
+                    <!-- Session -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="session">Session</label>
+                            <select id="session" name="session" class="form-control">
+                                <option value="">Select Session</option>
+                                {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session.session_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Term -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="term">Term</label>
+                            <select id="term" name="term" class="form-control" disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Branch -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="branch">Branch</label>
+                            <select id="branch" name="branch" class="form-control" disabled>
+                                <option value="">Select Branch</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <!-- Classes -->
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Classes</label>
+                            <div id="classesContainer" class="d-flex flex-wrap">
+                                <!-- Dynamic checkboxes for classes -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="filterButton" class="btn btn-primary mt-3">Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsContainer" class="mt-4">
+        <!-- Dynamic cards will be appended here -->
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const shortCode = "{{ school.short_code }}";
+
+        const sessionSelect = document.getElementById("session");
+        const termSelect = document.getElementById("term");
+        const branchSelect = document.getElementById("branch");
+        const classesContainer = document.getElementById("classesContainer");
+        const filterButton = document.getElementById("filterButton");
+        const resultsContainer = document.getElementById("resultsContainer");
+
+        // Fetch terms when session changes
+        sessionSelect.addEventListener("change", function () {
+            termSelect.disabled = true;
+            branchSelect.disabled = true;
+            classesContainer.innerHTML = "";
+
+            if (sessionSelect.value) {
+                fetch(`/results/${shortCode}/get-terms/${sessionSelect.value}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        termSelect.disabled = false;
+                        termSelect.innerHTML = '<option value="">Select Term</option>';
+                        data.terms.forEach(term => {
+                            const option = document.createElement("option");
+                            option.value = term.id;
+                            option.textContent = term.term_name;
+                            termSelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        // Fetch branches when term changes
+        termSelect.addEventListener("change", function () {
+            branchSelect.disabled = true;
+            classesContainer.innerHTML = "";
+
+            if (termSelect.value) {
+                branchSelect.disabled = false;
+            }
+        });
+
+        // Fetch classes when branch changes
+        branchSelect.addEventListener("change", function () {
+            classesContainer.innerHTML = "";
+
+            if (branchSelect.value) {
+                fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.classes.forEach(cls => {
+                            const department = cls.department ? `(${cls.department})` : "";
+                            const checkbox = document.createElement("div");
+                            checkbox.classList.add("form-check", "mr-3");
+                            checkbox.innerHTML = `
+                                <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
+                                <label class="form-check-label" for="class-${cls.id}">${cls.name} ${department}</label>
+                            `;
+                            classesContainer.appendChild(checkbox);
+                        });
+                    });
+            }
+        });
+
+        // Filter results
+        filterButton.addEventListener("click", function () {
+            const session = sessionSelect.value;
+            const term = termSelect.value;
+            const branch = branchSelect.value;
+            const classes = Array.from(
+                document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
+            ).map(input => input.value);
+
+            if (!session || !term || !branch || classes.length === 0) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            fetch(`/results/${shortCode}/fetch-students-result/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ session, term, branch, classes })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    resultsContainer.innerHTML = "";
+
+                    data.students.forEach(student => {
+                        const schoolCommentLabel = data.school_details.school_type === "Primary" ? "Head Teacher" : "Principal";
+                        const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
+                        const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
+                        const studentCard = `
+                            <div class="card mb-4">
+                                <!-- School Details -->
+                                    <div class="card-header d-flex align-items-center justify-content-between border rounded bg-light">
+                                        <div class="d-flex align-items-center justify-content-center w-100">
+                                            <!-- School Logo -->
+                                            <img src="${schoolLogo}" alt="School Logo" class="img-fluid mr-2" style="width: 50px; height: 50px; margin-right: 10px;">
+                                            <!-- Middle Details -->
+                                            <div style="text-align: center; flex-grow: 1;">
+                                                <h5 class="mb-0">${data.school_details.school_name}</h5>
+                                                <p class="text-muted mb-0">${data.school_details.school_address}</p>
+                                                <div class="d-flex justify-content-center" style="gap: 1rem;">
+                                                    <span class="text-muted">
+                                                        <strong>Email:</strong> ${data.school_details.school_email || "N/A"}
+                                                    </span>
+                                                    <span class="text-muted">
+                                                        <strong>Phone:</strong> ${data.school_details.school_phone || "N/A"}
+                                                    </span>
+                                                </div>
+                                                <p class="text-primary mt-2">
+                                                    <strong>${data.school_details.term_label || "N/A"}</strong>
+                                                </p>
+                                            </div>
+                                            <!-- Profile Picture -->
+                                            <img src="${profileImage}" alt="Student Profile" class="img-fluid rounded-circle ml-2" style="width: 50px; height: 50px; margin-left: 10px;">
+                                        </div>
+                                    </div>
+
+
+
+                                <!-- Student Details -->
+                                <div class="card-body text-center">
+                                    <div class="d-flex justify-content-center mb-2">
+                                        <span class="mr-3"><strong>Name:</strong> ${student.first_name} ${student.last_name}</span>
+                                        <span><strong>Class:</strong> ${student.class}</span>
+                                    </div>
+                                    <div class="mt-1">
+                                        <span class="badge badge-primary">Subjects Done: ${student.total_subjects}</span>
+                                        <span class="badge badge-success">Subjects Passed: ${student.subjects_passed}</span>
+                                        <span class="badge badge-danger">Subjects Failed: ${student.subjects_failed}</span>
+                                    </div>
+                                    <div class="mt-1">
+                                        <span class="badge badge-info">
+                                            School Opened: ${student.total_days_school_opened || "N/A"} Days, 
+                                            Present: ${student.attendance_count || "N/A"} Days, 
+                                            Absent: ${student.times_absent || "N/A"} Days
+                                        </span>
+                                    </div>
+
+                                    <!-- Subject Scores -->
+                                    <div class="card mt-1 ml-3 mr-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <div class="d-flex justify-content-around mb-1">
+                                                <span><strong>Total Obtainable Score:</strong> ${student.max_obtainable_score}</span>
+                                                <span><strong>Total Obtained Score:</strong> ${student.obtained_score}</span>
+                                                <span><strong>Average Percentage:</strong> ${student.average.average_percentage.toFixed(2)}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-bordered" style="font-size: 11px;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Subjects</th>
+                                                        <th style="writing-mode: vertical-lr;">CA Score</th>
+                                                        <th style="writing-mode: vertical-lr;">Exam Score</th>
+                                                        <th style="writing-mode: vertical-lr;">Total Score</th>
+                                                        <th style="writing-mode: vertical-lr;">Highest</th>
+                                                        <th style="writing-mode: vertical-lr;">Average</th>
+                                                        <th style="writing-mode: vertical-lr;">Lowest</th>
+                                                        <th style="writing-mode: vertical-lr;">Grade</th>
+                                                        <th>Remarks</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${student.subjects.map(subject => `
+                                                        <tr>
+                                                            <td>${subject.subject}</td>
+                                                            <td>${subject.converted_ca || "N/A"}</td>
+                                                            <td>${subject.exam_score || "N/A"}</td>
+                                                            <td>${subject.total_score || "N/A"}</td>
+                                                            <td>${subject.highest_score || "N/A"}</td>
+                                                            <td>${subject.average_score ? subject.average_score.toFixed(2) : "N/A"}</td>
+                                                            <td>${subject.lowest_score || "N/A"}</td>
+                                                            <td>${subject.grade || "N/A"}</td>
+                                                            <td>${subject.remark || "N/A"}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- Psychomotor and Behavioral Ratings -->
+                                        <div class="mt-4">
+                                            <h6 class="text-center text-primary">Psychomotor Ratings</h6>
+                                            <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
+                                                <thead>
+                                                    <tr>
+                                                        ${Object.keys(student.rating.psychomotor || {}).map(key => `
+                                                            <th>${key.replace(/_/g, ' ')}</th>
+                                                        `).join('')}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        ${Object.values(student.rating.psychomotor || {}).map(value => `
+                                                            <td>${value || "N/A"}</td>
+                                                        `).join('')}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <h6 class="text-center text-primary">Behavioral Ratings</h6>
+                                            <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
+                                                <thead>
+                                                    <tr>
+                                                        ${Object.keys(student.rating.behavioral || {}).map(key => `
+                                                            <th>${key.replace(/_/g, ' ')}</th>
+                                                        `).join('')}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        ${Object.values(student.rating.behavioral || {}).map(value => `
+                                                            <td>${value || "N/A"}</td>
+                                                        `).join('')}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Comments -->
+                                        <div class="mt-4 text-left">
+                                            <h6 class="text-primary">Teacher's Comment</h6>
+                                            <p>${student.comments[0]?.text || "N/A"}</p>
+                                            <h6 class="text-primary">${schoolCommentLabel}'s Comment</h6>
+                                            <p>${student.principal_comment || "N/A"}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="next-term-section text-center">
+                                <span class="text-muted">
+                                    <strong>Next Term Begins: </strong>
+                                </span>
+                                <span class="badge badge-primary">${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}</span>
+                            </div>
+                        `;
+                        resultsContainer.innerHTML += studentCard;
+                    });
+                })
+                .catch(error => console.error("Error:", error));
+                console.log(response.school_details.next_term_begins);
+
+        });
+    });
+</script>
+{% endblock %}

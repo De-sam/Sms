@@ -25,6 +25,17 @@ from classes.models import Class, Subject
 from .models import ResultStructure, ResultComponent, StudentAverageResult,StudentResult
 import json
 from django.db.models import Sum, Avg, Max, Min
+from academics.models import (
+    Session, Term
+)
+from schools.models import Branch
+from students.models import Student
+from results.models import  StudentFinalResult,StudentAverageResult
+from ratings.models import Rating
+from attendance.models import StudentAttendance,SchoolDaysOpen
+from comments.models import Comment
+
+
 
 
 @login_required_with_short_code
@@ -492,6 +503,104 @@ def generate_remark(grade):
     }
     return remarks.get(grade, "No Remark Available")
 
+import random
+
+def get_comment_by_percentage(percentage):
+    comments = {
+        75: [
+            "Excellent work, keep it up!",
+            "Outstanding performance, you're doing great!",
+            "You did good, fantastic job!",
+            "Your performance is remarkable, keep it consistent!",
+            "Incredible effort, you're a role model!",
+            "Great job, your dedication is paying off!",
+            "Superb work, you're achieving excellence!",
+            "Amazing results, you're on the right path!",
+            "You're at the top, keep leading the way!",
+            "Fantastic effort, you're setting an example!"
+        ],
+        70: [
+            "Very good job, keep up the great work!",
+            "You're doing well, aim a little higher!",
+            "Nice effort, you're almost there!",
+            "Impressive performance, keep progressing!",
+            "You're on the right track, stay focused!",
+            "Great progress, you're improving steadily!",
+            "Well done, you’re doing great!",
+            "You're achieving good results, keep it up!",
+            "Good job, keep pushing forward!",
+            "You're performing well, aim for the top!"
+        ],
+        65: [
+            "Good effort, you’re improving!",
+            "You're doing fine, keep working harder!",
+            "Nice progress, you're getting there!",
+            "Good job, but there's room to grow!",
+            "Keep going, you're on the right path!",
+            "Steady improvement, keep it consistent!",
+            "You're achieving fair results, aim for better!",
+            "Good performance, push yourself more!",
+            "Well done, but you can aim higher!",
+            "You're improving, don't lose momentum!"
+        ],
+        50: [
+            "Fair performance, but you can do better!",
+            "You're making progress, keep at it!",
+            "Not bad, but there's room for improvement.",
+            "You're doing okay, but aim higher!",
+            "Decent effort, strive for more next time!",
+            "You're getting there, keep trying harder!",
+            "Fair work, but there's potential for more!",
+            "You're doing fine, push yourself further!",
+            "Good attempt, aim for greater heights!",
+            "Keep improving, you’re on the right track!"
+        ],
+        40: [
+            "You're passing, but strive for better results!",
+            "You're capable of more, work harder!",
+            "Not bad, but you can do better with effort.",
+            "You're just making it, aim for higher scores!",
+            "Keep trying, you're on the brink of improvement!",
+            "You're getting through, but there's room for growth.",
+            "Put in more effort to see greater results!",
+            "You're close, but push for a better grade!",
+            "You're passing, but aim higher next time.",
+            "A fair attempt, but there's potential for improvement."
+        ],
+        0: [
+            "Poor performance, you need to work harder.",
+            "Don't lose hope, keep trying!",
+            "This isn't your best, you can improve!",
+            "You're struggling, but success is within reach.",
+            "Failure is a step to success, keep working!",
+            "Not good enough, but you can rise above this.",
+            "Keep going, you're capable of much more!",
+            "Focus and determination will help you improve.",
+            "You need to put in more effort to succeed.",
+            "Don't give up, you can turn this around!"
+        ]
+    }
+
+    if percentage >= 75:
+        return random.choice(comments[75])
+    elif percentage >= 70:
+        return random.choice(comments[70])
+    elif percentage >= 65:
+        return random.choice(comments[65])
+    elif percentage >= 50:
+        return random.choice(comments[50])
+    elif percentage >= 40:
+        return random.choice(comments[40])
+    else:
+        return random.choice(comments[0])
+
+# Example Usage
+percentage = 68
+comment = get_comment_by_percentage(percentage)
+print(f"Comment for {percentage}%: {comment}")
+
+
+
 def render_class_result_preview(request, short_code):
     """
     Render the class result preview template.
@@ -570,6 +679,265 @@ def fetch_class_results(request, short_code):
                     }
                     for student_id, data in grouped_results.items()
                 ]
+            }
+
+            return JsonResponse(response_data, status=200)
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
+def render_generate_result_filter(request, short_code):
+    """
+    Render the result generation filter template.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    user_roles = get_user_roles(request.user, school)
+
+    context = {
+        'school': school,
+        'sessions': Session.objects.filter(school=school),
+        'terms': Term.objects.none(),  # Initially empty, dynamically loaded
+        'branches': Branch.objects.filter(school=school),
+        **user_roles,
+    }
+    return render(request, "results/generate_result_filter.html", context)
+
+
+
+@csrf_exempt
+def fetch_students_result(request, short_code):
+    """
+    Fetch detailed student results, including name, class, attendance count, scores for each subject,
+    average, comments, ratings, branch details, times absent, remarks for each grade,
+    total number of subjects, total number of subjects failed, highest, lowest, and average scores,
+    along with principal/headteacher comments, term information, and next term begins date.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            session_id = data.get("session")
+            term_id = data.get("term")
+            branch_id = data.get("branch")
+            class_ids = data.get("classes", [])
+
+            # Validate required parameters
+            if not (session_id and term_id and branch_id and class_ids):
+                return JsonResponse({"error": "Missing required filters."}, status=400)
+
+            # Fetch related objects
+            session = get_object_or_404(Session, id=session_id)
+            term = get_object_or_404(Term, id=term_id)
+            branch = get_object_or_404(Branch, id=branch_id)
+            school = branch.primary_school or branch.school
+
+            # Fetch email and phone number from SchoolRegistration
+            school_registration = get_object_or_404(SchoolRegistration, short_code=short_code)
+            school_email = school_registration.email
+            school_phone = school_registration.admin_phone_number
+
+            # Determine if the school is primary or secondary
+            school_type = "Primary" if branch.primary_school else "Secondary"
+            school_name = school.school_name
+            school_address = branch.address  # Use branch's address
+
+            # Determine the term label based on term_name
+            term_label_map = {
+                "First Term": "FIRST TERM EXAMINATION REPORT",
+                "Second Term": "SECOND TERM EXAMINATION REPORT",
+                "Third Term": "THIRD TERM EXAMINATION REPORT",
+            }
+            term_label = term_label_map.get(term.term_name, "TERM EXAMINATION REPORT")
+
+            # Determine next term begins date
+            next_term_start_date = None
+            if term.term_name == "First Term":
+                next_term = Term.objects.filter(session=session, term_name="Second Term").first()
+                if next_term:
+                    next_term_start_date = next_term.start_date
+            elif term.term_name == "Second Term":
+                next_term = Term.objects.filter(session=session, term_name="Third Term").first()
+                if next_term:
+                    next_term_start_date = next_term.start_date
+            elif term.term_name == "Third Term":
+                next_session = Session.objects.filter(id__gt=session.id).order_by("id").first()
+                if next_session:
+                    next_term = Term.objects.filter(session=next_session, term_name="First Term").first()
+                    if next_term:
+                        next_term_start_date = next_term.start_date
+
+            # Format the next term date if available
+            formatted_next_term_start_date = (
+                next_term_start_date.strftime("%B %d, %Y") if next_term_start_date else "Not Available"
+            )
+
+            # Fetch total days the school was open for the session and term
+            total_days_open = SchoolDaysOpen.objects.filter(
+                branch=branch, session=session, term=term
+            ).values_list('days_open', flat=True).first() or 0
+
+            # Fetch students in the selected classes and branch
+            students = Student.objects.filter(
+                student_class__id__in=class_ids,
+                branch=branch
+            ).select_related("user", "student_class")
+
+            # Fetch attendance, averages, and ratings
+            attendance_counts = StudentAttendance.objects.filter(
+                session=session, term=term, branch=branch, student__in=students
+            ).values("student").annotate(total_attendance=Sum("attendance_count"))
+
+            averages = StudentAverageResult.objects.filter(
+                session=session, term=term, branch=branch, student__in=students
+            ).select_related("student")
+
+            ratings = Rating.objects.filter(
+                session=session, term=term, branch=branch, student__in=students
+            ).select_related("student")
+
+            comments = Comment.objects.filter(
+                session=session, term=term, student__in=students
+            ).select_related("student", "author")
+
+            # Fetch results for the students
+            results = StudentFinalResult.objects.filter(
+                session=session,
+                term=term,
+                branch=branch,
+                student_class__id__in=class_ids
+            ).select_related("subject", "student").order_by("student__last_name", "subject__name")
+
+            # Group results by student
+            grouped_results = {}
+            for result in results:
+                # Skip subjects where both CA and exam scores are zero
+                if result.converted_ca == 0 and result.exam_score == 0:
+                    continue
+
+                if result.student_id not in grouped_results:
+                    attendance = next(
+                        (item["total_attendance"] for item in attendance_counts if item["student"] == result.student_id), 0
+                    )
+                    avg_result = next(
+                        (
+                            {
+                                "total_score_obtained": round(avg.total_score_obtained, 2),
+                                "average_percentage": round(avg.average_percentage, 2)
+                            }
+                            for avg in averages if avg.student_id == result.student_id
+                        ), {}
+                    )
+                    average_percentage = avg_result.get("average_percentage", 0)
+
+                    # Use `get_comment_by_percentage` for principal/headteacher comments
+                    principal_comment = get_comment_by_percentage(average_percentage)
+
+                    # Fetch profile picture
+                    profile_picture = (
+                        result.student.profile_picture.url
+                        if hasattr(result.student, "profile_picture") and result.student.profile_picture
+                        else result.student.user.profile_picture.url
+                        if hasattr(result.student.user, "profile_picture") and result.student.user.profile_picture
+                        else None
+                    )
+
+                    grouped_results[result.student_id] = {
+                        "first_name": result.student.first_name,
+                        "last_name": result.student.last_name,
+                        "profile_picture": profile_picture,
+                        "class": result.student.student_class.name,
+                        "attendance_count": attendance,
+                        "times_absent": max(0, total_days_open - attendance),  # Calculate times absent
+                        "total_days_school_opened": total_days_open,
+                        "subjects": [],
+                        "total_subjects": 0,
+                        "subjects_failed": 0,
+                        "subjects_passed": 0,
+                        "highest_score": None,
+                        "lowest_score": None,
+                        "average_score": None,
+                        "average": avg_result,
+                        "rating": next(
+                            (
+                                {
+                                    "psychomotor": {
+                                        "coordination": rating.coordination,
+                                        "handwriting": rating.handwriting,
+                                        "sports": rating.sports,
+                                        "artistry": rating.artistry,
+                                        "verbal_fluency": rating.verbal_fluency,
+                                        "games": rating.games,
+                                        "neatness": rating.neatness,
+                                    },
+                                    "behavioral": {
+                                        "punctuality": rating.punctuality,
+                                        "attentiveness": rating.attentiveness,
+                                        "obedience": rating.obedience,
+                                        "leadership": rating.leadership,
+                                        "emotional_stability": rating.emotional_stability,
+                                        "teamwork": rating.teamwork,
+                                        "neatness": rating.neatness,
+                                    }
+                                }
+                                for rating in ratings if rating.student_id == result.student_id
+                            ), {}
+                        ),
+                        "comments": [
+                            {
+                                "author": comment.author.get_full_name(),
+                                "text": comment.comment_text,
+                                "date": comment.created_at
+                            }
+                            for comment in comments if comment.student_id == result.student_id
+                        ],
+                        "max_obtainable_score": 100 * results.filter(student_id=result.student_id).count(),
+                        "obtained_score": round(
+                            results.filter(student_id=result.student_id).aggregate(Sum("total_score"))["total_score__sum"] or 0,
+                            2
+                        ),
+                        "principal_comment": principal_comment
+                    }
+
+                # Add subject details
+                grouped_results[result.student_id]["total_subjects"] += 1
+                grouped_results[result.student_id]["subjects"].append({
+                    "subject": result.subject.name,
+                    "converted_ca": result.converted_ca,
+                    "exam_score": result.exam_score,
+                    "total_score": result.total_score,
+                    "grade": result.grade,
+                    "remark": generate_remark(result.grade),  # Use the grading function here
+                    "highest_score": result.highest_score,  # From database
+                    "lowest_score": result.lowest_score,    # From database
+                    "average_score": round(result.average_score, 2) if result.average_score else None  # From database
+                })
+
+                # Increment subjects passed and failed
+                if result.grade == "F9":  # Assuming F9 is the failing grade
+                    grouped_results[result.student_id]["subjects_failed"] += 1
+                else:
+                    grouped_results[result.student_id]["subjects_passed"] += 1
+
+            # Sort students by highest percentage to lowest
+            sorted_students = sorted(
+                grouped_results.values(),
+                key=lambda x: x["average"]["average_percentage"],
+                reverse=True
+            )
+
+            # Prepare response data
+            response_data = {
+                "school_details": {
+                    "school_name": school_name,
+                    "school_type": school_type,
+                    "school_address": school_address,
+                    "school_email": school_email,
+                    "school_phone": school_phone,
+                    "logo": school.logo.url if school.logo else None,
+                    "term_label": term_label,
+                    "next_term_begins": formatted_next_term_start_date  # Include next term begins
+                },
+                "students": sorted_students
             }
 
             return JsonResponse(response_data, status=200)

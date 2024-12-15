@@ -19,8 +19,14 @@ urlpatterns = [
     path('<str:short_code>/get-classes/<int:branch_id>/', get_classes_by_branch, name='get_classes_by_branch'),
     path('<str:short_code>/get-subjects/<int:branch_id>/', get_subjects_by_branch, name='get_subjects_by_branch'),
     path('<str:short_code>/get-classes/<int:branch_id>/<int:subject_id>/', get_classes_by_subject, name='get_classes_by_subject'),
-    path("<short_code>/class-result-preview/", views.render_class_result_preview, name="class_result_preview"),    path("<short_code>/fetch-class-results/", views.fetch_class_results, name="fetch_class_results"),
+    path("<str:short_code>/class-result-preview/", views.render_class_result_preview, name="class_result_preview"),
+    path("<str:short_code>/fetch-class-results/", views.fetch_class_results, name="fetch_class_results"),
+
     # Fetch and save scores
     path('<str:short_code>/get-student-scores/', views.get_student_scores, name='get_student_scores'),
     path('<str:short_code>/save-student-scores/', views.save_student_scores, name='save_student_scores'),
+
+    # Fetch and display detailed student results
+    path('<str:short_code>/generate-result-filter/', views.render_generate_result_filter, name='generate_result_filter'),
+    path('<str:short_code>/fetch-students-result/', views.fetch_students_result, name='fetch_students_result'),
 ]
