@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 data.branches.forEach((branch) => {
                     const option = document.createElement("option");
                     option.value = branch.id;
-                    option.textContent = branch.branch_name;
+                    option.textContent = `${branch.branch_name} (${branch.branch_type})`;
                     branchSelect.appendChild(option);
                 });
             }

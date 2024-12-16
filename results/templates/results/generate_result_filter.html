@@ -47,19 +47,18 @@
                             </select>
                         </div>
                     </div>
-                </div>
-                <div class="row">
+                
                     <!-- Classes -->
-                    <div class="col-md-12">
+                    <div class="col-md-8">
                         <div class="form-group">
                             <label>Classes</label>
-                            <div id="classesContainer" class="d-flex flex-wrap">
+                            <div id="classesContainer" class="row">
                                 <!-- Dynamic checkboxes for classes -->
                             </div>
                         </div>
                     </div>
-                    
                 </div>
+                
                 <button type="button" id="filterButton" class="btn btn-primary mt-3">Filter</button>
             </form>
         </div>
@@ -146,26 +145,33 @@
         });
 
         // Fetch classes when branch changes
-        branchSelect.addEventListener("change", function () {
-            classesContainer.innerHTML = "";
+branchSelect.addEventListener("change", function () {
+    classesContainer.innerHTML = ""; // Clear previous content
 
-            if (branchSelect.value) {
-                fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.classes.forEach(cls => {
-                            const department = cls.department ? `(${cls.department})` : "";
-                            const checkbox = document.createElement("div");
-                            checkbox.classList.add("form-check", "mr-3");
-                            checkbox.innerHTML = `
-                                <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
-                                <label class="form-check-label" for="class-${cls.id}">${cls.name} ${department}</label>
-                            `;
-                            classesContainer.appendChild(checkbox);
-                        });
-                    });
-            }
-        });
+    if (branchSelect.value) {
+        fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
+            .then(response => response.json())
+            .then(data => {
+                data.classes.forEach(cls => {
+                    const department = cls.department ? `(${cls.department})` : "";
+
+                    // Create Bootstrap column for each class
+                    const col = document.createElement("div");
+                    col.classList.add("col-md-4", "mb-3"); // 3 items per row with spacing
+                    col.innerHTML = `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
+                            <label class="form-check-label" for="class-${cls.id}">
+                                ${cls.name} ${department}
+                            </label>
+                        </div>
+                    `;
+                    classesContainer.appendChild(col);
+                });
+            });
+    }
+});
+
 
         // Filter results
         filterButton.addEventListener("click", function () {

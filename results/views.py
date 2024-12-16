@@ -683,18 +683,29 @@ def fetch_class_results(request, short_code):
             print(f"Error occurred: {e}")
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
+
+from django.db.models import Value, CharField
 def render_generate_result_filter(request, short_code):
     """
     Render the result generation filter template.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user_roles = get_user_roles(request.user, school)
+    branches = [
+        {
+            "id": branch.id,
+            "branch_name": branch.branch_name,
+            "school_type": "Primary" if branch.primary_school else "Secondary"
+        }
+        for branch in Branch.objects.filter(school=school)
+    ]
+
 
     context = {
         'school': school,
         'sessions': Session.objects.filter(school=school),
         'terms': Term.objects.none(),  # Initially empty, dynamically loaded
-        'branches': Branch.objects.filter(school=school),
+        'branches': branches,
         **user_roles,
     }
     return render(request, "results/generate_result_filter.html", context)
