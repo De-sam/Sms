@@ -594,10 +594,6 @@ def get_comment_by_percentage(percentage):
     else:
         return random.choice(comments[0])
 
-# Example Usage
-percentage = 68
-comment = get_comment_by_percentage(percentage)
-print(f"Comment for {percentage}%: {comment}")
 
 
 

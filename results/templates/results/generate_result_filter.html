@@ -285,11 +285,12 @@
                                                         <th style="writing-mode: vertical-lr;">CA Score</th>
                                                         <th style="writing-mode: vertical-lr;">Exam Score</th>
                                                         <th style="writing-mode: vertical-lr;">Total Score</th>
+                                                        <th style="writing-mode: vertical-lr;">Grade</th>
+                                                        <th>Remarks</th>
                                                         <th style="writing-mode: vertical-lr;">Highest</th>
                                                         <th style="writing-mode: vertical-lr;">Average</th>
                                                         <th style="writing-mode: vertical-lr;">Lowest</th>
-                                                        <th style="writing-mode: vertical-lr;">Grade</th>
-                                                        <th>Remarks</th>
+                                                        
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -299,11 +300,12 @@
                                                             <td>${subject.converted_ca || "N/A"}</td>
                                                             <td>${subject.exam_score || "N/A"}</td>
                                                             <td>${subject.total_score || "N/A"}</td>
+                                                            <td>${subject.grade || "N/A"}</td>
+                                                            <td>${subject.remark || "N/A"}</td>
                                                             <td>${subject.highest_score || "N/A"}</td>
                                                             <td>${subject.average_score ? subject.average_score.toFixed(2) : "N/A"}</td>
                                                             <td>${subject.lowest_score || "N/A"}</td>
-                                                            <td>${subject.grade || "N/A"}</td>
-                                                            <td>${subject.remark || "N/A"}</td>
+                                                            
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
