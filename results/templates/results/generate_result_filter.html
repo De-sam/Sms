@@ -379,60 +379,69 @@
 </script>
 <style>
 @media print {
+    /* General settings */
     body {
-        transform: scale(0.9); /* Scale down the entire page to 90% */
-        transform-origin: top center; /* Ensure scaling is centered */
-        margin: 0; /* Remove extra margins for better fit */
+        margin: 0;
+        padding: 0;
     }
 
-    /* Cards */
+    @page {
+        size: auto; /* Let the browser determine the page size */
+        margin: 1cm; /* Set consistent margins for all pages */
+    }
+
+    /* Prevent splitting of individual cards */
     .card {
-        page-break-inside: avoid; /* Prevent breaking cards between pages */
-        margin-bottom: 1rem; /* Add space between cards */
+        page-break-inside: avoid; /* Prevent cards from breaking across pages */
+        margin-bottom: 0.5rem; /* Add space between cards */
+    }
+
+    /* Keep headers and content together */
+    .card-header, .card-body {
+        page-break-inside: avoid; /* Ensure headers and bodies stay together */
     }
 
     /* Force a new page before the school details card */
     .card.school-details-card {
-        page-break-before: always; /* Start a new page before this card */
+        page-break-before: always; /* Start on a new page */
     }
 
-    /* Force a new page after the school resumption date */
+    /* Force a new page after the resumption date */
     .next-term-section {
-        page-break-after: always; /* Start a new page after this section */
+        page-break-after: always; /* Start new page after this section */
+    }
+
+    /* Automatic scaling for oversized content */
+    .print-container {
+        transform: scale(0.80); /* Scale down to fit */
+        transform-origin: top center; /* Center scaling */
     }
 
     /* Tables */
     .table-bordered {
-        page-break-inside: avoid; /* Prevent tables from breaking between pages */
-        padding: 2px; /* Reduced padding for all table cells */
-        font-size: 10px; /* Reduce font size slightly for better fit */
-        text-align: center; /* Center-align all text within the table */
-        margin: 0 auto; /* Ensure the table is horizontally centered */
-        border-collapse: collapse; /* Ensures no extra spacing between cells */
-        width: auto; /* Prevents the table from spanning the full width of the screen */
+        page-break-inside: avoid; /* Prevent tables from breaking across pages */
+        font-size: 10px; /* Adjust font size for better readability */
+        text-align: center; /* Ensure table text is centered */
+        margin: 0 auto; /* Center tables */
+        border-collapse: collapse; /* Remove spacing between table cells */
     }
 
     .table-bordered td,
     .table-bordered th {
-        padding: 4px; /* Adjust top, bottom, left, and right padding */
+        padding: 4px; /* Adjust cell padding for compact tables */
     }
 
-    /* Headers */
-    .card-header {
-        text-align: center; /* Center-align text in the card header */
-        padding: 10px; /* Adjust padding for a balanced look */
-        page-break-inside: avoid; /* Prevent breaking inside headers */
-        display: flex;
-        align-items: center;
-        justify-content: space-between; /* Ensure alignment and spacing */
-        gap: 5px; /* Adds uniform spacing between all items */
+    /* Hide buttons and form controls when printing */
+    .btn, #filterForm {
+        display: none !important;
     }
 
     /* Images */
     img {
-        max-width: 100%; /* Ensure images fit within their containers */
-        height: auto; /* Maintain aspect ratio */
+        max-width: 100%;
+        height: auto;
     }
+
 
     .card-header img.logo {
         margin-right: 10px; /* Reduce spacing between the logo and the middle details */
