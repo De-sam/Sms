@@ -68,6 +68,16 @@
     <div id="resultsContainer" class="mt-4">
         <!-- Dynamic cards will be appended here -->
     </div>
+
+    <!-- Loader Spinner -->
+<div id="loader" class="d-none text-center mt-3">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="sr-only">Loading...</span>
+    </div>
+    <p class="mt-2 text-primary">Please wait, loading...</p>
+</div>
+
+
     <!-- Print Button -->
 <div class="text-center mt-3">
     <button id="printButton" class="btn btn-primary">
@@ -187,6 +197,11 @@ branchSelect.addEventListener("change", function () {
                 return;
             }
 
+            // Show the loader
+            document.getElementById("loader").classList.remove("d-none");
+            resultsContainer.innerHTML = ""; // Clear previous results
+
+            
             fetch(`/results/${shortCode}/fetch-students-result/`, {
                 method: "POST",
                 headers: {
@@ -379,9 +394,12 @@ branchSelect.addEventListener("change", function () {
                         resultsContainer.innerHTML += studentCard;
                     });
                 })
-                .catch(error => console.error("Error:", error));
-                console.log(response.school_details.next_term_begins);
-
+                .catch(error => console.error("Error:", error))
+                .finally(() => {
+            // Hide the loader after fetch completes
+            document.getElementById("loader").classList.add("d-none");
+             });
+                
         });
     });
 </script>
@@ -547,6 +565,17 @@ branchSelect.addEventListener("change", function () {
     margin-left: 10px; /* Reduce spacing between the profile picture and the middle details */
 }
 
+#loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
 
 </style>
 {% endblock %}
