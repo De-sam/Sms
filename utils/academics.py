@@ -60,34 +60,20 @@ def get_branches(request, short_code):
 
 # Fetch classes by branch for a given school
 def get_classes_by_branch(request, short_code, branch_id):
-    """
-    Fetch classes for a given branch, filtered based on user role.
-    """
     # Fetch the branch ensuring it belongs to the correct school
     branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
     user = request.user
 
-    # Check if the user is a teacher
+    # Check if the user is an admin or teacher
     if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
+        # If the user is a teacher, only show the classes assigned to them within this branch
         teacher = user.staff
+        teacher_assignments = TeacherClassAssignment.objects.filter(teacher=teacher, branch=branch)
 
-        # Fetch classes directly assigned to the teacher in the branch
-        teacher_class_assignments = TeacherClassAssignment.objects.filter(
-            teacher=teacher, branch=branch
-        ).values_list('class_id', flat=True)
-
-        # Fetch classes assigned to the teacher through subjects in the branch
-        teacher_subject_class_assignments = TeacherSubjectClassAssignment.objects.filter(
-            teacher=teacher, branch=branch
-        ).values_list('class_id', flat=True)
-
-        # Combine the class assignments and ensure no duplicates
-        class_ids = set(teacher_class_assignments) | set(teacher_subject_class_assignments)
-
-        # Filter only the assigned classes for the teacher in this branch
-        classes = Class.objects.filter(id__in=class_ids).select_related('department').distinct()
+        # Get the classes assigned to this teacher for the branch
+        classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).select_related('department').distinct()
     else:
-        # Admins or other roles: Fetch all classes in the branch
+        # If the user is an admin or otherwise authorized, fetch all classes in the branch
         classes = Class.objects.filter(branches=branch).select_related('department').distinct()
 
     # Prepare the data to send as JSON response
@@ -101,7 +87,6 @@ def get_classes_by_branch(request, short_code, branch_id):
     ]
 
     return JsonResponse({'classes': classes_data})
-
 
 # Fetch subjects by branch
 def get_subjects_by_branch(request, short_code, branch_id):
