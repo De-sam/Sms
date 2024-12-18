@@ -34,7 +34,7 @@ from results.models import  StudentFinalResult,StudentAverageResult
 from ratings.models import Rating
 from attendance.models import StudentAttendance,SchoolDaysOpen
 from comments.models import Comment
-
+from .models import PublishedResult
 
 
 
@@ -960,3 +960,78 @@ def fetch_students_result(request, short_code):
         except Exception as e:
             print(f"Error occurred: {e}")
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
+
+
+
+@login_required_with_short_code
+@admin_required
+@transaction.atomic
+def publish_results(request, short_code):
+    """
+    Publish results for a specific session, term, branch, and class(es).
+    """
+    if request.method == "POST":
+        data = json.loads(request.body)  # Parse JSON payload
+
+        session_id = data.get("session")
+        term_id = data.get("term")
+        branch_id = data.get("branch")
+        class_ids = data.get("classes", [])  # List of classes
+
+        if not all([session_id, term_id, branch_id]) or not class_ids:
+            return JsonResponse({'success': False, 'error': 'Missing required data.'}, status=400)
+
+        # Fetch the required objects
+        session = get_object_or_404(Session, id=session_id)
+        term = get_object_or_404(Term, id=term_id)
+        branch = get_object_or_404(Branch, id=branch_id)
+
+        # Loop through each class_id to publish results
+        for class_id in class_ids:
+            cls = get_object_or_404(Class, id=class_id)
+
+            # Update or create the published record
+            published_result, created = PublishedResult.objects.get_or_create(
+                session=session, term=term, branch=branch, cls=cls
+            )
+
+            if not published_result.is_published:
+                published_result.is_published = True
+                published_result.save()
+
+        return JsonResponse({'success': True, 'message': 'Results published successfully!'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+
+def list_published_results(request, short_code):
+    """
+    Display a paginated table of published results for the admin.
+    Includes branch type and department if available.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    user_roles = get_user_roles(request.user, school)
+
+    # Fetch all published results related to the school
+    published_results = PublishedResult.objects.filter(
+        branch__school=school
+    ).select_related('session', 'term', 'branch', 'cls').order_by('-published_at')
+
+    # Annotate branch type dynamically
+    for result in published_results:
+        result.branch_type = "Primary" if result.branch.primary_school else "Secondary"
+        result.department = getattr(result.cls, "department", "N/A")  # If no department, set to 'N/A'
+
+    # Pagination setup (10 records per page)
+    paginator = Paginator(published_results, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'school': school,
+        'published_results': page_obj,  # Paginated results
+        **user_roles,
+    }
+    return render(request, 'results/list_published_results.html', context)

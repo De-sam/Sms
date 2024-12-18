@@ -1,0 +1,79 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div class="card card-outline card-primary">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title"><i class="fas fa-list"></i> Published Results</h3>
+    </div>
+    <div class="card-body">
+        <!-- Responsive Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Session</th>
+                        <th>Term</th>
+                        <th>Branch</th>
+                        <th>Branch Type</th>
+                        <th>Class</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in published_results %}
+                    <tr>
+                        <td>{{ result.session.session_name }}</td>
+                        <td>{{ result.term.term_name }}</td>
+                        <td>{{ result.branch.branch_name }}</td>
+                        <td>{{ result.branch_type }}</td>
+                        <td>{{ result.cls.name }}</td>
+                        <td>{{ result.department }}</td>
+                        <td>
+                            {% if result.is_published %}
+                            <span class="badge badge-success">Published</span>
+                            {% else %}
+                            <span class="badge badge-warning">Unpublished</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ result.published_at|date:"F j, Y, g:i a" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-danger">No published results available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if published_results.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ published_results.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ published_results.number }} of {{ published_results.paginator.num_pages }}</span>
+                </li>
+
+                {% if published_results.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ published_results.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ published_results.paginator.num_pages }}">Last &raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

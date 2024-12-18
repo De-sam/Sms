@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 
-                <button type="button" id="filterButton" class="btn btn-primary mt-3">Filter</button>
+                <button type="button" id="filterButton" class="btn btn-primary mt-3">Generate Results</button>
             </form>
         </div>
     </div>
@@ -74,144 +74,126 @@
     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
         <span class="sr-only">Loading...</span>
     </div>
-    <p class="mt-2 text-primary">Please wait, loading...</p>
+    <p class="mt-2 text-primary">Fetching results. Please wait...</p>
 </div>
 
 
-    <!-- Print Button -->
-<div class="text-center mt-3">
+ <!-- Buttons for Print and Publish -->
+<div id="actionButtons" class="text-center mt-3 d-none">
+    <button id="publishButton" class="btn btn-success mr-2">
+        <i class="fas fa-upload"></i> Publish Results
+    </button>
     <button id="printButton" class="btn btn-primary">
         <i class="fas fa-print"></i> Print Results
     </button>
 </div>
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Print functionality
-        document.getElementById("printButton").addEventListener("click", function () {
-            const printContent = document.getElementById("resultsContainer").innerHTML;
-            const originalContent = document.body.innerHTML;
 
-            // Temporarily replace body content with the print content
-            document.body.innerHTML = `
-                <div style="margin: 20px; font-family: Arial, sans-serif;">
-                    ${printContent}
-                </div>
-            `;
-
-            // Trigger print dialog
-            window.print();
-
-            // Restore the original content after printing
-            document.body.innerHTML = originalContent;
-
-            // Reload JavaScript to restore functionality
-            location.reload();
-        });
-    });
-</script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const shortCode = "{{ school.short_code }}";
+document.addEventListener("DOMContentLoaded", function () {
+    const shortCode = "{{ school.short_code }}";
 
-        const sessionSelect = document.getElementById("session");
-        const termSelect = document.getElementById("term");
-        const branchSelect = document.getElementById("branch");
-        const classesContainer = document.getElementById("classesContainer");
-        const filterButton = document.getElementById("filterButton");
-        const resultsContainer = document.getElementById("resultsContainer");
+    const sessionSelect = document.getElementById("session");
+    const termSelect = document.getElementById("term");
+    const branchSelect = document.getElementById("branch");
+    const classesContainer = document.getElementById("classesContainer");
+    const filterButton = document.getElementById("filterButton");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const loader = document.getElementById("loader");
+    const printButton = document.getElementById("printButton");
+    const publishButton = document.getElementById("publishButton");
+    const actionButtons = document.getElementById("actionButtons");
 
-        // Fetch terms when session changes
-        sessionSelect.addEventListener("change", function () {
-            termSelect.disabled = true;
-            branchSelect.disabled = true;
-            classesContainer.innerHTML = "";
+    // Fetch terms when session changes
+    sessionSelect.addEventListener("change", function () {
+        termSelect.disabled = true;
+        branchSelect.disabled = true;
+        classesContainer.innerHTML = "";
 
-            if (sessionSelect.value) {
-                fetch(`/results/${shortCode}/get-terms/${sessionSelect.value}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        termSelect.disabled = false;
-                        termSelect.innerHTML = '<option value="">Select Term</option>';
-                        data.terms.forEach(term => {
-                            const option = document.createElement("option");
-                            option.value = term.id;
-                            option.textContent = term.term_name;
-                            termSelect.appendChild(option);
-                        });
-                    });
-            }
-        });
-
-        // Fetch branches when term changes
-        termSelect.addEventListener("change", function () {
-            branchSelect.disabled = true;
-            classesContainer.innerHTML = "";
-
-            if (termSelect.value) {
-                branchSelect.disabled = false;
-            }
-        });
-
-        // Fetch classes when branch changes
-branchSelect.addEventListener("change", function () {
-    classesContainer.innerHTML = ""; // Clear previous content
-
-    if (branchSelect.value) {
-        fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
-            .then(response => response.json())
-            .then(data => {
-                data.classes.forEach(cls => {
-                    const department = cls.department ? `(${cls.department})` : "";
-
-                    // Create Bootstrap column for each class
-                    const col = document.createElement("div");
-                    col.classList.add("col-md-4", "mb-3"); // 3 items per row with spacing
-                    col.innerHTML = `
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
-                            <label class="form-check-label" for="class-${cls.id}">
-                                ${cls.name} ${department}
-                            </label>
-                        </div>
-                    `;
-                    classesContainer.appendChild(col);
-                });
-            });
-    }
-});
-
-
-        // Filter results
-        filterButton.addEventListener("click", function () {
-            const session = sessionSelect.value;
-            const term = termSelect.value;
-            const branch = branchSelect.value;
-            const classes = Array.from(
-                document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
-            ).map(input => input.value);
-
-            if (!session || !term || !branch || classes.length === 0) {
-                alert("Please fill in all fields.");
-                return;
-            }
-
-            // Show the loader
-            document.getElementById("loader").classList.remove("d-none");
-            resultsContainer.innerHTML = ""; // Clear previous results
-
-            
-            fetch(`/results/${shortCode}/fetch-students-result/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({ session, term, branch, classes })
-            })
+        if (sessionSelect.value) {
+            fetch(`/results/${shortCode}/get-terms/${sessionSelect.value}/`)
                 .then(response => response.json())
                 .then(data => {
+                    termSelect.disabled = false;
+                    termSelect.innerHTML = '<option value="">Select Term</option>';
+                    data.terms.forEach(term => {
+                        const option = document.createElement("option");
+                        option.value = term.id;
+                        option.textContent = term.term_name;
+                        termSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+
+    // Fetch branches when term changes
+    termSelect.addEventListener("change", function () {
+        branchSelect.disabled = true;
+        classesContainer.innerHTML = "";
+
+        if (termSelect.value) {
+            branchSelect.disabled = false;
+        }
+    });
+
+    // Fetch classes when branch changes
+    branchSelect.addEventListener("change", function () {
+        classesContainer.innerHTML = "";
+
+        if (branchSelect.value) {
+            fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
+                .then(response => response.json())
+                .then(data => {
+                    data.classes.forEach(cls => {
+                        const department = cls.department ? `(${cls.department})` : "";
+                        const col = document.createElement("div");
+                        col.classList.add("col-md-4", "mb-3");
+                        col.innerHTML = `
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
+                                <label class="form-check-label" for="class-${cls.id}">
+                                     ${cls.name}${department}
+                                </label>
+                            </div>
+                        `;
+                        classesContainer.appendChild(col);
+                    });
+                });
+        }
+    });
+
+    // Filter results
+    filterButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(
+            document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
+        ).map(input => input.value);
+
+        if (!session || !term || !branch || classes.length === 0) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        loader.classList.remove("d-none");
+        resultsContainer.innerHTML = "";
+        actionButtons.classList.add("d-none");
+
+        fetch(`/results/${shortCode}/fetch-students-result/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ session, term, branch, classes })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.students.length === 0) {
+                    resultsContainer.innerHTML = "<p class='text-center text-danger'>No results found!</p>";
+                } else {
                     resultsContainer.innerHTML = "";
 
                     data.students.forEach(student => {
@@ -393,15 +375,59 @@ branchSelect.addEventListener("change", function () {
                         `;
                         resultsContainer.innerHTML += studentCard;
                     });
-                })
-                .catch(error => console.error("Error:", error))
-                .finally(() => {
-            // Hide the loader after fetch completes
-            document.getElementById("loader").classList.add("d-none");
-             });
-                
-        });
+                    actionButtons.classList.remove("d-none"); // Show action buttons
+                }
+            })
+            .catch(error => console.error("Error:", error))
+            .finally(() => loader.classList.add("d-none"));
     });
+
+    // Publish results
+    publishButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(
+            document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
+        ).map(input => input.value);
+
+        fetch(`/results/${shortCode}/publish-result/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ session, term, branch, classes })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Results published successfully!");
+                    publishButton.disabled = true;
+                    publishButton.textContent = "Published";
+                } else {
+                    alert("Failed to publish results.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    });
+
+    // Print functionality
+    printButton.addEventListener("click", function () {
+        const printContent = resultsContainer.innerHTML;
+        const originalContent = document.body.innerHTML;
+
+        document.body.innerHTML = `
+            <div style="margin: 20px; font-family: Arial, sans-serif;">
+                ${printContent}
+            </div>
+        `;
+        window.print();
+        document.body.innerHTML = originalContent;
+        location.reload();
+    });
+});
+
 </script>
 <style>
 @media print {

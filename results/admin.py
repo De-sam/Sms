@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import ResultStructure, ResultComponent, StudentResult,StudentFinalResult,StudentAverageResult
+from .models import PublishedResult
 
 class ResultComponentInline(admin.TabularInline):
     model = ResultComponent
@@ -125,3 +126,17 @@ class StudentAverageResultAdmin(admin.ModelAdmin):
     list_filter = ("session", "term", "branch")
     ordering = ("-created_at",)
 
+
+
+@admin.register(PublishedResult)
+class PublishedResultAdmin(admin.ModelAdmin):
+    list_display = ('session', 'term', 'branch', 'cls', 'is_published', 'published_at')
+    list_filter = ('session', 'term', 'branch', 'cls', 'is_published')
+    search_fields = ('session__session_name', 'term__term_name', 'branch__branch_name', 'cls__name')
+    readonly_fields = ('published_at',)
+    list_editable = ('is_published',)
+
+    def published_at(self, obj):
+        """Optional: Display human-readable datetime if needed."""
+        return obj.updated_at.strftime('%Y-%m-%d %H:%M') if obj.updated_at else "Not Published"
+    published_at.short_description = "Published At"

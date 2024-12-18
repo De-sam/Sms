@@ -21,6 +21,8 @@ urlpatterns = [
     path('<str:short_code>/get-classes/<int:branch_id>/<int:subject_id>/', get_classes_by_subject, name='get_classes_by_subject'),
     path("<str:short_code>/class-result-preview/", views.render_class_result_preview, name="class_result_preview"),
     path("<str:short_code>/fetch-class-results/", views.fetch_class_results, name="fetch_class_results"),
+    path('<str:short_code>/publish-result/', views.publish_results, name='publish_results'),
+    path('<str:short_code>/list-published-results', views.list_published_results, name='list_published_results'),
 
     # Fetch and save scores
     path('<str:short_code>/get-student-scores/', views.get_student_scores, name='get_student_scores'),

@@ -210,3 +210,19 @@ class StudentAverageResult(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.session.session_name} ({self.term.term_name})"
+
+
+class PublishedResult(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    cls = models.ForeignKey(Class, on_delete=models.CASCADE)  # The class for which results are published
+    is_published = models.BooleanField(default=False)
+    published_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('session', 'term', 'branch', 'cls')  # Ensure no duplicate entries for the same class
+
+    def __str__(self):
+        return f"{self.cls} - {self.session} {self.term} (Published: {self.is_published})"
