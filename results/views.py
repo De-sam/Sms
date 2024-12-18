@@ -849,7 +849,7 @@ def fetch_students_result(request, short_code):
                     session=session, 
                     term=term,
                     branch=branch,
-                    student__in=students
+                    student=result.student
                     ).select_related("student").first()  
 
 
@@ -858,7 +858,7 @@ def fetch_students_result(request, short_code):
                     session=session, 
                     term=term, 
                     branch=branch, 
-                    student__in=students
+                    student=result.student
                     ).select_related("student").first()  
 
 
