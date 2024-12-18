@@ -433,16 +433,21 @@ def update_student_averages(session, term, branch, student_class):
     ).distinct()
 
     for student in students:
+    # Filter results to include only those with valid scores
         student_results = StudentFinalResult.objects.filter(
             student=student,
             session=session,
             term=term,
             branch=branch,
             student_class=student_class,
+            converted_ca__gt=0,  # Ensure test scores are valid
+            exam_score__gt=0  # Ensure exam scores are valid
         )
 
-        # Calculate total scores
+        # Aggregate total scores
         total_score_obtained = student_results.aggregate(total_obtained=Sum("total_score"))["total_obtained"] or 0
+
+        # Count the number of subjects with valid scores
         total_subjects = student_results.count()
         total_score_maximum = total_subjects * 100  # Assuming max score per subject is 100
 
@@ -821,17 +826,14 @@ def fetch_students_result(request, short_code):
                     attendance = next(
                         (item["total_attendance"] for item in attendance_counts if item["student"] == result.student_id), 0
                     )
-                    avg_result = next(
-                        (
-                            {
-                                "total_score_obtained": round(avg.total_score_obtained, 2),
-                                "average_percentage": round(avg.average_percentage, 2)
-                            }
-                            for avg in averages if avg.student_id == result.student_id
-                        ), {}
-                    )
-                    average_percentage = avg_result.get("average_percentage", 0)
+                    avg_result = averages.filter(student_id=result.student_id).first()
 
+                    average_percentage = (
+                        round(avg_result.average_percentage, 2)
+                        if avg_result and avg_result.average_percentage is not None
+                        else 0
+                    )
+                    
                     # Use `get_comment_by_percentage` for principal/headteacher comments
                     principal_comment = get_comment_by_percentage(average_percentage)
 
@@ -877,7 +879,11 @@ def fetch_students_result(request, short_code):
                         "highest_score": None,
                         "lowest_score": None,
                         "average_score": None,
-                        "average": avg_result,
+                        "average": {
+                            "total_score_obtained": avg_result.total_score_obtained if avg_result else 0,
+                            "total_score_maximum": avg_result.total_score_maximum if avg_result else 0,
+                            "average_percentage": average_percentage,
+                        },
                         "rating": {
                             "psychomotor": {
                                 "coordination": psychomotor_rating.coordination if psychomotor_rating else "N/A",

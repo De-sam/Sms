@@ -176,31 +176,32 @@ class StudentAverageResult(models.Model):
     def calculate_average(self):
         """
         Calculate the average percentage and update the field,
-        excluding subjects with zero scores.
+        excluding subjects with invalid scores.
         """
         from results.models import StudentFinalResult  # Import here to avoid circular dependencies
 
-        # Fetch all results for the student with non-zero scores
+        # Fetch results with valid scores
         student_results = StudentFinalResult.objects.filter(
             student=self.student,
             session=self.session,
             term=self.term,
             branch=self.branch,
-            total_score__gt=0  # Exclude results with zero scores
+            converted_ca__gt=0,  # Ensure test scores are valid
+            exam_score__gt=0  # Ensure exam scores are valid
         )
 
         # Aggregate total scores
-        total_score_obtained = student_results.aggregate(Sum('total_score'))['total_score__sum'] or 0
+        total_score_obtained = student_results.aggregate(Sum("total_score"))["total_score__sum"] or 0
 
-        # Count the number of subjects with non-zero scores
+        # Count valid subjects
         total_subjects = student_results.count()
         total_score_maximum = total_subjects * 100  # Assuming max score per subject is 100
 
-        # Update the instance fields
+        # Update instance fields
         self.total_score_obtained = total_score_obtained
         self.total_score_maximum = total_score_maximum
 
-        # Calculate the average percentage
+        # Calculate average percentage
         if total_score_maximum > 0:
             self.average_percentage = (total_score_obtained / total_score_maximum) * 100
         else:
