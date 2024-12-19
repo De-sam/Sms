@@ -201,12 +201,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
                         const studentCard = `
-                            <div class="card mb-1 school-details-card" style="max-width: 80%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <div class="card mb-0 school-details-card" style="max-width: 80%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                     <!-- School Details -->
                                     <div class="card-header d-flex align-items-center justify-content-between border rounded bg-light">
                                         <div class="d-flex align-items-center justify-content-center w-100">
                                             <!-- School Logo -->
-                                            <img src="${schoolLogo}" alt="School Logo" class="img-fluid" style="width: 50px; height: 50px; margin-right: 5px;">
+                                            <img src="${schoolLogo}" alt="School Logo" class="img-fluid" style="width: 70px; height: 70px; margin-right: 5px;">
                                             <!-- Middle Details -->
                                             <div style="text-align: center; flex-grow: 1; margin: 0 10px;">
                                                 <h5 class="mb-0">${data.school_details.school_name}</h5>
@@ -219,12 +219,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                                         <strong>Phone:</strong> ${data.school_details.school_phone || "N/A"}
                                                     </span>
                                                 </div>
-                                                <p class="text-primary mt-2">
+                                                <p class="text-primary mt-1">
                                                     <strong>${data.school_details.term_label || "N/A"}</strong>
                                                 </p>
                                             </div>
                                             <!-- Profile Picture -->
-                                            <img src="${profileImage}" alt="Student Profile" class="img-fluid rounded-circle" style="width: 50px; height: 50px; margin-left: 5px;">
+                                            <img src="${profileImage}" alt="Student Profile" class="img-fluid rounded-circle" style="width: 70px; height: 70px; margin-left: 5px;">
                                         </div>
                                     </div>
                                 </div>
@@ -254,12 +254,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                         </span>
                                     </div>
 
-                                    <div class="mt-1">
+                                    <div class="mt-0">
                                         <span class="badge badge-primary">Subjects Done: ${student.total_subjects}</span>
                                         <span class="badge badge-success">Subjects Passed: ${student.subjects_passed}</span>
                                         <span class="badge badge-danger">Subjects Failed: ${student.subjects_failed}</span>
                                     </div>
-                                   <div class="mt-1">
+                                   <div class="mt-0">
                                          <span class="badge badge-info">
                                             &nbsp;&nbsp;&nbsp; School Opened: ${student.total_days_school_opened || "N/A"} Days &nbsp;&nbsp;&nbsp;
                                             Present: ${student.attendance_count || "N/A"} Days  &nbsp;&nbsp;&nbsp; 
@@ -268,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                     </div>
 
                                     <!-- Subject Scores -->
-                                   <div class="card mt-1 mx-auto" style="max-width: 80%; width: auto;">
+                                   <div class="card mt-0 mx-auto" style="max-width: 80%; width: auto;">
                                         <div class="card-header bg-secondary text-white">
                                             <div class="score-details d-flex justify-content-center align-items-center text-center">
                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     @page {
         size: auto; /* Let the browser determine the page size */
-        margin: 1cm; /* Set consistent margins for all pages */
+        margin: 0.5cm; /* Set consistent margins for all pages */
     }
 
     /* Prevent splitting of individual cards */
@@ -508,7 +508,7 @@ document.addEventListener("DOMContentLoaded", function () {
         display: flex; /* Flexbox for alignment */
         justify-content: center; /* Horizontally center items */
         align-items: center; /* Vertically center items */
-        gap: 1.5rem; /* Space between elements */
+        gap: 0.5rem; /* Space between elements */
         text-align: center; /* Center align text */
         font-size: 12px; /* Adjust font size for clarity */
         margin: 0; /* Remove unnecessary margins */

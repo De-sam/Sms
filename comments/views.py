@@ -132,12 +132,14 @@ def save_comments(request, short_code):
 
                 # Create or update the comment
                 Comment.objects.update_or_create(
-                    student=student,
-                    session=session,
-                    term=term,
-                    author=request.user,
-                    defaults={'comment_text': comment_text}
-                )
+                student=student,
+                session=session,
+                term=term,
+                defaults={
+                    'comment_text': comment_text,
+                    'author': request.user
+                }
+            )
 
             return JsonResponse({"success": True, "message": "Comments saved successfully."})
 
