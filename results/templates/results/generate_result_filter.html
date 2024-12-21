@@ -462,6 +462,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (publishButton) {
         publishButton.addEventListener("click", function () {
             // Ensure the session variable is defined
+            const shortCode = "{{ school.short_code }}";
             const session = sessionSelect ? sessionSelect.value : null;
             const term = termSelect ? termSelect.value : null;
             const branch = branchSelect ? branchSelect.value : null;
