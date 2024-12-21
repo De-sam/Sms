@@ -632,9 +632,21 @@ def fetch_class_results(request, short_code):
             branch_id = data.get("branch")
             class_ids = data.get("classes", [])
 
+            # Check if the user is a student
+            is_student = hasattr(request.user, 'student_profile')
+
+            if is_student:
+                # Get the logged-in student's profile
+                student = request.user.student_profile
+
+                # Override branch and class filters for the student
+                branch_id = student.branch.id
+                class_ids = [student.student_class.id]
+
             # Validate required parameters
             if not (session_id and term_id and branch_id and class_ids):
                 return JsonResponse({"error": "Missing required filters."}, status=400)
+
 
             # Fetch related objects
             session = Session.objects.get(id=session_id)
@@ -689,13 +701,23 @@ def fetch_class_results(request, short_code):
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
 
-from django.db.models import Value, CharField
 def render_generate_result_filter(request, short_code):
     """
     Render the result generation filter template.
+    For admins, branch and class fields are editable.
+    For students, branch and class fields are read-only.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user_roles = get_user_roles(request.user, school)
+
+    # Determine if the user is a student
+    student_branch = None
+    student_class = None
+    if hasattr(request.user, 'student_profile'):
+        student_branch = request.user.student_profile.branch
+        student_class = request.user.student_profile.student_class
+
+    # Prepare branches and classes for admins
     branches = [
         {
             "id": branch.id,
@@ -705,14 +727,21 @@ def render_generate_result_filter(request, short_code):
         for branch in Branch.objects.filter(school=school)
     ]
 
+    classes = Class.objects.filter(branches__school=school)
 
     context = {
         'school': school,
         'sessions': Session.objects.filter(school=school),
         'terms': Term.objects.none(),  # Initially empty, dynamically loaded
-        'branches': branches,
-        **user_roles,
+        'branches': branches,  # For admins
+        'classes': classes,  # For admins
+        'student_branch': student_branch,  # Pre-fill for students
+        'student_class': student_class,  # Pre-fill for students
+        'is_school_admin': 'is_school_admin' in user_roles,
+        'is_student': 'is_student' in user_roles,
+        **user_roles,  # Include additional roles for flexibility
     }
+
     return render(request, "results/generate_result_filter.html", context)
 
 
@@ -732,10 +761,40 @@ def fetch_students_result(request, short_code):
             term_id = data.get("term")
             branch_id = data.get("branch")
             class_ids = data.get("classes", [])
+            school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+            # Check if the user is a student or an admin
+            is_student = hasattr(request.user, 'student_profile')
+            is_admin = request.user == school.admin_user
+
+            if is_student:
+                # Get the logged-in student's profile
+                student = request.user.student_profile
+
+                # Override branch and class filters for the student
+                branch_id = student.branch.id
+                class_ids = [student.student_class.id]
 
             # Validate required parameters
             if not (session_id and term_id and branch_id and class_ids):
                 return JsonResponse({"error": "Missing required filters."}, status=400)
+
+            # Check if results are published (Skip check for admins)
+            if not is_admin:
+                published = PublishedResult.objects.filter(
+                    session_id=session_id,
+                    term_id=term_id,
+                    branch_id=branch_id,
+                    cls_id__in=class_ids,  # Ensure class filtering
+                    is_published=True
+                ).exists()
+
+                if not published:
+                    return JsonResponse(
+                        {"error": "Results are not yet published for the selected term."},
+                        status=403
+                    )
+
 
             # Fetch related objects
             session = get_object_or_404(Session, id=session_id)
@@ -794,6 +853,17 @@ def fetch_students_result(request, short_code):
                 branch=branch
             ).select_related("user", "student_class")
 
+            # If the user is a student, filter down to only their results
+            if is_student:
+                students = students.filter(user=request.user)
+                print(f"Filtered students for {request.user}: {students}")
+            else:
+                students = Student.objects.filter(
+                     student_class__id__in=class_ids,
+                         branch=branch
+                 )
+                print(f"Admin fetching results: {students}")
+
             # Fetch attendance, averages, and ratings
             attendance_counts = StudentAttendance.objects.filter(
                 session=session, term=term, branch=branch, student__in=students
@@ -812,7 +882,8 @@ def fetch_students_result(request, short_code):
                 session=session,
                 term=term,
                 branch=branch,
-                student_class__id__in=class_ids
+                student_class__id__in=class_ids,
+                student__in=students
             ).select_related("subject", "student").order_by("student__last_name", "subject__name")
 
             # Group results by student
@@ -836,6 +907,7 @@ def fetch_students_result(request, short_code):
                     
                     # Use `get_comment_by_percentage` for principal/headteacher comments
                     principal_comment = get_comment_by_percentage(average_percentage)
+
 
                     # Fetch profile picture
                     profile_picture = (
@@ -967,6 +1039,31 @@ def fetch_students_result(request, short_code):
             print(f"Error occurred: {e}")
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
+
+
+@csrf_exempt
+def fetch_results_wrapper(request, short_code):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            
+            # Log incoming data for debugging
+            print(f"Incoming data: {data}")
+
+            # Check user type
+            is_student = hasattr(request.user, 'student_profile')
+            if is_student:
+                student = request.user.student_profile
+                data["branch"] = student.branch.id
+                data["classes"] = [student.student_class.id]
+                print(f"Modified data for student: {data}")
+
+            # Serialize back to request body
+            request._body = json.dumps(data)
+            return fetch_students_result(request, short_code)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
 

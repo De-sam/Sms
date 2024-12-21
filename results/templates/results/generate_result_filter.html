@@ -36,29 +36,53 @@
                     </div>
 
                     <!-- Branch -->
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="branch">Branch</label>
-                            <select id="branch" name="branch" class="form-control" disabled>
-                                <option value="">Select Branch</option>
-                                {% for branch in branches %}
-                                <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                
-                    <!-- Classes -->
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <label>Classes</label>
-                            <div id="classesContainer" class="row">
-                                <!-- Dynamic checkboxes for classes -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="branch">Branch</label>
+                                <label for="branch">Branch</label>
+                                    {% if is_school_admin %}
+                                    <!-- Editable dropdown for admins -->
+                                    <select id="branch" name="branch" class="form-control">
+                                        <option value="">Select Branch</option>
+                                        {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% elif is_student %}
+                                    <!-- Read-only field for students -->
+                                    <div>
+                                        <input type="text" id="branch-name" class="form-control" value="{{ student_branch.branch_name }}" readonly>
+                                        <input type="hidden"  id="branch" name="branch" value="{{ student_branch.id }}"> <!-- Correct branch ID -->
+                                    </div>
+                                    {% endif %}
+
                             </div>
                         </div>
-                    </div>
-                </div>
-                
+
+                        <!-- Classes -->
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Classes</label>
+                                <div id="classesContainer" class="row">
+                                    {% if is_school_admin %}
+                                    <!-- Dynamic class loading handled by JavaScript for admins -->
+                                    <!-- Classes will be dynamically populated in this container -->
+                                    <p class="text-muted">Select a branch to load available classes.</p>
+                                    {% elif is_student %}
+                                    <!-- Read-only field for students -->
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ student_class.id }}" id="class-{{ student_class.id }}" checked disabled>
+                                            <label class="form-check-label" for="class-{{ student_class.id }}">
+                                                {{ student_class.name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+          
                 <button type="button" id="filterButton" class="btn btn-primary mt-3">Generate Results</button>
             </form>
         </div>
@@ -80,9 +104,11 @@
 
  <!-- Buttons for Print and Publish -->
 <div id="actionButtons" class="text-center mt-3 d-none">
+    {% if is_school_admin %}
     <button id="publishButton" class="btn btn-success mr-2">
         <i class="fas fa-upload"></i> Publish Results
     </button>
+    {% endif %}
     <button id="printButton" class="btn btn-primary">
         <i class="fas fa-print"></i> Print Results
     </button>
@@ -93,6 +119,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const shortCode = "{{ school.short_code }}";
+    const isStudent = {{ is_student|yesno:"true,false" }}; // Dynamically set from the backend
 
     const sessionSelect = document.getElementById("session");
     const termSelect = document.getElementById("term");
@@ -108,8 +135,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fetch terms when session changes
     sessionSelect.addEventListener("change", function () {
         termSelect.disabled = true;
-        branchSelect.disabled = true;
-        classesContainer.innerHTML = "";
+        if (!isStudent) {
+            branchSelect.disabled = true; // Disable branch only for admins
+            classesContainer.innerHTML = ""; // Clear classes for admins
+        }
 
         if (sessionSelect.value) {
             fetch(`/results/${shortCode}/get-terms/${sessionSelect.value}/`)
@@ -128,16 +157,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Fetch branches when term changes
-    termSelect.addEventListener("change", function () {
+termSelect.addEventListener("change", function () {
+    if (!isStudent) {
         branchSelect.disabled = true;
-        classesContainer.innerHTML = "";
+        classesContainer.innerHTML = ""; // Clear classes for admins
+    }
 
-        if (termSelect.value) {
-            branchSelect.disabled = false;
-        }
-    });
+    if (termSelect.value && !isStudent) {
+        branchSelect.disabled = false;
+    }
+});
 
-    // Fetch classes when branch changes
+// Pre-fill class for students
+if (isStudent) {
+    // Prepopulate classesContainer with the student's class
+    classesContainer.innerHTML = `
+        <div class="col-md-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="{{ student_class.id }}" id="class-{{ student_class.id }}" checked disabled>
+                <label class="form-check-label" for="class-{{ student_class.id }}">
+                    {{ student_class.name }}
+                </label>
+            </div>
+        </div>
+    `;
+} else {
+    // Fetch classes dynamically when branch changes (Admins only)
     branchSelect.addEventListener("change", function () {
         classesContainer.innerHTML = "";
 
@@ -162,12 +207,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
     });
+}
+
+// Adjust branch value retrieval for both students and admins
+const getBranchValue = () => {
+    if (isStudent) {
+        const branchInput = document.querySelector("input[name='branch']");
+        return branchInput ? branchInput.value : null;
+    } else {
+        return branchSelect.value;
+    }
+};
+
 
     // Filter results
     filterButton.addEventListener("click", function () {
         const session = sessionSelect.value;
         const term = termSelect.value;
-        const branch = branchSelect.value;
+        const branch = getBranchValue(); 
         const classes = Array.from(
             document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
         ).map(input => input.value);
@@ -191,6 +248,14 @@ document.addEventListener("DOMContentLoaded", function () {
         })
             .then(response => response.json())
             .then(data => {
+
+                if (data.error) {
+                 // Display alert if results are not published
+                 alert(data.error); // Customize this message if needed
+                resultsContainer.innerHTML = `<p class='text-center text-danger'>${data.error}</p>`;
+                return;
+                }
+
                 if (data.students.length === 0) {
                     resultsContainer.innerHTML = "<p class='text-center text-danger'>No results found!</p>";
                 } else {

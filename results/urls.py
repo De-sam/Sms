@@ -30,5 +30,5 @@ urlpatterns = [
 
     # Fetch and display detailed student results
     path('<str:short_code>/generate-result-filter/', views.render_generate_result_filter, name='generate_result_filter'),
-    path('<str:short_code>/fetch-students-result/', views.fetch_students_result, name='fetch_students_result'),
+    path('<str:short_code>/fetch-students-result/', views.fetch_results_wrapper, name='fetch_students_result'),
 ]
