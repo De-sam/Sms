@@ -55,7 +55,15 @@
             {% if request.user.is_authenticated %}
             <li class="nav-item dropdown user-menu">
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
-                    <img src="{% avatar_url 128 %}" class="user-image img-circle elevation-2" alt="User Image">
+                    <img 
+                        src="{% if request.user.student_profile and request.user.student_profile.picture %}{{ request.user.student_profile.picture.url }}
+                             {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                             {% elif request.user.picture %}{{ request.user.picture.url }}
+                             {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                        {% endif %}" 
+                        class="user-image img-circle elevation-2" 
+                        alt="User Image"
+                        style="width: 50px; height: 50px;">
                     <span class="d-none d-md-inline">
                         {% if request.user.student_profile %}
                             {{ request.user.student_profile.last_name }}
@@ -69,8 +77,15 @@
                 <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <!-- User image -->
                     <li class="user-header bg-primary">
-                        <img src="{% avatar_url size=160 %}" class="img-circle elevation-2" alt="User Image">
-        
+                        <img 
+                            src="{% if request.user.student_profile and request.user.student_profile.picture %}{{ request.user.student_profile.picture.url }}
+                                 {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                                 {% elif request.user.picture %}{{ request.user.picture.url }}
+                                 {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                            {% endif %}" 
+                            class="img-circle elevation-2" 
+                            alt="User Image"
+                            style="width: 50px; height: 50px;">
                         <p>
                             {% if request.user.student_profile %}
                                 {{ request.user.student_profile.last_name }}
