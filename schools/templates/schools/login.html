@@ -34,9 +34,6 @@
         body {
             margin: 0;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-family: Arial, sans-serif;
             background: radial-gradient(circle, var(--theme-color1), var(--theme-color2), var(--theme-color3));
             animation: gradientShift 15s infinite;
@@ -57,15 +54,37 @@
             }
         }
 
+        /* Overlay */
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent overlay */
+            backdrop-filter: blur(10px); /* Blur effect */
+            z-index: 1;
+        }
+
         .login-container {
+            position: relative;
+            z-index: 2; /* Place the card above the overlay */
             background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(15px);
             padding: 50px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 500px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .demo-data {
+            z-index: 2;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1.5;
         }
 
         .school-logo {
@@ -99,9 +118,19 @@
         }
 
         .form-control {
+            background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent input background */
+            backdrop-filter: blur(8px); /* Blur effect for input fields */
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Optional border for visibility */
             border-radius: 30px;
             padding: 20px;
             font-size: 1.3rem;
+            color: #333; /* Text color */
+        }
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.5); /* Slightly less transparent on focus */
+            outline: none;
+            border-color: var(--theme-color1); /* Highlight border */
         }
 
         .custom-bg {
@@ -124,77 +153,97 @@
             height: 26px;
         }
 
-        @media (min-width: 992px) {
-            .container {
-                justify-content: flex-end; /* Align to the right for large screens */
+        @media (max-width: 991.98px) {
+            .demo-data {
+                display: none; /* Hide demo data on smaller screens */
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container d-flex align-items-center vh-100">
-        <div class="card login-container">
-            <div class="text-center mb-4">
-                {% if school.logo %}
-                <img class="img-fluid school-logo" src="{{ school.logo.url }}" alt="School Logo">
-                {% else %}
-                <span class="badge bg-secondary">No Logo Available</span>
-                {% endif %}
+    <div class="background-overlay"></div> <!-- Transparent overlay with blur effect -->
+
+    <div class="container-fluid vh-100 d-flex align-items-center">
+        <!-- Demo Data Section -->
+        <div class="row w-100">
+            <div class="col-lg-6 d-none d-lg-block demo-data">
+                <div class="p-5">
+                    <h2>Welcome to Our Portal</h2>
+                    <p>Experience the next-generation platform for managing schools effortlessly.</p>
+                    <ul>
+                        <li>Manage attendance with ease</li>
+                        <li>Track student performance</li>
+                        <li>Seamless parent-teacher communication</li>
+                    </ul>
+                </div>
             </div>
 
-            <p class="welcome-text">Welcome Back!</p>
+            <!-- Login Form Section -->
+            <div class="col-lg-6 d-flex justify-content-center align-items-center">
+                <div class="card login-container">
+                    <div class="text-center mb-4">
+                        {% if school.logo %}
+                        <img class="img-fluid school-logo" src="{{ school.logo.url }}" alt="School Logo">
+                        {% else %}
+                        <span class="badge bg-secondary">No Logo Available</span>
+                        {% endif %}
+                    </div>
 
-            {% if messages %}
-            <div class="container mt-4">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    <p class="welcome-text">Welcome Back!</p>
+
+                    {% if messages %}
+                    <div class="container mt-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login-page' short_code=school.short_code %}">
+                        {% csrf_token %}
+                        {% if school.short_code %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}" />
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+                                </svg>
+                                Username
+                            </label>
+                            <input type="text" id="username" name="username" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2" />
+                                </svg>
+                                Password
+                            </label>
+                            <input type="password" id="password" name="password" class="form-control" required>
+                        </div>
+                        {% endif %}
+                        <div class="d-grid">
+                            <button class="btn custom-bg" type="submit">
+                                Login
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-arrow-in-right"
+                                    viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                        d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0-14.5 2h-8A1.5.5 0 0 0-5 3.5v2a.5.5 0 0 0 1 0z" />
+                                    <path fill-rule="evenodd"
+                                        d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                {% endfor %}
             </div>
-            {% endif %}
-
-            <form method="post" action="{% url 'login-page' short_code=school.short_code %}">
-                {% csrf_token %}
-                {% if school.short_code %}
-                <input type="hidden" name="next" value="{{ request.GET.next }}" />
-                <div class="mb-3">
-                    <label for="username" class="form-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill"
-                            viewBox="0 0 16 16">
-                            <path
-                                d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
-                        </svg>
-                        Username
-                    </label>
-                    <input type="text" id="username" name="username" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill"
-                            viewBox="0 0 16 16">
-                            <path
-                                d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2" />
-                        </svg>
-                        Password
-                    </label>
-                    <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                {% endif %}
-                <div class="d-grid">
-                    <button class="btn custom-bg" type="submit">
-                        Login
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-arrow-in-right"
-                            viewBox="0 0 16 16">
-                            <path fill-rule="evenodd"
-                                d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0-14.5 2h-8A1.5.5 0 0 0-5 3.5v2a.5.5 0 0 0 1 0z" />
-                            <path fill-rule="evenodd"
-                                d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
-                        </svg>
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
