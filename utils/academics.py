@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from classes.models import TeacherClassAssignment, TeacherSubjectClassAssignment, Class, Subject
 from schools.models import Branch
-
+from students.models import ParentStudentRelationship
 
 # Fetch sessions for a given school identified by the short_code
 def get_sessions(request, short_code):
@@ -72,9 +72,18 @@ def get_classes_by_branch(request, short_code, branch_id):
 
         # Get the classes assigned to this teacher for the branch
         classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).select_related('department').distinct()
+    elif hasattr(user, 'parent_profile'):
+        # If the user is a parent, fetch classes related to their children in the branch
+        parent_relationships = ParentStudentRelationship.objects.filter(
+            parent_guardian=user.parent_profile,
+            student__branch=branch
+        )
+        classes = Class.objects.filter(
+            id__in=parent_relationships.values_list('student__student_class_id', flat=True)
+        ).distinct()
     else:
-        # If the user is an admin or otherwise authorized, fetch all classes in the branch
-        classes = Class.objects.filter(branches=branch).select_related('department').distinct()
+        # Admins or other authorized roles fetch all classes in the branch
+        classes = Class.objects.filter(branches=branch).distinct()
 
     # Prepare the data to send as JSON response
     classes_data = [

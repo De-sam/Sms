@@ -35,27 +35,33 @@
                         </div>
                     </div>
 
-                    <!-- Branch -->
+                   <!-- Branch -->
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="branch">Branch</label>
-                                <label for="branch">Branch</label>
-                                    {% if is_school_admin %}
-                                    <!-- Editable dropdown for admins -->
-                                    <select id="branch" name="branch" class="form-control">
-                                        <option value="">Select Branch</option>
-                                        {% for branch in branches %}
-                                        <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
-                                        {% endfor %}
-                                    </select>
-                                    {% elif is_student %}
-                                    <!-- Read-only field for students -->
-                                    <div>
-                                        <input type="text" id="branch-name" class="form-control" value="{{ student_branch.branch_name }}" readonly>
-                                        <input type="hidden"  id="branch" name="branch" value="{{ student_branch.id }}"> <!-- Correct branch ID -->
-                                    </div>
-                                    {% endif %}
-
+                                {% if is_school_admin %}
+                                <!-- Editable dropdown for admins -->
+                                <select id="branch" name="branch" class="form-control">
+                                    <option value="">Select Branch</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
+                                    {% endfor %}
+                                </select>
+                                {% elif is_student %}
+                                <!-- Read-only field for students -->
+                                <div>
+                                    <input type="text" id="branch-name" class="form-control" value="{{ student_branch.branch_name }}" readonly>
+                                    <input type="hidden" id="branch" name="branch" value="{{ student_branch.id }}"> <!-- Correct branch ID -->
+                                </div>
+                                {% elif is_parent %}
+                                <!-- Editable dropdown for parents, limited to their child's branches -->
+                                <select id="branch" name="branch" class="form-control">
+                                    <option value="">Select Branch</option>
+                                    {% for branch in parent_branches %}
+                                    <option value="{{ branch.id }}">{{ branch.branch_name }} ({{ branch.school_type }})</option>
+                                    {% endfor %}
+                                </select>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -66,7 +72,6 @@
                                 <div id="classesContainer" class="row">
                                     {% if is_school_admin %}
                                     <!-- Dynamic class loading handled by JavaScript for admins -->
-                                    <!-- Classes will be dynamically populated in this container -->
                                     <p class="text-muted">Select a branch to load available classes.</p>
                                     {% elif is_student %}
                                     <!-- Read-only field for students -->
@@ -78,11 +83,13 @@
                                             </label>
                                         </div>
                                     </div>
+                                    {% elif is_parent %}
+                                    <!-- Dynamic class loading for parents -->
+                                    <p class="text-muted">Select a branch to load available classes.</p>
                                     {% endif %}
                                 </div>
                             </div>
-                        </div>
-          
+                        </div>   
                 <button type="button" id="filterButton" class="btn btn-primary mt-3">Generate Results</button>
             </form>
         </div>

@@ -29,7 +29,7 @@ from academics.models import (
     Session, Term
 )
 from schools.models import Branch
-from students.models import Student
+from students.models import Student,ParentStudentRelationship
 from results.models import  StudentFinalResult,StudentAverageResult
 from ratings.models import Rating
 from attendance.models import StudentAttendance,SchoolDaysOpen
@@ -701,23 +701,51 @@ def fetch_class_results(request, short_code):
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
 
+
 def render_generate_result_filter(request, short_code):
     """
     Render the result generation filter template.
-    For admins, branch and class fields are editable.
+    For admins, all branches and classes are editable.
     For students, branch and class fields are read-only.
+    For parents, branches and classes are limited to their children's data.
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user_roles = get_user_roles(request.user, school)
 
-    # Determine if the user is a student
+    # Default values
     student_branch = None
     student_class = None
+    parent_branches = []
+    parent_classes = []
+
+    # Determine if the user is a student
     if hasattr(request.user, 'student_profile'):
         student_branch = request.user.student_profile.branch
         student_class = request.user.student_profile.student_class
 
-    # Prepare branches and classes for admins
+    # Determine if the user is a parent
+    if hasattr(request.user, 'parent_profile'):
+        parent_relationships = ParentStudentRelationship.objects.filter(
+            parent_guardian=request.user.parent_profile,
+            student__branch__school=school
+        )
+        # Get distinct branches and classes linked to the parent's children
+        parent_branches = [
+            {
+                "id": branch.id,
+                "branch_name": branch.branch_name,
+                "school_type": "Primary" if branch.primary_school else "Secondary"
+            }
+            for branch in Branch.objects.filter(
+                id__in=parent_relationships.values_list('student__branch_id', flat=True)
+            ).distinct()
+        ]
+        parent_classes = Class.objects.filter(
+            id__in=parent_relationships.values_list('student__student_class_id', flat=True)
+        ).distinct()
+
+        
+    # Prepare all branches for admins
     branches = [
         {
             "id": branch.id,
@@ -727,18 +755,19 @@ def render_generate_result_filter(request, short_code):
         for branch in Branch.objects.filter(school=school)
     ]
 
-    classes = Class.objects.filter(branches__school=school)
-
     context = {
         'school': school,
         'sessions': Session.objects.filter(school=school),
         'terms': Term.objects.none(),  # Initially empty, dynamically loaded
         'branches': branches,  # For admins
-        'classes': classes,  # For admins
+        'classes': Class.objects.filter(branches__school=school),  # For admins
         'student_branch': student_branch,  # Pre-fill for students
         'student_class': student_class,  # Pre-fill for students
+        'parent_branches': parent_branches,  # Pre-fill for parents
+        'parent_classes': parent_classes,  # Pre-fill for parents
         'is_school_admin': 'is_school_admin' in user_roles,
         'is_student': 'is_student' in user_roles,
+        'is_parent': 'is_parent' in user_roles,
         **user_roles,  # Include additional roles for flexibility
     }
 
@@ -749,10 +778,8 @@ def render_generate_result_filter(request, short_code):
 @csrf_exempt
 def fetch_students_result(request, short_code):
     """
-    Fetch detailed student results, including name, class, attendance count, scores for each subject,
-    average, comments, ratings, branch details, times absent, remarks for each grade,
-    total number of subjects, total number of subjects failed, highest, lowest, and average scores,
-    along with principal/headteacher comments, term information, and next term begins date.
+    Fetch detailed student results for admins, students, and parents, including 
+    filtering based on roles and the specific classes or branches relevant to the user.
     """
     if request.method == "POST":
         try:
@@ -763,9 +790,10 @@ def fetch_students_result(request, short_code):
             class_ids = data.get("classes", [])
             school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
-            # Check if the user is a student or an admin
+            # Determine user roles
             is_student = hasattr(request.user, 'student_profile')
             is_admin = request.user == school.admin_user
+            is_parent = hasattr(request.user, 'parent_profile')
 
             if is_student:
                 # Get the logged-in student's profile
@@ -774,6 +802,22 @@ def fetch_students_result(request, short_code):
                 # Override branch and class filters for the student
                 branch_id = student.branch.id
                 class_ids = [student.student_class.id]
+
+            elif is_parent:
+                # Filter results based on the parent's children
+                parent_relationships = ParentStudentRelationship.objects.filter(
+                    parent_guardian=request.user.parent_profile,
+                    student__branch_id=branch_id  # Ensure the branch matches the selected branch
+                )
+
+                # Restrict classes to those of the parent's children
+                parent_class_ids = parent_relationships.values_list(
+                    'student__student_class_id', flat=True
+                ).distinct()
+
+                # Validate the selected classes against the parent's children
+                if not set(class_ids).issubset(set(parent_class_ids)):
+                    return JsonResponse({"error": "You are not authorized to view results for the selected classes."}, status=403)
 
             # Validate required parameters
             if not (session_id and term_id and branch_id and class_ids):
@@ -857,6 +901,13 @@ def fetch_students_result(request, short_code):
             if is_student:
                 students = students.filter(user=request.user)
                 print(f"Filtered students for {request.user}: {students}")
+            elif is_parent:
+                students = students.filter(
+                    id__in=parent_relationships.values_list('student_id', flat=True)
+                )
+                print(f"Filtered students for parent {request.user}: {students}")
+
+   
             else:
                 students = Student.objects.filter(
                      student_class__id__in=class_ids,
@@ -1052,19 +1103,39 @@ def fetch_results_wrapper(request, short_code):
 
             # Check user type
             is_student = hasattr(request.user, 'student_profile')
+            is_parent = hasattr(request.user, 'parent_profile')
+
             if is_student:
                 student = request.user.student_profile
                 data["branch"] = student.branch.id
                 data["classes"] = [student.student_class.id]
                 print(f"Modified data for student: {data}")
 
+            elif is_parent:
+                # Handle parent-specific filtering
+                parent_relationships = ParentStudentRelationship.objects.filter(
+                    parent_guardian=request.user.parent_profile,
+                    student__branch_id=data.get("branch")  # Ensure the branch matches a selected branch
+                )
+
+                # Collect unique class IDs linked to the parent's children
+                parent_classes = parent_relationships.values_list('student__student_class_id', flat=True).distinct()
+                if not parent_classes:
+                    return JsonResponse({"error": "No classes found for the selected branch."}, status=400)
+
+                data["classes"] = list(parent_classes)
+                print(f"Modified data for parent: {data}")
+
             # Serialize back to request body
             request._body = json.dumps(data)
             return fetch_students_result(request, short_code)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    return JsonResponse({"error": "Invalid request method."}, status=405)
 
+        except Exception as e:
+            # Log error for debugging
+            print(f"Error in fetch_results_wrapper: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
 @login_required_with_short_code
