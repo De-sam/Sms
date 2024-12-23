@@ -68,140 +68,228 @@
 
         .school-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            padding: 10px 20px;
             position: absolute;
-            top: 20px; /* Adjust to move closer to the top */
-            left: 30px; /* Margin for logo */
-            z-index: 2; /* Ensures header is above overlay */
+            top: 20px;
+            left: 0;
+            width: 100%;
+            z-index: 3; /* Above overlay */
         }
 
         .school-logo {
             max-width: 50px;
             height: 50px;
+            margin-left: 70px; /* Push logo inward */
             border-radius: 8px;
         }
 
         .school-name {
-            font-size: 24px; /* Reduced size for better alignment */
+            font-size: 24px;
             font-weight: bold;
             color: white;
-            line-height: 1; /* Ensures alignment with the logo */
+            line-height: 1;
+            margin-left: 10px; /* Push school name inward */
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-right: 20px; /* Push buttons inward from the right */
+        }
+
+        .header-action-btn {
+        background-color: var(--theme-color2);
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease-in-out;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 5px; /* Space between icon and text */
+    }
+
+    .header-action-btn:hover {
+        background-color: var(--theme-color1);
+        color: white;
+    }
+
+    .header-action-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+        .header-line {
+            position: absolute;
+            top: 90px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 2;
         }
 
         .login-container {
             position: relative;
-            z-index: 3; /* Ensures the login form is above overlay and header */
+            z-index: 3;
             background-color: rgba(255, 255, 255, 0.7); /* White background with slight transparency */
             backdrop-filter: blur(12px); /* Blur effect */
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .login-card-logo {
+            max-width: 50px;
+            height: 50px;
+            margin-left: 20px;
+            border-radius: 8px;
         }
 
         .demo-data {
             position: relative;
-            z-index: 2; /* Ensures demo text is above the overlay */
+            z-index: 2;
             color: white;
             font-size: 1.2rem;
             font-weight: bold;
             line-height: 1.5;
         }
 
-        .welcome-text {
-            text-align: center;
-            font-size: 1.8rem;
-            color: var(--theme-color1);
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        .form-label {
-            font-weight: bold;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .form-label svg {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            color: var(--theme-color1);
-        }
-
-        .form-control {
-            background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
-            backdrop-filter: blur(8px); /* Blur effect for input fields */
-            border: 1px solid rgba(200, 200, 200, 0.5); /* Optional border for visibility */
-            border-radius: 30px;
-            padding: 15px;
-            font-size: 1rem;
-            color: #333; /* Text color */
-        }
-
-        .form-control:focus {
-            background-color: rgba(255, 255, 255, 1); /* Fully opaque on focus */
-            outline: none;
-            border-color: var(--theme-color1); /* Highlight border */
-        }
-
-        .custom-bg {
-            background-color: var(--theme-color2);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 30px;
-            font-size: 1.2rem;
-            transition: background-color 0.3s ease-in-out;
-        }
-
-        .custom-bg:hover {
-            background-color: var(--theme-color1);
-            color: white;
-        }
-
-        .custom-bg svg {
-            width: 24px;
-            height: 24px;
-        }
-
         @media (max-width: 991.98px) {
-            .demo-data {
-                display: none; /* Hide demo data on smaller screens */
+            .school-name,
+            .school-logo {
+                display: none; /* Hide header logo and school name on smaller screens */
+            }
+
+            .header-actions {
+                display: flex; /* Ensure action buttons remain visible */
+                margin: auto; /* Center action buttons in mobile view */
             }
 
             .login-container {
                 padding: 20px;
                 max-width: 350px;
+                margin-top: 20px; /* Bring login card towards the top */
             }
 
-            .form-control {
-                font-size: 0.9rem;
-                padding: 12px;
-            }
-
-            .custom-bg {
-                font-size: 1rem;
-                padding: 12px;
+            .login-card-logo {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
             }
         }
+        .custom-bg {
+        background-color: var(--theme-color2); /* Primary theme color */
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 30px;
+        font-size: 1.2rem;
+        transition: background-color 0.3s ease-in-out;
+    }
+
+    .custom-bg:hover {
+        background-color: var(--theme-color1); /* Secondary theme color */
+        color: white;
+    }
+
+    .custom-bg svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .form-label {
+        font-weight: bold;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-label svg {
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+        color: var(--theme-color1); /* Primary theme color for icons */
+    }
+
+
+    .welcome-text {
+        text-align: center;
+        font-size: 1.8rem;
+        color: var(--theme-color1); /* Primary theme color */
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    .form-control {
+        background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
+        backdrop-filter: blur(8px);
+        border: 2px solid var(--theme-color1); /* Theme color border */
+        border-radius: 30px;
+        padding: 15px;
+        font-size: 1rem;
+        color: #333;
+        transition: border-color 0.3s ease-in-out;
+    }
+
+    .form-control:focus {
+        background-color: rgba(255, 255, 255, 1); /* Solid background on focus */
+        outline: none;
+        border-color: var(--theme-color1); /* Theme color border on focus */
+        box-shadow: 0 0 5px var(--theme-color1); /* Subtle glow on focus */
+    }
     </style>
 </head>
 
 <body>
-    <div class="background-overlay"></div> <!-- Transparent overlay with blur effect -->
+    <div class="background-overlay"></div>
 
     <!-- School Header -->
     <div class="school-header">
-        {% if school.logo %}
-        <img src="{{ school.logo.url }}" alt="School Logo" class="school-logo">
-        {% endif %}
-        <span class="school-name">{{ school.school_name }}</span>
+        <div class="d-flex align-items-center">
+            {% if school.logo %}
+            <img src="{{ school.logo.url }}" alt="School Logo" class="school-logo">
+            {% endif %}
+            <span class="school-name">{{ school.school_name }}</span>
+        </div>
+        <div class="header-actions">
+            <a href="#" class="header-action-btn">
+                <!-- Student Registration Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height=20" fill="currentColor" class="bi bi-mortarboard-fill" viewBox="0 0 16 16">
+                    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917z"/>
+                    <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466z"/>
+                  </svg>
+                Student Registration
+            </a>
+            <a href="#" class="header-action-btn">
+                <!-- Teacher Registration Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person-fill-down" viewBox="0 0 16 16">
+                    <path d="M12.5 9a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7m.354 5.854 1.5-1.5a.5.5 0 0 0-.708-.708l-.646.647V10.5a.5.5 0 0 0-1 0v2.793l-.646-.647a.5.5 0 0 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
+                  </svg>
+                Teachers Registration
+            </a>
+            <a href="#" class="header-action-btn">
+                <!-- School Fees Inquiry Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bank2" viewBox="0 0 16 16">
+                    <path d="M8.277.084a.5.5 0 0 0-.554 0l-7.5 5A.5.5 0 0 0 .5 6h1.875v7H1.5a.5.5 0 0 0 0 1h13a.5.5 0 1 0 0-1h-.875V6H15.5a.5.5 0 0 0 .277-.916zM12.375 6v7h-1.25V6zm-2.5 0v7h-1.25V6zm-2.5 0v7h-1.25V6zm-2.5 0v7h-1.25V6zM8 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2M.5 15a.5.5 0 0 0 0 1h15a.5.5 0 1 0 0-1z"/>
+                  </svg>
+                School Fees Inquiry
+            </a>
+        </div>
+        
     </div>
+
+    <!-- Header Line -->
+    <div class="header-line"></div>
 
     <div class="container-fluid vh-100 d-flex align-items-center">
         <!-- Demo Data Section -->
@@ -223,34 +311,23 @@
                 <div class="card login-container">
                     <div class="text-center mb-4">
                         {% if school.logo %}
-                        <img class="img-fluid school-logo" src="{{ school.logo.url }}" alt="School Logo">
+                        <img class="img-fluid login-card-logo" src="{{ school.logo.url }}" alt="School Logo">
                         {% else %}
                         <span class="badge bg-secondary">No Logo Available</span>
                         {% endif %}
                     </div>
-
+                    
                     <p class="welcome-text">Welcome Back!</p>
-
-                    {% if messages %}
-                    <div class="container mt-4">
-                        {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
+                    
                     <form method="post" action="{% url 'login-page' short_code=school.short_code %}">
                         {% csrf_token %}
                         {% if school.short_code %}
                         <input type="hidden" name="next" value="{{ request.GET.next }}" />
                         <div class="mb-3">
                             <label for="username" class="form-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill"
-                                    viewBox="0 0 16 16">
-                                    <path
-                                        d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+                                <!-- Username Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM5 7a3 3 0 1 1 6 0 3 3 0 0 1-6 0z" />
                                 </svg>
                                 Username
                             </label>
@@ -258,10 +335,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill"
-                                    viewBox="0 0 16 16">
-                                    <path
-                                        d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2" />
+                                <!-- Password Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 16">
+                                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2z" />
+                                    <path d="M3 8h10v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" />
                                 </svg>
                                 Password
                             </label>
@@ -274,13 +351,13 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-arrow-in-right"
                                     viewBox="0 0 16 16">
                                     <path fill-rule="evenodd"
-                                        d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0-14.5 2h-8A1.5.5 0 0 0-5 3.5v2a.5.5 0 0 0 1 0z" />
+                                        d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0 14.5 2h-8A1.5.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z" />
                                     <path fill-rule="evenodd"
                                         d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
                                 </svg>
                             </button>
                         </div>
-                    </form>
+                    </form>                    
                 </div>
             </div>
         </div>
