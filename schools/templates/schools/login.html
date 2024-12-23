@@ -66,69 +66,85 @@
             z-index: 1;
         }
 
+        .school-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            top: 20px; /* Adjust to move closer to the top */
+            left: 30px; /* Margin for logo */
+            z-index: 2; /* Ensures header is above overlay */
+        }
+
+        .school-logo {
+            max-width: 50px;
+            height: 50px;
+            border-radius: 8px;
+        }
+
+        .school-name {
+            font-size: 24px; /* Reduced size for better alignment */
+            font-weight: bold;
+            color: white;
+            line-height: 1; /* Ensures alignment with the logo */
+        }
+
         .login-container {
             position: relative;
-            z-index: 2; /* Place the card above the overlay */
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(15px);
-            padding: 50px;
+            z-index: 3; /* Ensures the login form is above overlay and header */
+            background-color: rgba(255, 255, 255, 0.7); /* White background with slight transparency */
+            backdrop-filter: blur(12px); /* Blur effect */
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .demo-data {
-            z-index: 2;
+            position: relative;
+            z-index: 2; /* Ensures demo text is above the overlay */
             color: white;
             font-size: 1.2rem;
             font-weight: bold;
             line-height: 1.5;
         }
 
-        .school-logo {
-            max-width: 90px;
-            height: auto;
-            border: 1px solid var(--theme-color2);
-            border-radius: 50%;
-            margin: 0 auto;
-        }
-
         .welcome-text {
             text-align: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: var(--theme-color1);
-            margin-top: 20px;
+            margin-top: 15px;
             font-weight: bold;
         }
 
         .form-label {
             font-weight: bold;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
         }
 
         .form-label svg {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             margin-right: 10px;
             color: var(--theme-color1);
         }
 
         .form-control {
-            background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent input background */
+            background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
             backdrop-filter: blur(8px); /* Blur effect for input fields */
-            border: 1px solid rgba(255, 255, 255, 0.5); /* Optional border for visibility */
+            border: 1px solid rgba(200, 200, 200, 0.5); /* Optional border for visibility */
             border-radius: 30px;
-            padding: 20px;
-            font-size: 1.3rem;
+            padding: 15px;
+            font-size: 1rem;
             color: #333; /* Text color */
         }
 
         .form-control:focus {
-            background-color: rgba(255, 255, 255, 0.5); /* Slightly less transparent on focus */
+            background-color: rgba(255, 255, 255, 1); /* Fully opaque on focus */
             outline: none;
             border-color: var(--theme-color1); /* Highlight border */
         }
@@ -137,9 +153,9 @@
             background-color: var(--theme-color2);
             color: white;
             border: none;
-            padding: 20px;
+            padding: 15px;
             border-radius: 30px;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             transition: background-color 0.3s ease-in-out;
         }
 
@@ -149,13 +165,28 @@
         }
 
         .custom-bg svg {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
         }
 
         @media (max-width: 991.98px) {
             .demo-data {
                 display: none; /* Hide demo data on smaller screens */
+            }
+
+            .login-container {
+                padding: 20px;
+                max-width: 350px;
+            }
+
+            .form-control {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+
+            .custom-bg {
+                font-size: 1rem;
+                padding: 12px;
             }
         }
     </style>
@@ -164,11 +195,19 @@
 <body>
     <div class="background-overlay"></div> <!-- Transparent overlay with blur effect -->
 
+    <!-- School Header -->
+    <div class="school-header">
+        {% if school.logo %}
+        <img src="{{ school.logo.url }}" alt="School Logo" class="school-logo">
+        {% endif %}
+        <span class="school-name">{{ school.school_name }}</span>
+    </div>
+
     <div class="container-fluid vh-100 d-flex align-items-center">
         <!-- Demo Data Section -->
         <div class="row w-100">
             <div class="col-lg-6 d-none d-lg-block demo-data">
-                <div class="p-5">
+                <div class="p-5 mt-5">
                     <h2>Welcome to Our Portal</h2>
                     <p>Experience the next-generation platform for managing schools effortlessly.</p>
                     <ul>
