@@ -26,7 +26,7 @@ def pricing(request):
 
 def send_registration_email(request, school_name, admin_email, first_name, shortcode):
     subject = 'School Registration Successful'
-    login_url = f'http://localhost:8000/schools/{shortcode}/login/'
+    login_url = f'http://sms-lme5.onrender.com/schools/{shortcode}/login/'
     message = (
         f'Dear {first_name},\n\n'
         f'Your school "{school_name}" has been successfully registered. '
