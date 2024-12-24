@@ -29,7 +29,7 @@ def process_file_task(file_path, file_name, school_id):
 @shared_task
 def send_staff_creation_email(email, username, shortcode):
     
-    login_url = f'http://localhost:8000/schools/{shortcode}/login/'
+    login_url = f'http://sms-lme5.onrender.com/schools/{shortcode}/login/'
     
     # Email subject and message
     subject = 'Your New Account'
