@@ -21,6 +21,20 @@ from django.db.models import Case, When, Value, CharField, Count, Subquery, Oute
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 
+
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.models import User
+
+
+from students.models import Student
+from staff.models import Staff
+from students.models import ParentGuardian
+
+
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -88,6 +102,67 @@ def logout_view(request, short_code):
     messages.success(request, 'logged out sucessfully!!!.')
     return redirect('login-page', short_code=short_code)
 
+
+def forgot_password(request, short_code):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    if request.method == "POST":
+        email = request.POST.get('email')
+
+        # Check if the email belongs to a staff member
+        staff_user = Staff.objects.filter(user__email=email, branches__school=school).first()
+
+        # Check if the email belongs to a student
+        student_user = Student.objects.filter(user__email=email, branch__school=school).first()
+
+        # Check if the email belongs to a parent
+        parent_user = ParentGuardian.objects.filter(user__email=email, school=school).first()
+
+        # Get the linked user object
+        user = None
+        if staff_user:
+            user = staff_user.user
+        elif student_user:
+            user = student_user.user
+        elif parent_user:
+            user = parent_user.user
+
+        if user:
+            # Generate the token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            # Generate the reset link
+            reset_link = request.build_absolute_uri(
+                reverse(
+                    'password_reset_confirm',
+                    kwargs={
+                        'short_code': short_code,
+                        'uidb64': uid,
+                        'token': token,
+                    }
+                )
+            )
+
+            # Send the email
+            send_mail(
+                subject="Password Reset Request",
+                message=f"Please click the link below to reset your password:\n{reset_link}",
+                from_email="noreply@yourdomain.com",
+                recipient_list=[email],
+            )
+
+            messages.success(request, "A password reset link has been sent to your email.")
+            return redirect('forgot_password', short_code=short_code)
+        else:
+            messages.error(request, "No account is associated with this email address.")
+            return redirect('forgot_password', short_code=short_code)
+
+    context = {
+        'school': school,
+        'title': f'{school.school_name} Forgot Password',
+    }
+    return render(request, 'schools/forgot_password.html', context)
 @login_required_with_short_code
 def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)

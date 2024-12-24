@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 
 @shared_task
 def send_student_creation_email(email, username, short_code, first_name, last_name):
-    login_url = f'http://localhost:8000/schools/{short_code}/login/'
+    login_url = f'http://sms-lme5.onrender.com/schools/{short_code}/login/'
     full_name = f"{first_name} {last_name}"
     
     # Email subject and message
@@ -31,7 +31,7 @@ def send_student_creation_email(email, username, short_code, first_name, last_na
 
 @shared_task
 def send_parent_creation_email(email, username, short_code, first_name, last_name):
-    login_url = f'http://localhost:8000/schools/{short_code}/login/'
+    login_url = f'http://sms-lme5.onrender.com/schools/{short_code}/login/'
     full_name = f"{last_name} {first_name} "
 
     # Email subject and message

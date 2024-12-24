@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from landingpage.models import SchoolRegistration
 from students.models import ParentStudentRelationship
 
+
 def admin_required(view_func):
     """Decorator to check if the user is an admin."""
     @wraps(view_func)
