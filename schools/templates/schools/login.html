@@ -55,16 +55,17 @@
         }
 
         /* Overlay */
-        .background-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent overlay */
-            backdrop-filter: blur(10px); /* Blur effect */
-            z-index: 1;
-        }
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(10px); /* Blur effect */
+    z-index: 1;
+}
+
 
         .school-header {
             display: flex;
@@ -81,7 +82,7 @@
         .school-logo {
             max-width: 50px;
             height: 50px;
-            margin-left: 70px; /* Push logo inward */
+            margin-left: 250px; /* Push logo inward */
             border-radius: 8px;
         }
 
@@ -96,7 +97,7 @@
         .header-actions {
             display: flex;
             gap: 10px;
-            margin-right: 20px; /* Push buttons inward from the right */
+            margin-right: 250px; /* Push buttons inward from the right */
         }
 
         .header-action-btn {
@@ -155,14 +156,80 @@
         }
 
         .demo-data {
-            position: relative;
-            z-index: 2;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            line-height: 1.5;
-        }
+    position: relative;
+    z-index: 2;
+    font-size: 2rem; /* Larger text */
+    font-weight: bold;
+    line-height: 1.5;
+    padding-left: 250px; /* Align with the header logo */
+    padding-right: 50px; /* Add spacing to the right */
+    text-align: left; /* Align text to the left */
+}
 
+.demo-data h2 {
+    font-size: 2.5rem; /* Larger heading */
+    margin-bottom: 20px;
+    color: var(--theme-color1); /* Use theme color for "Single Login Interface" */
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3); /* Add a subtle shadow for elegance */
+}
+
+.demo-data h3 {
+    font-size: 2rem;
+    color: white; /* White for "Welcome to Our Portal" */
+    margin-top: 20px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3); /* Subtle shadow for readability */
+}
+
+.demo-data p {
+    font-size: 1.5rem; /* Slightly smaller for descriptive text */
+    font-weight: 500;
+    color: white; /* White for other descriptive text */
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3); /* Subtle shadow for contrast */
+}
+
+.animated-list {
+    list-style-type: disc; /* Use default bullet style */
+    padding-left: 20px; /* Indent list */
+    margin: 0;
+    font-size: 1.4rem; /* Reduced text size */
+    color: white; /* White for list items */
+}
+
+.animated-list li {
+    opacity: 0; /* Start hidden */
+    animation: fadeIn 2s forwards; /* Animation to fade in */
+}
+
+.animated-list li:nth-child(1) {
+    animation-delay: 0s; /* First item appears immediately */
+}
+
+.animated-list li:nth-child(2) {
+    animation-delay: 2s; /* Second item appears after 2 seconds */
+}
+
+.animated-list li:nth-child(3) {
+    animation-delay: 4s; /* Third item appears after 4 seconds */
+}
+
+.animated-list li:nth-child(4) {
+    animation-delay: 6s; /* Fourth item appears after 6 seconds */
+}
+
+.animated-list li:nth-child(5) {
+    animation-delay: 8s; /* Fifth item appears after 8 seconds */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px); /* Slide in from above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Settle in place */
+    }
+}
         @media (max-width: 991.98px) {
             .school-name,
             .school-logo {
@@ -288,23 +355,28 @@
         
     </div>
 
-    <!-- Header Line -->
-    <div class="header-line"></div>
+  
 
     <div class="container-fluid vh-100 d-flex align-items-center">
         <!-- Demo Data Section -->
         <div class="row w-100">
             <div class="col-lg-6 d-none d-lg-block demo-data">
                 <div class="p-5 mt-5">
-                    <h2>Welcome to Our Portal</h2>
+                    <h2>Single Login Interface</h2>
+                    <p>For Students, Parents, Staff, and Administrators</p>
+                    <h3 class="mt-4">Welcome to Our Portal</h3>
                     <p>Experience the next-generation platform for managing schools effortlessly.</p>
-                    <ul>
+                    <ul class="animated-list mt-4">
                         <li>Manage attendance with ease</li>
                         <li>Track student performance</li>
                         <li>Seamless parent-teacher communication</li>
+                        <li>School fees management</li>
+                        <li>Comprehensive reporting and analytics</li>
                     </ul>
                 </div>
             </div>
+    
+    
 
             <!-- Login Form Section -->
             <div class="col-lg-6 d-flex justify-content-center align-items-center">
@@ -387,6 +459,14 @@
         </div>
     </div>
 
+
+    <footer class="bg-dark text-white py-3 position-relative bottom-0 w-100">
+        <div class="container text-center">
+            <p class="mb-0">Copyright © All rights reserved.</p>
+        </div>
+    </footer>
+    
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
