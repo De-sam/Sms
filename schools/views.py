@@ -34,6 +34,14 @@ from students.models import Student
 from staff.models import Staff
 from students.models import ParentGuardian
 
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.shortcuts import get_object_or_404
+from landingpage.models import SchoolRegistration
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from django.views import View
+from datetime import datetime, timedelta
+
 
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -103,29 +111,103 @@ def logout_view(request, short_code):
     return redirect('login-page', short_code=short_code)
 
 
+class CustomPasswordResetConfirmView(View):
+    template_name = 'schools/password_reset_confirm.html'
+
+    def get(self, request, short_code, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and self.is_token_valid(user, token):
+            context = {
+                'validlink': True,
+                'short_code': short_code,
+                'uidb64': uidb64,
+                'token': token,
+                'school': get_object_or_404(SchoolRegistration, short_code=short_code),
+            }
+            return render(request, self.template_name, context)
+        else:
+            messages.error(request, "The password reset link is invalid or has expired.")
+            return redirect('forgot_password', short_code=short_code)
+
+    def post(self, request, short_code, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and self.is_token_valid(user, token):
+            password1 = request.POST.get('new_password1')
+            password2 = request.POST.get('new_password2')
+
+            if password1 and password2 and password1 == password2:
+                user.set_password(password1)
+                user.save()
+                messages.success(request, "Your password has been reset successfully. You can now log in.")
+                return redirect(reverse('login-page', kwargs={'short_code': short_code}))
+            else:
+                messages.error(request, "Passwords do not match. Please try again.")
+                return render(request, self.template_name, {
+                    'validlink': True,
+                    'short_code': short_code,
+                    'uidb64': uidb64,
+                    'token': token,
+                    'school': get_object_or_404(SchoolRegistration, short_code=short_code),
+                })
+
+        messages.error(request, "The password reset link is invalid or has expired.")
+        return redirect('forgot_password', short_code=short_code)
+
+    def is_token_valid(self, user, token):
+        """
+        Check if the token is valid and not expired.
+        """
+        try:
+            # Extract the timestamp from the token
+            ts_b36, _ = token.split("-")
+            timestamp = int(ts_b36, 36)
+        except ValueError:
+            return False
+
+        # Check if the token is older than 1 minute
+        token_age = datetime.now() - datetime.fromtimestamp(timestamp)
+        return token_age <= timedelta(minutes=1) and default_token_generator.check_token(user, token)
+
 def forgot_password(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
     if request.method == "POST":
         email = request.POST.get('email')
 
+        # Initialize user as None
+        user = None
+
+        # Check if the email belongs to the admin
+        if school.admin_user and school.admin_user.email == email:
+            user = school.admin_user
+
         # Check if the email belongs to a staff member
-        staff_user = Staff.objects.filter(user__email=email, branches__school=school).first()
+        if not user:
+            staff_user = Staff.objects.filter(user__email=email, branches__school=school).first()
+            if staff_user:
+                user = staff_user.user
 
         # Check if the email belongs to a student
-        student_user = Student.objects.filter(user__email=email, branch__school=school).first()
+        if not user:
+            student_user = Student.objects.filter(user__email=email, branch__school=school).first()
+            if student_user:
+                user = student_user.user
 
         # Check if the email belongs to a parent
-        parent_user = ParentGuardian.objects.filter(user__email=email, school=school).first()
-
-        # Get the linked user object
-        user = None
-        if staff_user:
-            user = staff_user.user
-        elif student_user:
-            user = student_user.user
-        elif parent_user:
-            user = parent_user.user
+        if not user:
+            parent_user = ParentGuardian.objects.filter(user__email=email, school=school).first()
+            if parent_user:
+                user = parent_user.user
 
         if user:
             # Generate the token
@@ -155,7 +237,7 @@ def forgot_password(request, short_code):
             messages.success(request, "A password reset link has been sent to your email.")
             return redirect('forgot_password', short_code=short_code)
         else:
-            messages.error(request, "No account is associated with this email address.")
+            messages.error(request, "No account is associated with this email address in this school.")
             return redirect('forgot_password', short_code=short_code)
 
     context = {
@@ -163,6 +245,7 @@ def forgot_password(request, short_code):
         'title': f'{school.school_name} Forgot Password',
     }
     return render(request, 'schools/forgot_password.html', context)
+
 @login_required_with_short_code
 def dashboard(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
