@@ -41,6 +41,9 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
 from datetime import datetime, timedelta
+from utils.tokens import CustomPasswordResetTokenGenerator
+
+custom_token_generator = CustomPasswordResetTokenGenerator()
 
 
 def login(request, short_code):
@@ -121,7 +124,7 @@ class CustomPasswordResetConfirmView(View):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
 
-        if user is not None and self.is_token_valid(user, token):
+        if user is not None and custom_token_generator.check_token(user, token):
             context = {
                 'validlink': True,
                 'short_code': short_code,
@@ -141,7 +144,7 @@ class CustomPasswordResetConfirmView(View):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
 
-        if user is not None and self.is_token_valid(user, token):
+        if user is not None and custom_token_generator.check_token(user, token):
             password1 = request.POST.get('new_password1')
             password2 = request.POST.get('new_password2')
 
@@ -226,13 +229,22 @@ def forgot_password(request, short_code):
                 )
             )
 
-            # Send the email
+             # Send the email
             send_mail(
                 subject="Password Reset Request",
-                message=f"Please click the link below to reset your password:\n{reset_link}",
-                from_email="noreply@yourdomain.com",
+                message=(
+                    f"Hello {email}!\n\n"
+                    "Someone has requested a link to change your password. You can do this through the link below.\n\n"
+                    f"Change my password: {reset_link}\n\n"
+                    "or copy and open this link in your browser:\n"
+                    f"{reset_link}\n\n"
+                    "If you didn't request this, please ignore this email.\n\n"
+                    "Your password won't change until you access the link above and create a new one."
+                ),
+                from_email="noreply@AcadémiQ.com",
                 recipient_list=[email],
             )
+
 
             messages.success(request, "A password reset link has been sent to your email.")
             return redirect('forgot_password', short_code=short_code)
