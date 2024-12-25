@@ -1,7 +1,6 @@
 {% load adminlte_helpers i18n %}
 {% load static %}
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-
     <!-- Header Navbar: style can be found in header.less -->
     {% block nav_bar %}
     <!-- Left navbar links -->
@@ -16,118 +15,216 @@
     {% endblock %}
 
     {% block nav_custom_menu %}
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            {% block header_dropdowns %}
-                <!-- Notifications Dropdown Menu -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <i class="far fa-bell"></i>
-                        <span class="badge badge-warning navbar-badge">15</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item dropdown-header">15 Notifications</span>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-envelope mr-2"></i> 4 new messages
-                            <span class="float-right text-muted text-sm">3 mins</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-users mr-2"></i> 8 friend requests
-                            <span class="float-right text-muted text-sm">12 hours</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-file mr-2"></i> 3 new reports
-                            <span class="float-right text-muted text-sm">2 days</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
-                        <i class="fas fa-expand-arrows-alt"></i>
-                    </a>
-                </li>
-            {% block user_info %}
-
-            {% if request.user.is_authenticated %}
-            <li class="nav-item dropdown user-menu">
-                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
-                    <img 
-                        src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}{{ request.user.student_profile.profile_picture.url }}
-                             {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
-                             {% elif request.user.staff %}{{ request.user.staff.profile_picture.url }}
-                             {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
-                        {% endif %}" 
-                        class="user-image img-circle elevation-2" 
-                        alt="User Image"
-                        style="width: 35px; height: 35px;">
-                    <span class="d-none d-md-inline">
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
+        {% block header_dropdowns %}
+        <!-- Notifications Dropdown Menu -->
+        <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+                <i class="far fa-bell"></i>
+                <span class="badge badge-warning navbar-badge">15</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                <span class="dropdown-item dropdown-header">15 Notifications</span>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-envelope mr-2"></i> 4 new messages
+                    <span class="float-right text-muted text-sm">3 mins</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-users mr-2"></i> 8 friend requests
+                    <span class="float-right text-muted text-sm">12 hours</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-file mr-2"></i> 3 new reports
+                    <span class="float-right text-muted text-sm">2 days</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                <i class="fas fa-expand-arrows-alt"></i>
+            </a>
+        </li>
+        {% block user_info %}
+        {% if request.user.is_authenticated %}
+        <li class="nav-item dropdown user-menu">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                <img src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}
+                            {{ request.user.student_profile.profile_picture.url }}
+                         {% elif request.user.parent_profile %}
+                            https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                         {% elif request.user.staff %}
+                            {{ request.user.staff.profile_picture.url }}
+                         {% else %}
+                            https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                         {% endif %}" 
+                    class="user-image img-circle elevation-2" 
+                    alt="User Image" style="width: 35px; height: 35px;">
+                <span class="d-none d-md-inline">
+                    {% if request.user.student_profile %}
+                        {{ request.user.student_profile.last_name }}
+                    {% elif request.user.parent_profile %}
+                        {{ request.user.parent_profile.last_name }}
+                    {% else %}
+                        {{ request.user.last_name }}
+                    {% endif %}
+                </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                <!-- User image -->
+                <li class="user-header bg-primary">
+                    <img src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}
+                                {{ request.user.student_profile.profile_picture.url }}
+                             {% elif request.user.parent_profile %}
+                                https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                             {% elif request.user.staff %}
+                                {{ request.user.staff.profile_picture.url }}
+                             {% else %}
+                                https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                             {% endif %}" 
+                        class="img-circle elevation-2" 
+                        alt="User Image" style="width: 50px; height: 50px;">
+                    <p>
                         {% if request.user.student_profile %}
                             {{ request.user.student_profile.last_name }}
                         {% elif request.user.parent_profile %}
                             {{ request.user.parent_profile.last_name }}
                         {% else %}
                             {{ request.user.last_name }}
-                        {% endif %}
-                    </span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <!-- User image -->
-                    <li class="user-header bg-primary">
-                        <img 
-                            src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}{{ request.user.student_profile.profile_picture.url }}
-                                 {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
-                                 {% elif request.user.staff %}{{ request.user.staff.profile_picture.url }}
-                                 {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                        {% endif %} - {% firstof request.user.get_role %}
+                        <small>Member since: {{ request.user.date_joined }}</small>
+                    </p>
+                </li>
+                <!-- Menu Footer-->
+                <li class="user-footer">
+                    <button class="btn btn-default btn-flat" data-bs-toggle="modal"
+                        data-bs-target="#changePasswordModal">{% trans 'Change Password' %}</button>
+                    <a href="{% if school.short_code %}
+                                {% url 'logout-view' school.short_code %}
                             {% endif %}" 
-                            class="img-circle elevation-2" 
-                            alt="User Image"
-                            style="width: 50px; height: 50px;">
-                        <p>
-                            {% if request.user.student_profile %}
-                                {{ request.user.student_profile.last_name }}
-                            {% elif request.user.parent_profile %}
-                                {{ request.user.parent_profile.last_name }}
-                            {% else %}
-                                {{ request.user.last_name }}
-                            {% endif %} - {% firstof request.user.get_role %}
-                            <small>Member since: {{ request.user.date_joined }}</small>
-                        </p>
-                    </li>
-                    <!-- Menu Body -->
-                    <li class="user-body">
-                        <div class="row">
-                            <div class="col-4 text-center">
-                                <a href="#">Profile</a>
-                            </div>
-                            <div class="col-4 text-center">
-                                <a href="#">Team</a>
-                            </div>
-                            <div class="col-4 text-center">
-                                <a href="#">Friends</a>
-                            </div>
-                        </div>
-                        <!-- /.row -->
-                    </li>
-                    <!-- Menu Footer-->
-                    <li class="user-footer">
-                        <a href="{% block change_password_url %}{% url 'admin:password_change' %}{% endblock %}" class="btn btn-default btn-flat">{% trans 'Change Password' %}</a>
-                        <a href="{% block logout_url %}
-                        {% if school.short_code %}
-                        {% url 'logout-view' school.short_code %}
-                        {% endif %}
-                        {% endblock %}" class="btn btn-default btn-flat float-right">{% trans 'Sign Out' %}<a>
-                    </li>
-                </ul>
-            </li>
-            {% endif %}
-            {% endblock user_info %}
-            {% endblock header_dropdowns %}
-        </ul>
+                        class="btn btn-default btn-flat float-right">{% trans 'Sign Out' %}</a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+        {% endblock user_info %}
+        {% endblock header_dropdowns %}
+    </ul>
     {% endblock nav_custom_menu %}
-{% endblock %}
+    {% endblock %}
 </nav>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm" action="{% url 'change_password' short_code=school.short_code %}" method="post">
+                    {% csrf_token %}
+                    <div id="passwordChangeFeedback"></div>
+                    <div class="mb-3">
+                        <label for="new_password1" class="form-label">New Password</label>
+                        <input type="password" id="new_password1" name="new_password1" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password2" class="form-label">Confirm New Password</label>
+                        <input type="password" id="new_password2" name="new_password2" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+ <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Check if force password change is required
+    const forcePasswordChange = {{ force_password_change|yesno:"true,false" }}; // This comes from the Django context
+
+    if (forcePasswordChange) {
+        // Show the change password modal immediately if the user is forced to change their password
+        $('#changePasswordModal').modal('show');
+    }
+
+    // Select the form element
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const feedbackContainer = document.getElementById('passwordChangeFeedback');
+
+    // Listen for the form submission
+    changePasswordForm.addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Prepare form data for AJAX
+        const formData = new FormData(changePasswordForm);
+
+        // Get the action URL from the form
+        const actionUrl = changePasswordForm.action;
+
+        // Clear previous feedback
+        feedbackContainer.innerHTML = '';
+
+        // Send the POST request via Fetch API
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'), // Include CSRF token
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                feedbackContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        ${data.message}
+                    </div>
+                `;
+
+                // Optionally close the modal after a short delay
+                setTimeout(() => {
+                    $('#changePasswordModal').modal('hide');
+                }, 2000);
+            } else {
+                // Show error message
+                feedbackContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        ${data.error}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            feedbackContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    An unexpected error occurred. Please try again later.
+                </div>
+            `;
+        });
+    });
+
+    // Ensure modal backdrop is cleaned up if modal is closed manually
+    $('#changePasswordModal').on('hidden.bs.modal', function () {
+        $('body').removeClass('modal-open'); // Ensure modal-open class is removed from body
+        $('.modal-backdrop').remove(); // Remove the remaining backdrop
+    });
+});
+
+</script>
+    

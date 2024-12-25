@@ -20,7 +20,8 @@ from staff.models import Staff
 from django.db.models import Case, When, Value, CharField, Count, Subquery, OuterRef  # Corrected this import
 from django.core.serializers.json import DjangoJSONEncoder
 import json
-
+from django.http import JsonResponse
+from django.contrib.auth import update_session_auth_hash
 
 from django.core.mail import send_mail
 from django.urls import reverse
@@ -45,7 +46,6 @@ from utils.tokens import CustomPasswordResetTokenGenerator
 
 custom_token_generator = CustomPasswordResetTokenGenerator()
 
-
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
@@ -60,23 +60,30 @@ def login(request, short_code):
                 # Admin user
                 if user == school.admin_user:
                     django_login(request, user)
-                    next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                    return redirect('schools_dashboard',  short_code=short_code)
+                    return redirect('schools_dashboard', short_code=short_code)
 
                 # Staff member
                 elif hasattr(user, 'staff') and user.staff.branches.filter(school=school).exists():
                     if user.staff.status == 'active':  # Ensure staff member is active
                         django_login(request, user)
-                        next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                        return redirect('schools_dashboard',  short_code=short_code)
+
+                        # Check if password is the default password
+                        if password == 'new_staff':
+                            request.session['force_password_change'] = True
+
+                        return redirect('schools_dashboard', short_code=short_code)
                     else:
                         messages.error(request, 'Your account is inactive. Please contact the administrator.')
 
                 # Student
                 elif hasattr(user, 'student_profile') and user.student_profile.branch.school == school:
                     django_login(request, user)
-                    next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                    return redirect("schools_dashboard",  short_code=short_code)
+
+                    # Check if password is the default password
+                    if password == 'student':
+                        request.session['force_password_change'] = True
+
+                    return redirect("schools_dashboard", short_code=short_code)
 
                 # Parent
                 elif hasattr(user, 'parent_profile'):  # Using `parent_profile` based on the related_name
@@ -86,8 +93,12 @@ def login(request, short_code):
                         student__branch__school=school
                     ).exists():
                         django_login(request, user)
-                        next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                        return redirect("schools_dashboard",  short_code=short_code)
+
+                        # Check if password is the default password
+                        if password == 'parents':
+                            request.session['force_password_change'] = True
+
+                        return redirect("schools_dashboard", short_code=short_code)
                     else:
                         messages.error(request, 'No students associated with your account in this school.')
                 else:
@@ -105,8 +116,28 @@ def login(request, short_code):
 
     return render(request, 'schools/login.html', context)
 
-def loader(request, short_code):
-    return render(request, 'schools/loader.html', {'short_code': short_code})
+@login_required_with_short_code
+def change_password(request, short_code):
+    if request.method == 'POST':
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                return JsonResponse({'success': False, 'error': "Passwords do not match!"})
+            elif len(new_password1) < 8:
+                return JsonResponse({'success': False, 'error': "Password must be at least 8 characters long."})
+            else:
+                user = request.user
+                user.set_password(new_password1)
+                user.save()
+                update_session_auth_hash(request, user)  # Keep the user logged in after password change
+                return JsonResponse({'success': True, 'message': "Your password has been updated successfully!"})
+        else:
+            return JsonResponse({'success': False, 'error': "Please fill out both password fields."})
+    else:
+        return JsonResponse({'success': False, 'error': "Invalid request method."})
+
 
 def logout_view(request, short_code):
     logout(request)
@@ -292,16 +323,10 @@ def dashboard(request, short_code):
         'is_student': is_student,
         'is_parent': is_parent,
         'is_accountant': is_accountant,
+        'force_password_change': request.session.pop('force_password_change', False),
     }
 
- # Debugging: Print out the context values
-    print(f"Dashboard View Context for User {user.username}:")
-    print(f"  - is_school_admin: {is_school_admin}")
-    print(f"  - is_teacher: {is_teacher}")
-    print(f"  - is_student: {is_student}")
-    print(f"  - is_parent: {is_parent}")
-    print(f"  - is_accountant: {is_accountant}")
-
+ 
 
 ################## Add admin-specific data #################################
     if is_school_admin:

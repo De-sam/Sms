@@ -8,12 +8,14 @@ class Session(models.Model):
         on_delete=models.CASCADE,
         related_name='sessions'
     )
-    session_name = models.CharField(max_length=20, unique=True)  # e.g., "2023/24"
+    session_name = models.CharField(max_length=20)  # e.g., "2023/24"
     start_date = models.DateField()  # The start date of the session
     end_date = models.DateField(editable=False)  # Automatically set, read-only
     is_active = models.BooleanField(default=False)  # Flag to mark whether this is the current active session
 
     class Meta:
+        
+        unique_together = ('school', 'session_name')  # Ensure session names are unique within a school
         indexes = [
             models.Index(fields=['session_name']),  # Index for searching sessions by name
             models.Index(fields=['is_active']),     # Index for filtering active sessions

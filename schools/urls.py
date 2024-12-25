@@ -7,6 +7,7 @@ from .views import CustomPasswordResetConfirmView
 urlpatterns = [
     path('<str:short_code>/logout/', views.logout_view, name='logout-view'),
     path('<str:short_code>/login/', views.login, name='login-page'),
+    path('<str:short_code>/change-password/', views.change_password, name='change_password'),
     path('<str:short_code>/forgot-password/', views.forgot_password, name='forgot_password'),
     path('<str:short_code>/dashboard/', views.dashboard, name='schools_dashboard'),
     path('<str:short_code>/school_profile/', views.school_profile, name='school_profile'),
@@ -16,7 +17,6 @@ urlpatterns = [
     path('<str:short_code>/add_pry_branch/', views.add_primary_branch, name='add_primary_branch'),
     path('<str:short_code>/branch_list/', views.branch_list, name='branch_list'),
     path('<str:short_code>/add_primary_school/', views.add_primary_school, name='add_primary_school'),
-    path('loader/<short_code>/', views.loader, name='loader'),
 
     # Password Reset URLs
     path(
