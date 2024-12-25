@@ -57,14 +57,19 @@
             <li class="nav-item dropdown user-menu">
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                     <img 
-                        src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}{{ request.user.student_profile.profile_picture.url }}
-                             {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
-                             {% elif request.user.staff %}{{ request.user.staff.profile_picture.url }}
-                             {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                        src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}
+                                {{ request.user.student_profile.profile_picture.url }}
+                            {% elif request.user.parent_profile %}
+                                https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                            {% elif request.user.staff and request.user.staff.profile_picture %}
+                                {{ request.user.staff.profile_picture.url }}
+                            {% else %}
+                                https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
                         {% endif %}" 
                         class="user-image img-circle elevation-2" 
                         alt="User Image"
                         style="width: 35px; height: 35px;">
+
                     <span class="d-none d-md-inline">
                         {% if request.user.student_profile %}
                             {{ request.user.student_profile.last_name }}
@@ -79,14 +84,19 @@
                     <!-- User image -->
                     <li class="user-header bg-primary text-center">
                         <img 
-                            src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}{{ request.user.student_profile.profile_picture.url }}
-                                 {% elif request.user.parent_profile %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
-                                 {% elif request.user.staff %}{{ request.user.staff.profile_picture.url }}
-                                 {% else %}https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                            src="{% if request.user.student_profile and request.user.student_profile.profile_picture %}
+                                    {{ request.user.student_profile.profile_picture.url }}
+                                {% elif request.user.parent_profile %}
+                                    https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
+                                {% elif request.user.staff and request.user.staff.profile_picture %}
+                                    {{ request.user.staff.profile_picture.url }}
+                                {% else %}
+                                    https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg
                             {% endif %}" 
                             class="img-circle elevation-2 mb-2" 
                             alt="User Image"
                             style="width: 50px; height: 50px;">
+
                         <p>
                             {% if request.user.student_profile %}
                                 {{ request.user.student_profile.last_name }}
@@ -146,42 +156,44 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const changePasswordForm = document.getElementById('changePasswordForm');
-    const feedbackContainer = document.getElementById('passwordChangeFeedback');
-
-    changePasswordForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        const formData = new FormData(changePasswordForm);
-        const actionUrl = changePasswordForm.action;
-
-        feedbackContainer.innerHTML = '';
-        fetch(actionUrl, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                feedbackContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                setTimeout(() => {
-                    $('#changePasswordModal').modal('hide');
-                }, 2000);
-            } else {
-                feedbackContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-            }
-        })
-        .catch(error => {
-            feedbackContainer.innerHTML = `<div class="alert alert-danger">An unexpected error occurred. Please try again later.</div>`;
+    document.addEventListener('DOMContentLoaded', function () {
+        const forcePasswordChange = {{ force_password_change|yesno:"true,false" }}; // Backend flag for password change
+        if (forcePasswordChange) {
+            $('#changePasswordModal').modal('show'); // Automatically show the modal
+        }
+    
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        const feedbackContainer = document.getElementById('passwordChangeFeedback');
+    
+        changePasswordForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(changePasswordForm);
+            const actionUrl = changePasswordForm.action;
+    
+            feedbackContainer.innerHTML = '';
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    feedbackContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    setTimeout(() => {
+                        $('#changePasswordModal').modal('hide');
+                        window.location.reload(); // Reload page after successful password change
+                    }, 2000);
+                } else {
+                    feedbackContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                feedbackContainer.innerHTML = `<div class="alert alert-danger">An unexpected error occurred. Please try again later.</div>`;
+            });
         });
     });
-
-    $('#changePasswordModal').on('hidden.bs.modal', function () {
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
-    });
-});
-</script>
+    </script>
+    

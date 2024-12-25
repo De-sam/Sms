@@ -95,7 +95,7 @@ def login(request, short_code):
                         django_login(request, user)
 
                         # Check if password is the default password
-                        if password == 'parents':
+                        if password == 'parent':
                             request.session['force_password_change'] = True
 
                         return redirect("schools_dashboard", short_code=short_code)
