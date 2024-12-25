@@ -218,13 +218,7 @@ def add_staff(request, short_code):
 @admin_required
 def staff_list(request, short_code):
     # Generate a unique cache key based on the school and query parameters
-    cache_key = f"staff_list_{short_code}_{request.GET.get('q', '')}_{request.GET.get('page', 1)}_{request.GET.get('status', '').lower()}"
-    cached_staff_list = cache.get(cache_key)
-
-    # Check if the result is already cached
-    if cached_staff_list:
-        return cached_staff_list
-
+    
     # Fetch the school object
     school = get_object_or_404(SchoolRegistration.objects.select_related('admin_user'), short_code=short_code)
     
@@ -270,7 +264,7 @@ def staff_list(request, short_code):
     })
 
     # Cache the rendered response for 5 minutes (300 seconds)
-    cache.set(cache_key, response, 300)
+
 
     return response
 
