@@ -429,7 +429,7 @@
                             </label>
                             <input type="text" id="username" name="username" class="form-control" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 position-relative">
                             <label for="password" class="form-label">
                                 <!-- Password Icon -->
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 16">
@@ -438,21 +438,61 @@
                                 </svg>
                                 Password
                             </label>
-                            <input type="password" id="password" name="password" class="form-control" required>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    class="form-control" 
+                                    style="border-radius: 30px; padding-right: 40px;" 
+                                    placeholder="Enter your password" 
+                                    required>
+                                <button 
+                                    type="button" 
+                                    id="togglePassword" 
+                                    style="
+                                        position: absolute; 
+                                        right: 10px; 
+                                        background: none; 
+                                        border: none; 
+                                        cursor: pointer; 
+                                        outline: none;">
+                                    <!-- Default eye icon -->
+                                    <svg 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        width="20" 
+                                        height="20" 
+                                        fill="currentColor" 
+                                        id="eyeIcon" 
+                                        class="bi bi-eye" 
+                                        viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zm-8 4a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" />
+                                        <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
+                        
                         {% endif %}
+                        
                         <div class="d-grid">
-                            <button class="btn custom-bg" type="submit">
-                                Login
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-arrow-in-right"
-                                    viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd"
-                                        d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0 14.5 2h-8A1.5.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z" />
-                                    <path fill-rule="evenodd"
-                                        d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
-                                </svg>
+                            <button class="btn custom-bg" type="submit" id="loginButton">
+                                <span id="buttonText">
+                                    Login
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-arrow-in-right"
+                                        viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd"
+                                            d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0 14.5 2h-8A1.5.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z" />
+                                        <path fill-rule="evenodd"
+                                            d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
+                                    </svg>
+                                </span>
+                                <span id="spinner" class="spinner-grow spinner-grow-sm text-light" style="display: none;" role="status" aria-hidden="true"></span>
                             </button>
                         </div>
+                        
+                        
+                       
                            <div class="text-center mt-3">
                                  <a href="{% url 'forgot_password' school.short_code %}" class="text-decoration-none" style="color: var(--theme-color1);">Forgot Password?</a>
                           </div>
@@ -472,6 +512,45 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+<script>
+   document.getElementById("togglePassword").addEventListener("click", function () {
+        const passwordInput = document.getElementById("password");
+        const eyeIcon = document.getElementById("eyeIcon");
+
+        // Toggle password visibility
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.replace("bi-eye", "bi-eye-slash-fill"); // Change to eye-slash icon
+            eyeIcon.innerHTML = `<path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                              <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>`;
+        } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.replace("bi-eye-slash-fill", "bi-eye"); // Change back to eye icon
+            eyeIcon.innerHTML = `<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zm-8 4a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+                                 <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>`;
+        }
+    });
+
+    document.getElementById("loginButton").addEventListener("click", function (event) {
+        const button = this;
+        const spinner = document.getElementById("spinner");
+        const buttonText = document.getElementById("buttonText");
+
+        // Prevent default form submission
+        event.preventDefault();
+
+        // Show spinner and disable button
+        spinner.style.display = "inline-block";
+        buttonText.style.display = "none";
+        button.disabled = true;
+
+        // Submit the form after a brief delay to show the spinner
+        setTimeout(() => {
+            button.closest("form").submit();
+        }, 200); // Delay for smooth user experience (in milliseconds)
+    });
+</script>    
 </body>
 
 </html>

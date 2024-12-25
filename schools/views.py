@@ -61,14 +61,14 @@ def login(request, short_code):
                 if user == school.admin_user:
                     django_login(request, user)
                     next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                    return redirect(next_url)
+                    return redirect('schools_dashboard',  short_code=short_code)
 
                 # Staff member
                 elif hasattr(user, 'staff') and user.staff.branches.filter(school=school).exists():
                     if user.staff.status == 'active':  # Ensure staff member is active
                         django_login(request, user)
                         next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                        return redirect(next_url)
+                        return redirect('schools_dashboard',  short_code=short_code)
                     else:
                         messages.error(request, 'Your account is inactive. Please contact the administrator.')
 
@@ -76,7 +76,7 @@ def login(request, short_code):
                 elif hasattr(user, 'student_profile') and user.student_profile.branch.school == school:
                     django_login(request, user)
                     next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                    return redirect(next_url)
+                    return redirect("schools_dashboard",  short_code=short_code)
 
                 # Parent
                 elif hasattr(user, 'parent_profile'):  # Using `parent_profile` based on the related_name
@@ -87,7 +87,7 @@ def login(request, short_code):
                     ).exists():
                         django_login(request, user)
                         next_url = request.GET.get('next', reverse('loader', kwargs={'short_code': short_code}))
-                        return redirect(next_url)
+                        return redirect("schools_dashboard",  short_code=short_code)
                     else:
                         messages.error(request, 'No students associated with your account in this school.')
                 else:
