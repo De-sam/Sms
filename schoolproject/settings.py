@@ -246,4 +246,4 @@ AXES_COOLOFF_TIME = 0.5 # Lockout duration in hours
 AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
 AXES_RESET_ON_SUCCESS = True  # Reset attempts after a successful login
 AXES_LOCKOUT_PARAMETERS = ['username']
-AXES_LOCKOUT_PARAMETERS = ['ip_address']
+# AXES_LOCKOUT_PARAMETERS = ['ip_address']
