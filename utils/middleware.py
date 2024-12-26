@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.sessions.models import Session
-
+from django.utils.timezone import now
 
 class SessionTimeoutMiddleware:
     def __init__(self, get_response):
