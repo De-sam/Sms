@@ -66,13 +66,6 @@ INSTALLED_APPS = [
 
 
 
-
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -83,8 +76,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'utils.middleware.SessionTimeoutMiddleware',
+    'utils.middleware.NotifyOnSessionTerminationMiddleware',
 ]
 
+INACTIVITY_TIMEOUT = 600  # 10 minutes in seconds
 
 
 
@@ -242,7 +238,17 @@ AUTHENTICATION_BACKENDS = [
 
 # Django-Axes Configuration
 AXES_FAILURE_LIMIT = 5  # Number of allowed attempts
-AXES_COOLOFF_TIME = 0.25 # Lockout duration in hours
+AXES_COOLOFF_TIME = 0.25  # Lockout duration in hours
 AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
 AXES_RESET_ON_SUCCESS = True  # Reset attempts after a successful login
 AXES_LOCKOUT_PARAMETERS = ['username']
+
+# HTTPS and Security Settings
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)  # Redirect HTTP to HTTPS
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000 if not DEBUG else 0, cast=int)  # HSTS duration
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=not DEBUG, cast=bool)  # HSTS for subdomains
+SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=not DEBUG, cast=bool)  # Preload HSTS for browsers
+SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=not DEBUG, cast=bool)  # XSS Protection
+SECURE_CONTENT_TYPE_NOSNIFF = config('SECURE_CONTENT_TYPE_NOSNIFF', default=not DEBUG, cast=bool)  # Content type nosniff header
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)  # HTTPS-only session cookies
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)  # HTTPS-only CSRF cookies

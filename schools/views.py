@@ -87,6 +87,7 @@ def login(request, short_code):
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
+                request.session.cycle_key()
                 # Admin user
                 if user == school.admin_user:
                     django_login(request, user)
