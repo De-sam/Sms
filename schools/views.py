@@ -43,8 +43,17 @@ from django.utils.http import urlsafe_base64_decode
 from django.views import View
 from datetime import datetime, timedelta
 from utils.tokens import CustomPasswordResetTokenGenerator
+from axes.handlers.proxy import AxesProxyHandler
+from axes.models import AccessAttempt
+from datetime import timedelta
+from django.utils import timezone
+
+
+
 
 custom_token_generator = CustomPasswordResetTokenGenerator()
+
+
 
 def login(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -54,6 +63,27 @@ def login(request, short_code):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+
+            # Check if the user is locked out
+            if AxesProxyHandler.is_locked(request):
+                # Calculate the cooldown time manually
+                lockout_time = timedelta(hours=1)  # Default cooloff time as per Axes settings
+                last_attempt = AccessAttempt.objects.filter(ip_address=request.META.get('REMOTE_ADDR')).last()
+                if last_attempt and last_attempt.attempt_time:
+                    time_elapsed = timezone.now() - last_attempt.attempt_time
+                    remaining_time = lockout_time - time_elapsed
+                    if remaining_time.total_seconds() > 0:
+                        minutes_remaining = round(remaining_time.total_seconds() / 60)
+                        messages.error(
+                            request,
+                            f"Your account is locked. Please try again in {minutes_remaining} minutes."
+                        )
+                        return redirect('login-page', short_code=short_code)
+                messages.error(request, "Your account is locked. Please try again later.")
+                return redirect('login-page', short_code=short_code)
+
+            
+
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
