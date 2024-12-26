@@ -243,8 +243,7 @@ AUTHENTICATION_BACKENDS = [
 # Django-Axes Configuration
 AXES_FAILURE_LIMIT = 5  # Number of allowed attempts
 AXES_COOLOFF_TIME = 1  # Lockout duration in hours
-AXES_LOCKOUT_TEMPLATE = 'axes/lockout.html'  # Custom lockout page template
 AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
 AXES_RESET_ON_SUCCESS = True  # Reset attempts after a successful login
-AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']
-AXES_LOCKOUT_TEMPLATE = 'axes/lockout.html'  # Custom lockout page template
+AXES_LOCKOUT_PARAMETERS = ['username']
+AXES_LOCKOUT_PARAMETERS = ['ip_address']
