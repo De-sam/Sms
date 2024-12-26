@@ -80,7 +80,7 @@ MIDDLEWARE = [
     'utils.middleware.NotifyOnSessionTerminationMiddleware',
 ]
 
-INACTIVITY_TIMEOUT = 600  # 10 minutes in seconds
+INACTIVITY_TIMEOUT = 1800  # 10 minutes in seconds
 
 
 
