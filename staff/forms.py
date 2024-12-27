@@ -151,6 +151,7 @@ class StaffCreationForm(UserCreationForm):
         return user
     
 class UserUpdateForm(forms.ModelForm):
+    username = forms.CharField(max_length=150, required=True, label="Username")
     email = forms.EmailField(required=True)
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
@@ -168,20 +169,19 @@ class UserUpdateForm(forms.ModelForm):
     profile_picture = forms.ImageField(required=False)
     staff_signature = forms.FileField(required=False)
 
-    # New fields for account information
-    bank_name = forms.CharField(max_length=100, required=False)
+    # New fields for bank details
+    bank_name = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select searchable-bank"})
+    )
     account_number = forms.CharField(max_length=20, required=False)
-    account_name = forms.CharField(max_length=100, required=False)
+    account_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     class Meta:
         model = User
-        fields = [
-            'first_name',
-            'last_name',
-            'email'
-        ]
+        fields = ['username', 'first_name', 'last_name', 'email']
 
-        
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)
         super().__init__(*args, **kwargs)
@@ -204,9 +204,20 @@ class UserUpdateForm(forms.ModelForm):
             self.fields['cv'].initial = staff_instance.cv
             self.fields['profile_picture'].initial = staff_instance.profile_picture
             self.fields['staff_signature'].initial = staff_instance.staff_signature
+            self.fields['bank_name'].initial = staff_instance.bank_name
+            self.fields['account_number'].initial = staff_instance.account_number
+            self.fields['account_name'].initial = staff_instance.account_name
+
+        # Populate bank_name choices dynamically
+        from utils.banking import fetch_bank_codes
+        bank_codes = fetch_bank_codes()
+        self.fields['bank_name'].choices = [("", "Select a bank")] + [
+            (code, name) for code, name in bank_codes.items()
+        ]
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.username = self.cleaned_data['username']
         user.email = self.cleaned_data['email']
 
         if commit:

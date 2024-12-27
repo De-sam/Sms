@@ -73,6 +73,8 @@
                                 <th>Full Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Bank</th>
+                                <th>Account Number</th>
                                 <th>Phone Number</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -90,6 +92,8 @@
                                         <td>{{ staff.user.first_name }} {{ staff.user.last_name }}</td>
                                         <td>{{ staff.user.email }}</td>
                                         <td>{{ staff.role.name }}</td>
+                                        <td>{{ staff.display_bank_name }}</td>
+                                        <td>{{ staff.account_number }}</td>
                                         <td>{{ staff.phone_number }}</td>
                                         <td>
                                             {% if staff.status == 'active' %}

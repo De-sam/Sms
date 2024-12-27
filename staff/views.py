@@ -28,7 +28,7 @@ from django.views.decorators.http import require_POST
 from classes.forms import TeacherClassAssignmentForm
 from utils.academics import get_sessions, get_terms
 from academics.models import Session, Term
-from utils.banking import verify_account_details
+from utils.banking import verify_account_details,fetch_bank_codes
 
 
 def save_temp_file(uploaded_file):
@@ -247,6 +247,9 @@ def staff_list(request, short_code):
     per_page = request.GET.get('per_page', 10)
     status_filter = request.GET.get('status', '').lower()
 
+
+    # Fetch bank codes dynamically
+    bank_codes = fetch_bank_codes()
     # Use select_related and prefetch_related for optimized querying
     staff_members = Staff.objects.filter(branches__school=school).select_related('role', 'user').prefetch_related('branches').distinct()
 
@@ -263,6 +266,11 @@ def staff_list(request, short_code):
     # Apply status filtering if specified
     if status_filter in ['active', 'inactive']:
         staff_members = staff_members.filter(status=status_filter)
+
+
+    # Annotate staff members with the human-readable bank name
+    for staff in staff_members:
+        staff.display_bank_name = bank_codes.get(staff.bank_name, "Unknown Bank")
 
     # Paginate the staff members list
     paginator = Paginator(staff_members, per_page)

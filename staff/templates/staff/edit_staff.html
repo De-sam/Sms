@@ -46,7 +46,14 @@
                                 Document Uploads
                             </a>
                         </li>
-                        
+                        <li class="nav-item">
+                            <a class="nav-link" id="account-info-tab" data-bs-toggle="tab" href="#account-info" role="tab" aria-controls="account-info" aria-selected="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-lock" viewBox="0 0 16 16">
+                                    <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5v-1a2 2 0 0 1 .01-.2 4.49 4.49 0 0 1 1.534-3.693Q8.844 9.002 8 9c-5 0-6 3-6 4m7 0a1 1 0 0 1 1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm3-3a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1"/>
+                                  </svg>
+                                Account Information
+                            </a>
+                        </li>
                     </ul>
 
                     <!-- Tab Content -->
@@ -156,8 +163,33 @@
                                 </div>
                             </div>
                         </div>
+                                                            
+                                    <div class="tab-pane fade" id="account-info" role="tabpanel" aria-labelledby="account-info-tab">
+                                        <div class="card">
+                                            <div class="card-header bg-primary text-white">
+                                                <h3 class="card-title">
+                                                    Account Information
+                                                </h3>
+                                            </div>
+                                            <div class="card-body bg-light">
+                                                <!-- New Account Information Fields -->
+                                                <div class="form-group">
+                                                    {{ form.username|as_crispy_field }} <!-- This will be read-only -->
+                                                </div>
 
-                        
+                                                <div class="form-group">
+                                                    {{ form.bank_name|as_crispy_field }}
+                                                </div>
+                                                
+                                                <div class="form-group">
+                                                    {{ form.account_number|as_crispy_field }}
+                                                </div>
+                                            
+                                                <div class="form-group">
+                                                    {{ form.account_name|as_crispy_field }}
+                                                </div>
+                                               
+                                            </div>
                                 <div class="card-footer d-flex justify-content-center">
                                     <button type="submit" class="btn btn-primary" id="addStaffButton">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-floppy2" viewBox="0 0 16 16">
@@ -202,5 +234,67 @@
             });
         });
     });
+</script>
+<!-- Include Select2 CSS and JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply Select2 to bank name field
+        $('.searchable-bank').select2({
+            placeholder: "Search for a bank",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const accountNumberInput = document.getElementById('id_account_number');
+    const bankSelect = document.getElementById('id_bank_name');
+    const accountNameInput = document.getElementById('id_account_name');
+
+    function fetchAccountName() {
+        const accountNumber = accountNumberInput.value;
+        const bankCode = bankSelect.value;
+
+        if (accountNumber && bankCode) {
+            // Extract short_code from the URL
+            const pathParts = window.location.pathname.split('/');
+            const url = `/staff/fetch_account_name?account_number=${accountNumber}&bank_code=${bankCode}`;
+
+            console.log('Constructed URL:', url); // Log URL for debugging
+
+            // Make the fetch request
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        accountNameInput.value = ''; // Clear account name on error
+                    } else {
+                        accountNameInput.value = data.account_name || ''; // Populate account name
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching account name:', error);
+                    alert('Failed to fetch account name. Please try again.');
+                });
+        }
+    }
+
+    // Attach event listeners
+    accountNumberInput.addEventListener('blur', fetchAccountName); // Trigger on input blur
+    bankSelect.addEventListener('change', fetchAccountName); // Trigger on bank selection change
+});
+
+
 </script>
 {% endblock %}
