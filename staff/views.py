@@ -28,6 +28,8 @@ from django.views.decorators.http import require_POST
 from classes.forms import TeacherClassAssignmentForm
 from utils.academics import get_sessions, get_terms
 from academics.models import Session, Term
+from utils.banking import verify_account_details
+
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -213,6 +215,25 @@ def add_staff(request, short_code):
         'form': form,
         'school': school,
     })
+
+
+
+def fetch_account_name(request):
+    """
+    Fetch the account name for a given account number and bank code via AJAX.
+    """
+    account_number = request.GET.get('account_number')
+    bank_code = request.GET.get('bank_code')
+
+    if not account_number or not bank_code:
+        return JsonResponse({'error': 'Account number and bank code are required.'}, status=400)
+
+    account_details = verify_account_details(account_number, bank_code)
+
+    if 'account_name' in account_details:
+        return JsonResponse({'account_name': account_details['account_name']})
+    else:
+        return JsonResponse({'error': 'Unable to verify account details.'}, status=400)
 
 @login_required_with_short_code
 @admin_required

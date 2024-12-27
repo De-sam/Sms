@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('fetch_account_name', views.fetch_account_name, name='fetch_account_name'), 
+    path('<str:short_code>/account/verify/', views.fetch_account_name, name='fetch_account_name'),
     path('<str:short_code>/assign-classes/<int:teacher_id>/', views.assign_teacher_to_class, name='assign_teacher_to_class'),
     path('<str:short_code>/get-classes-by-branch/<int:branch_id>/', views.get_classes_by_branch, name='get_classes_by_branch'),
     path('<str:short_code>/get-sessions/', views.get_sessions, name='get_sessions'),

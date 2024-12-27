@@ -8,6 +8,11 @@ from django import forms
 import datetime
 from .utils import generate_unique_username
 from academics.models import Session, Term
+from django.core.exceptions import ValidationError
+from utils.banking import fetch_bank_codes, verify_account_details
+import datetime
+
+
 
 class StaffUploadForm(forms.Form):
     file = forms.FileField()
@@ -30,10 +35,14 @@ class StaffCreationForm(UserCreationForm):
     profile_picture = forms.ImageField(required=False)
     staff_signature = forms.FileField(required=True)
 
-    # New fields for account information
-    bank_name = forms.CharField(max_length=100, required=False)
+    # Account details fields
+    bank_name = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select searchable-bank"})
+    )
     account_number = forms.CharField(max_length=20, required=False)
-    account_name = forms.CharField(max_length=100, required=False)
+    account_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     password1 = forms.CharField(
         required=True,
@@ -64,6 +73,12 @@ class StaffCreationForm(UserCreationForm):
         if school:
             self.fields['branches'].queryset = Branch.objects.filter(school=school)
 
+        # Populate bank_name choices dynamically
+        bank_codes = fetch_bank_codes()
+        self.fields['bank_name'].choices = [("", "Select a bank")] + [
+            (code, name) for code, name in bank_codes.items()
+        ]
+
         if not self.instance.pk:
             current_year = datetime.datetime.now().year
             school_initials = ''.join([word[0].upper() for word in school.school_name.split()])
@@ -83,6 +98,21 @@ class StaffCreationForm(UserCreationForm):
             self.fields['password2'].required = False
             self.fields['password1'].help_text = "Leave blank if you don't want to change the password."
             self.fields['password2'].help_text = "Leave blank if you don't want to change the password."
+
+    def clean(self):
+        cleaned_data = super().clean()
+        bank_code = cleaned_data.get("bank_name")
+        account_number = cleaned_data.get("account_number")
+
+        if bank_code and account_number:
+            # Verify account details
+            account_details = verify_account_details(account_number, bank_code)
+            if not account_details or 'account_name' not in account_details:
+                raise ValidationError("Unable to verify account details. Please check the bank and account number.")
+            # Populate account name
+            cleaned_data['account_name'] = account_details['account_name']
+
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -119,7 +149,7 @@ class StaffCreationForm(UserCreationForm):
             staff.save()
 
         return user
-
+    
 class UserUpdateForm(forms.ModelForm):
     email = forms.EmailField(required=True)
     first_name = forms.CharField(required=True)
@@ -150,6 +180,30 @@ class UserUpdateForm(forms.ModelForm):
             'last_name',
             'email'
         ]
+
+        
+    def __init__(self, *args, **kwargs):
+        school = kwargs.pop('school', None)
+        super().__init__(*args, **kwargs)
+
+        if school:
+            self.fields['branches'].queryset = Branch.objects.filter(school=school)
+
+        if self.instance and hasattr(self.instance, 'staff'):
+            staff_instance = self.instance.staff
+            self.fields['role'].initial = staff_instance.role
+            self.fields['branches'].initial = staff_instance.branches.all()
+            self.fields['gender'].initial = staff_instance.gender
+            self.fields['marital_status'].initial = staff_instance.marital_status
+            self.fields['date_of_birth'].initial = staff_instance.date_of_birth
+            self.fields['phone_number'].initial = staff_instance.phone_number
+            self.fields['address'].initial = staff_instance.address
+            self.fields['nationality'].initial = staff_instance.nationality
+            self.fields['staff_category'].initial = staff_instance.staff_category
+            self.fields['status'].initial = staff_instance.status
+            self.fields['cv'].initial = staff_instance.cv
+            self.fields['profile_picture'].initial = staff_instance.profile_picture
+            self.fields['staff_signature'].initial = staff_instance.staff_signature
 
     def save(self, commit=True):
         user = super().save(commit=False)

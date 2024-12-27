@@ -174,13 +174,13 @@
         <div class="card-body bg-light">
             <!-- New Account Information Fields -->
             <div class="form-group">
-                {{ form.account_number|as_crispy_field }}
-            </div>
-           
-            <div class="form-group">
                 {{ form.bank_name|as_crispy_field }}
             </div>
-           
+            
+            <div class="form-group">
+                {{ form.account_number|as_crispy_field }}
+            </div>
+        
             <div class="form-group">
                 {{ form.account_name|as_crispy_field }}
             </div>
@@ -336,5 +336,67 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.remove('modal-open'); // Remove the modal-open class from body
     });
 });
+</script>
+<!-- Include Select2 CSS and JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply Select2 to bank name field
+        $('.searchable-bank').select2({
+            placeholder: "Search for a bank",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const accountNumberInput = document.getElementById('id_account_number');
+    const bankSelect = document.getElementById('id_bank_name');
+    const accountNameInput = document.getElementById('id_account_name');
+
+    function fetchAccountName() {
+        const accountNumber = accountNumberInput.value;
+        const bankCode = bankSelect.value;
+
+        if (accountNumber && bankCode) {
+            // Extract short_code from the URL
+            const pathParts = window.location.pathname.split('/');
+            const url = `/staff/fetch_account_name?account_number=${accountNumber}&bank_code=${bankCode}`;
+
+            console.log('Constructed URL:', url); // Log URL for debugging
+
+            // Make the fetch request
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        accountNameInput.value = ''; // Clear account name on error
+                    } else {
+                        accountNameInput.value = data.account_name || ''; // Populate account name
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching account name:', error);
+                    alert('Failed to fetch account name. Please try again.');
+                });
+        }
+    }
+
+    // Attach event listeners
+    accountNumberInput.addEventListener('blur', fetchAccountName); // Trigger on input blur
+    bankSelect.addEventListener('change', fetchAccountName); // Trigger on bank selection change
+});
+
+
 </script>
 {% endblock %}

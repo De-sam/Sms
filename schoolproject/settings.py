@@ -105,6 +105,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'schoolproject.wsgi.application'
+# Nubapi API Key
+NUBAPI_API_KEY = "WA9JKOqad63BT1Ep6cfzGj9XKBeePk1v6vHwFsvYde2e1107"
 
 
 # Database
@@ -157,6 +159,9 @@ AUTH_PASSWORD_VALIDATORS = [
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
+
+NUBAPI_API_KEY = config('NUBAPI_API_KEY', default='')
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
