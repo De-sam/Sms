@@ -58,6 +58,14 @@ class Staff(models.Model):
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     staff_signature = models.FileField(upload_to='signatures/', blank=False, null=False)
 
+    # New fields for account information
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    account_number = models.CharField(max_length=10, blank=True, null=True)
+    account_name = models.CharField(max_length=100, blank=True, null=True)
+
+
+
+
     class Meta:
         indexes = [
             models.Index(fields=['user']),  # Index on the user (foreign key)

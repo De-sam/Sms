@@ -313,6 +313,31 @@
         border-color: var(--theme-color1); /* Theme color border on focus */
         box-shadow: 0 0 5px var(--theme-color1); /* Subtle glow on focus */
     }
+
+
+    .form-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        z-index: 10; /* Place overlay above form content */
+        border-radius: 15px; /* Match the card's rounded corners */
+    }
+
+    .form-overlay.d-block {
+        display: flex !important; /* Show overlay when active */
+    }
+
+    .large-spinner {
+        width: 6rem; /* Increased size */
+        height: 6rem; /* Increased size */
+        background-color: var(--theme-color1); /* Use theme color 1 for spinner */
+    }
     </style>
 </head>
 
@@ -379,7 +404,7 @@
 
             <!-- Login Form Section -->
             <div class="col-lg-6 d-flex justify-content-center align-items-center">
-                <div class="card login-container">
+                <div class="card login-container position-relative">
                     <div class="text-center mb-4">
                         {% if school.logo %}
                         <img class="img-fluid login-card-logo" src="{{ school.logo.url }}" alt="School Logo">
@@ -413,7 +438,12 @@
                         </div>
                         {% endif %}
                     </div>
-                    
+                                    <!-- Overlay for the spinner -->
+                    <div class="form-overlay d-none">
+                        <div class="spinner-grow text-primary large-spinner" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
                     <form method="post" action="{% url 'login-page' short_code=school.short_code %}">
                         {% csrf_token %}
                         {% if school.short_code %}
@@ -532,24 +562,23 @@
     });
 
     document.getElementById("loginButton").addEventListener("click", function (event) {
-        const button = this;
-        const spinner = document.getElementById("spinner");
-        const buttonText = document.getElementById("buttonText");
+    event.preventDefault(); // Prevent immediate submission
 
-        // Prevent default form submission
-        event.preventDefault();
+    const form = this.closest("form");
+    const overlay = document.querySelector(".form-overlay");
 
-        // Show spinner and disable button
-        spinner.style.display = "inline-block";
-        buttonText.style.display = "none";
-        button.disabled = true;
+    // Show overlay and spinner
+    overlay.classList.remove("d-none");
+    overlay.classList.add("d-block");
 
-        // Submit the form after a brief delay to show the spinner
-        setTimeout(() => {
-            button.closest("form").submit();
-        }, 200); // Delay for smooth user experience (in milliseconds)
-    });
-</script>    
+    // Submit the form after showing the spinner
+    setTimeout(() => {
+        form.submit();
+    }, 100); // Optional slight delay for smooth UX
+});
+
+</script>
+
 </body>
 
 </html>

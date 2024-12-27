@@ -172,6 +172,18 @@
             </h3>
         </div>
         <div class="card-body bg-light">
+            <!-- New Account Information Fields -->
+            <div class="form-group">
+                {{ form.account_number|as_crispy_field }}
+            </div>
+           
+            <div class="form-group">
+                {{ form.bank_name|as_crispy_field }}
+            </div>
+           
+            <div class="form-group">
+                {{ form.account_name|as_crispy_field }}
+            </div>
             <div class="form-group">
                 {{ form.username|as_crispy_field }} <!-- This will be read-only -->
             </div>

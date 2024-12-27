@@ -48,5 +48,5 @@ class NotifyOnSessionTerminationMiddleware:
     def __call__(self, request):
         if '_session_terminated' in request.session:
             del request.session['_session_terminated']
-            messages.info(request, "One of your sessions has been terminated.")
+            messages.info(request, "One of your sessions has been terminated or expired.")
         return self.get_response(request)
