@@ -332,19 +332,41 @@ def dashboard(request, short_code):
     is_parent = False
     is_accountant = False
 
+
+    staff = None  # Default value
+    student = None
+    parent = None  # Corrected to use lowercase 'parent'
+
     if not is_school_admin:
         if hasattr(user, 'staff'):
+            staff = user.staff  
             if user.staff.role.name.lower() == 'teacher':
                 is_teacher = True
             elif user.staff.role.name.lower() == 'accountant':
                 is_accountant = True
         elif hasattr(user, 'student_profile') and user.student_profile.branch.school == school:
             is_student = True
+            student = user.student_profile  # Assign student profile to 'student'
         elif hasattr(user, 'parent_profile') and ParentStudentRelationship.objects.filter(
             parent_guardian=user.parent_profile,
             student__branch__school=school
         ).exists():
             is_parent = True
+            parent = user.parent_profile  # Corrected to use lowercase 'parent'
+
+    # Base context for all roles
+    context = {
+        'school': school,
+        'is_school_admin': is_school_admin,
+        'is_teacher': is_teacher,
+        'is_student': is_student,
+        'is_parent': is_parent,
+        'is_accountant': is_accountant,
+        'staff': staff,  # Add staff to the context
+        'student': student,  # Add student to the context
+        'parent': parent,  # Add parent to the context
+        'force_password_change': request.session.pop('force_password_change', False),
+    }
 
     # Base context for all roles #
     context = {
@@ -354,6 +376,9 @@ def dashboard(request, short_code):
         'is_student': is_student,
         'is_parent': is_parent,
         'is_accountant': is_accountant,
+        'staff': staff,  # Add staff to the context
+        'student':student,
+        'parent':parent,
         'force_password_change': request.session.pop('force_password_change', False),
     }
 

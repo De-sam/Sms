@@ -107,6 +107,29 @@
                             {% endif %} - {% firstof request.user.get_role %}
                             <small>Member since: {{ request.user.date_joined }}</small>
                         </p>
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-center mt-3">
+                                {% if is_school_admin %}
+                                <a href="" class="btn btn-light btn-sm text-dark me-2">
+                                    <i class="fas fa-user-circle"></i> Admin Profile
+                                </a>
+                                {% elif request.user.staff %}
+                                <a href="{% url 'edit_staff' school.short_code request.user.staff.id %}" class="btn btn-light btn-sm text-dark me-2">
+                                    <i class="fas fa-user-circle"></i> Staff Profile
+                                </a>
+                                {% elif request.user.student_profile %}
+                                <a href="{% url 'edit_student' school.short_code student.id %}" class="btn btn-light btn-sm text-dark me-2">
+                                    <i class="fas fa-user-circle"></i> Student Profile
+                                </a>
+                                {% elif request.user.parent_profile %}
+                                <a href="{% url 'edit_parent_guardian' school.short_code parent.id %}" class="btn btn-light btn-sm text-dark me-2">
+                                    <i class="fas fa-user-circle"></i> Parent Profile
+                                </a>
+                                {% endif %}
+                                <a href="#" class="btn btn-light btn-sm text-dark me-2">
+                                    <i class="fas fa-bell"></i> Notifications
+                                </a>
+                            </div>
                     </li>
                     <!-- Menu Footer-->
                     <li class="user-footer d-flex justify-content-between">
@@ -126,6 +149,7 @@
     {% endblock nav_custom_menu %}
 {% endblock %}
 </nav>
+{% if '/admin/' not in request.path %}
 
 <!-- Change Password Modal -->
 <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel"
@@ -154,6 +178,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

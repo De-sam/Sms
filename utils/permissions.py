@@ -43,6 +43,21 @@ def accountant_required(view_func):
         raise PermissionDenied("You do not have permission to access this view.")
     return wrapper
 
+def accountant_or_admin_required(view_func):
+    """Decorator to check if the user is an accountant."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        school = get_object_or_404(SchoolRegistration, short_code=kwargs.get('short_code'))
+        if hasattr(request.user, 'staff') and request.user.staff.role.name.lower() == 'accountant':
+            return view_func(request, *args, **kwargs)
+        # Check if user is admin
+        if request.user == school.admin_user:
+            return view_func(request, *args, **kwargs)
+
+        raise PermissionDenied("You do not have permission to access this view.")
+    return wrapper
+
+
 def parent_required(view_func):
     """Decorator to check if the user is a parent."""
     @wraps(view_func)
@@ -57,6 +72,26 @@ def parent_required(view_func):
                 return view_func(request, *args, **kwargs)
         raise PermissionDenied("You do not have permission to access this view.")
     return wrapper
+
+def parent_or_admin_required(view_func):
+    """Decorator to check if the user is a parent."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        school = get_object_or_404(SchoolRegistration, short_code=kwargs.get('short_code'))
+        if hasattr(request.user, 'parent_profile'):
+            # Check if the parent has any students in the given school
+            if ParentStudentRelationship.objects.filter(
+                parent_guardian=request.user.parent_profile,
+                student__branch__school=school
+            ).exists():
+                return view_func(request, *args, **kwargs)
+            # Check if user is admin
+            if request.user == school.admin_user:
+                return view_func(request, *args, **kwargs)
+
+        raise PermissionDenied("You do not have permission to access this view.")
+    return wrapper
+
 
 def admin_or_teacher_required(view_func):
     """Decorator to check if the user is either an admin or a teacher."""
@@ -76,3 +111,24 @@ def admin_or_teacher_required(view_func):
         raise PermissionDenied("You do not have permission to access this view.")
     
     return wrapper
+
+def student_admin_required(view_func):
+    """Decorator to check if the user is a student admin."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        school = get_object_or_404(SchoolRegistration, short_code=kwargs.get('short_code'))
+
+        # Check if user is admin
+        if request.user == school.admin_user:
+            return view_func(request, *args, **kwargs)
+        
+        # If not a student admin
+        if hasattr(request.user, 'student_profile') and request.user.student_profile.branch.school == school:
+            return view_func(request, *args, **kwargs)
+        
+        raise PermissionDenied("You do not have permission to access this view.")
+    
+    return wrapper
+
+
+

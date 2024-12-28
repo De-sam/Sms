@@ -11,7 +11,7 @@ from django.core.paginator import Paginator, EmptyPage,PageNotAnInteger
 from django.db.models import Q
 from .models import Staff
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required
+from utils.permissions import admin_required,admin_or_teacher_required
 from django.db import transaction
 from django.http import HttpResponse
 import zipfile
@@ -298,7 +298,7 @@ def staff_list(request, short_code):
     return response
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 def edit_staff(request, short_code, staff_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     staff = get_object_or_404(Staff, id=staff_id)
@@ -313,7 +313,7 @@ def edit_staff(request, short_code, staff_id):
             form.save()
 
             messages.success(request, 'Staff member updated successfully!')
-            return redirect('staff_list', short_code=school.short_code)
+            return redirect('schools_dashboard', short_code=school.short_code)
         else:
             messages.error(request, 'Please correct the errors below and try again.')
             # Add form errors to the messages framework

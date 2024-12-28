@@ -32,6 +32,8 @@ def fetch_bank_codes():
     except requests.exceptions.RequestException as e:
         print(f"Error fetching bank codes: {e}")
         return {}
+    
+    
 def verify_account_details(account_number, bank_code):
     """
     Verify an account using the NubAPI.

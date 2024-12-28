@@ -1,5 +1,5 @@
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required,admin_or_teacher_required
+from utils.permissions import admin_required,admin_or_teacher_required,student_admin_required,parent_or_admin_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -34,7 +34,7 @@ def add_parent_guardian(request, short_code):
     })
 
 @login_required_with_short_code
-@admin_required
+@parent_or_admin_required
 def edit_parent(request, short_code, parent_id):
     # Get the school and parent objects
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -51,7 +51,7 @@ def edit_parent(request, short_code, parent_id):
         if form.is_valid():
             form.save()
             messages.success(request, f"Parent record for {parent.first_name} {parent.last_name} has been updated successfully.")
-            return redirect('parent_guardian_list', short_code=short_code)
+            return redirect('schools_dashboard', short_code=short_code)
     else:
         form = ParentGuardianCreationForm(instance=parent, school=school)
 
@@ -61,6 +61,7 @@ def edit_parent(request, short_code, parent_id):
         'school': school,
         'parent': parent,
     })
+
 
 @login_required_with_short_code
 @admin_required
@@ -176,7 +177,7 @@ def list_parent_guardians(request, short_code):
 
 
 @login_required_with_short_code
-@admin_required
+@student_admin_required
 @transaction.atomic
 def edit_student(request, short_code, student_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
@@ -258,7 +259,7 @@ def edit_student(request, short_code, student_id):
         existing_relationships.exclude(id__in=new_relationships).delete()
 
         messages.success(request, 'Student record has been updated successfully.')
-        return redirect('student_list', short_code=short_code)
+        return redirect('schools_dashboard', short_code=short_code)
 
     return render(request, 'students/edit_students.html', {
         'form': form,
