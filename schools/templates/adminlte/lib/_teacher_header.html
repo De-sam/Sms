@@ -136,7 +136,7 @@
                         <button class="btn btn-primary btn-flat" data-bs-toggle="modal" data-bs-target="#changePasswordModal">{% trans 'Change Password' %}</button>
                         <a href="{% block logout_url %}
                         {% if school.short_code %}
-                     {% url 'logout-view' school.short_code %}
+                        {% url 'logout-view' school.short_code %}
                         {% endif %}
                         {% endblock %}" class="btn btn-danger btn-flat">{% trans 'Sign Out' %}</a>
                     </li>
@@ -149,6 +149,7 @@
     {% endblock nav_custom_menu %}
 {% endblock %}
 </nav>
+
 
 {% if '/admin/' not in request.path %}
 <!-- Change Password Modal -->
@@ -179,6 +180,7 @@
     </div>
 </div>
 {% endif %}
+
 <script>
        document.addEventListener('DOMContentLoaded', function () {
         const forcePasswordChange = {{ force_password_change|yesno:"true,false" }}; // Backend flag for password change
@@ -219,5 +221,6 @@
             });
         });
     });
+
 </script>
- 
+    

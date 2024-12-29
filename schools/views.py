@@ -368,19 +368,6 @@ def dashboard(request, short_code):
         'force_password_change': request.session.pop('force_password_change', False),
     }
 
-    # Base context for all roles #
-    context = {
-        'school': school,
-        'is_school_admin': is_school_admin,
-        'is_teacher': is_teacher,
-        'is_student': is_student,
-        'is_parent': is_parent,
-        'is_accountant': is_accountant,
-        'staff': staff,  # Add staff to the context
-        'student':student,
-        'parent':parent,
-        'force_password_change': request.session.pop('force_password_change', False),
-    }
 
  
 
