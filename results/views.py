@@ -219,7 +219,6 @@ def filter_students_for_scores(request, short_code):
     }
     return render(request, 'results/filter_scores.html', context)
 
-
 @csrf_exempt
 def get_student_scores(request, short_code):
     """
@@ -249,10 +248,6 @@ def get_student_scores(request, short_code):
 
             # Fetch result structure for the branch
             result_structure = get_object_or_404(ResultStructure, branch=branch)
-            
-            # Print conversion total and exam total for debugging
-            print(f"DEBUG: Conversion Total is {result_structure.conversion_total}")
-            print(f"DEBUG: Exam Total is {result_structure.exam_total}")
 
             # Fetch students in the selected classes
             students = Student.objects.filter(
@@ -271,6 +266,25 @@ def get_student_scores(request, short_code):
             # Prepare data for the response
             student_data = []
             for student in students:
+                # Fetch component scores for the student
+                component_scores = {
+                    sr.component.id: sr.score
+                    for sr in StudentResult.objects.filter(
+                        student=student,
+                        component__in=components
+                    )
+                }
+
+                student_components = [
+                    {
+                        "component_id": component.id,
+                        "component_name": component.name,
+                        "max_marks": component.max_marks,
+                        "score": component_scores.get(component.id, ""),  # Use existing score or empty
+                    }
+                    for component in components
+                ]
+
                 # Check if scores exist for this student, subject, session, term, and branch
                 final_result = StudentFinalResult.objects.filter(
                     student=student,
@@ -280,16 +294,6 @@ def get_student_scores(request, short_code):
                     subject=subject,
                     student_class=student.student_class
                 ).first()
-
-                student_components = [
-                    {
-                        "component_id": component.id,
-                        "component_name": component.name,
-                        "max_marks": component.max_marks,
-                        "score": "",  # Placeholder for component score (can be updated if needed)
-                    }
-                    for component in components
-                ]
 
                 student_data.append({
                     "id": student.id,
@@ -324,7 +328,7 @@ def get_student_scores(request, short_code):
 @transaction.atomic
 def save_student_scores(request, short_code):
     """
-    Save or update student scores, calculate class-based highest, lowest, and average scores,
+    Save or update student scores, including component scores, calculate class-based statistics,
     and update student averages.
     """
     if request.method == "POST":
@@ -356,6 +360,19 @@ def save_student_scores(request, short_code):
                         "error": f"Student {student.id} does not have an associated class."
                     }, status=400)
 
+                # Save or update component scores
+                for component_key, component_score in score.items():
+                    if component_key.startswith("component_"):
+                        component_id = component_key.split("_")[1]  # Extract component ID
+                        component = ResultComponent.objects.get(id=component_id)
+
+                        StudentResult.objects.update_or_create(
+                            student=student,
+                            component=component,
+                            defaults={"score": component_score},
+                        )
+
+                # Calculate total score
                 total_score = score["converted_ca"] + score["exam_score"]
 
                 # Save or update final results

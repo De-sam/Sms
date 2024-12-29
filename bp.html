@@ -1,220 +1,662 @@
-{% load static %}
-{% load crispy_forms_tags %}
+{% extends 'schools/base_dash.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title }}</title>
-    
-    <!-- Add your CSS and other head elements here -->
-    <link rel="stylesheet" href="{% static 'schools/css/login.css' %}">
-    
-    <!-- Include Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    
-    <!-- Bootswatch installation -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/spacelab/bootstrap.min.css">
-    
-    <!-- Favicon -->
-    {% if school.logo %}
-    <link rel="icon" href="{{ school.logo.url }}" type="image/x-icon">
-    {% endif %}
-
-    <style>
-        :root {
-            --theme-color1: {{ school.theme_color1 }};
-            --theme-color2: {{ school.theme_color2|default:"#f5f5f5" }};
-            --theme-color3: #f5f5f5; /* Neutral gray for gradients */
-        }
-
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background: radial-gradient(circle, var(--theme-color1), var(--theme-color2), var(--theme-color3));
-            animation: gradientShift 15s infinite;
-            background-size: 200% 200%;
-        }
-
-        @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .combined-card {
-            display: flex;
-            height: 92vh; /* Occupy more vertical space */
-            width: 96vw; /* Occupy more horizontal space */
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .left-card {
-            flex: 3; /* Adjust left card width */
-            background-color: var(--theme-color1);
-            color: #fff;
-            padding: 40px; /* Increase padding slightly */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .right-card {
-            flex: 2; /* Adjust right card width */
-            background-color: rgba(255, 255, 255, 0.6); /* Increased transparency */
-            padding: 40px; /* Increase padding */
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Vertically center contents */
-            backdrop-filter: blur(8px); /* Stronger blur effect */
-            border-radius: 10px; /* Slightly rounded corners */
-        }
-
-        .school-logo {
-            max-width: 70px; /* Keep logo size */
-            height: auto;
-            border: 1px solid var(--theme-color2);
-            border-radius: 50%;
-            margin: 0 auto;
-        }
-
-        .welcome-text {
-            text-align: center;
-            font-size: 1.6rem; /* Slightly larger welcome text */
-            color: var(--theme-color1);
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .form-label {
-            font-weight: bold;
-            font-size: 1.3rem; /* Increased label font size */
-            display: flex;
-            align-items: center;
-        }
-
-        .form-label svg {
-            width: 24px; /* Increased icon size */
-            height: 24px; /* Increased icon size */
-            margin-right: 8px;
-            color: var(--theme-color1);
-        }
-
-        .form-control {
-            border-radius: 25px; /* Fully rounded fields */
-            padding: 15px; /* Add internal padding to make fields bigger */
-            font-size: 1.1rem; /* Slightly increase font size */
-        }
-
-        .custom-bg {
-            background-color: var(--theme-color2); /* Use theme color 2 for button background */
-            color: white; /* White text */
-            border: none;
-            padding: 15px;
-            border-radius: 25px;
-            font-size: 1.3rem; /* Match button text size with icon */
-            transition: background-color 0.3s ease-in-out; /* Smooth hover effect */
-        }
-
-        .custom-bg:hover {
-            background-color: var(--theme-color1); /* Use theme color 1 on hover */
-            color: white; /* White text */
-        }
-
-        .custom-bg svg {
-            width: 24px; /* Match icon size with labels */
-            height: 24px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="combined-card">
-        <!-- Left Card -->
-        <div class="left-card">
-            <h4 class="text-center">Welcome to {{ school.school_name }}</h4>
-            <p class="text-center">Your one-stop portal for school management and access.</p>
+{% block content %}
+<div>
+    <!-- Filter Scores Form -->
+    <div class="card card-outline card-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-filter"></i> Filter Scores
+            </h3>
         </div>
+        <div class="card-body">
+            <form method="get" id="filterForm">
+                <div class="row">
+                    <!-- Session -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="id_session">Session</label>
+                            <select id="id_session" name="session" class="form-control">
+                                <option value="">Select Session</option>
+                            </select>
+                        </div>
+                    </div>
 
-        <!-- Right Card (Login Card) -->
-        <div class="right-card">
-            <div class="text-center mb-4">
-                {% if school.logo %}
-                    <img class="img-fluid school-logo" src="{{ school.logo.url }}" alt="School Logo">
-                {% else %}
-                    <span class="badge bg-secondary">No Logo Available</span>
-                {% endif %}
-            </div>
+                    <!-- Term -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="id_term">Term</label>
+                            <select id="id_term" name="term" class="form-control" disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <p class="welcome-text">Welcome Back!</p>
+                    <!-- Branch -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="id_branch">Branch</label>
+                            <select id="id_branch" name="branch" class="form-control" disabled>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
 
-            {% if messages %}
-            <div class="container mt-4">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    <!-- Subject -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="id_subject">Subject</label>
+                            <select id="id_subject" name="subject" class="form-control" disabled>
+                                <option value="">Select Subject</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            
-            <form method="post" action="{% url 'login-page' short_code=school.short_code %}">
-                {% csrf_token %}
-                {% if school.short_code %}
-                <input type="hidden" name="next" value="{{ request.GET.next }}" />
-                <div class="mb-4">
-                    <label for="username" class="form-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
-                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
-                        </svg>
-                        Username
-                    </label>
-                    <input type="text" id="username" name="username" class="form-control" required>
+
+                <!-- Classes -->
+                <div class="form-group mt-3">
+                    <label>Classes</label>
+                    <div id="classesContainer" class="bg-light p-3 rounded">
+                        <!-- Classes checkboxes will be dynamically added here -->
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="password" class="form-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 16">
-                            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
-                        </svg>
-                        Password
-                    </label>
-                    <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                {% endif %}
-                <div class="form-group">
-                    <button class="btn custom-bg btn-block" type="submit">
-                        Login
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="  bi bi-box-arrow-in-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd"
-                                d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5.5 0 0 0 6.5 14h8a1.5.5 0 0 0 1.5-1.5v-9A1.5.5 0 0 0 14.5 2h-8A1.5.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z" />
-                            <path fill-rule="evenodd"
-                                d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
-                        </svg>
-                    </button>
-                </div>
+
+                <button type="button" id="filterButton" class="btn btn-primary">Filter</button>
             </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
+    <!-- Students and Scores -->
+    <div id="scoresContainer" class="card mt-4 d-none">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <!-- Enter Scores Section -->
+            <h3 class="card-title mb-0">
+                <i class="fas fa-user"></i> Enter Scores
+            </h3>
 
-</html>
-https://sms-lme5.onrender.com/schools/dsce/login/
+            <!-- CA Conversion Total Section -->
+            <div class="ms-auto">
+
+                <span class="badge badge-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor"
+                        class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                        <path
+                            d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                    </svg>
+                    Current CA Conversion Total: <span id="caConversionTotal">Fetching...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- "Wait a moment..." Text -->
+    <div id="loadingMessage" class="alert alert-info mt-3 d-none">
+        <div class="spinner-grow" role="status" style="height: 1rem; width: 1rem;">
+            <span class="sr-only">Loading...</span>
+        </div>
+        Wait a moment...
+    </div>
+
+    <div class="card-body ">
+        <form id="scoresForm">
+            <table class="table table-bordered table-responsive table-container">
+                <thead id="dynamicHeaders">
+                    <!-- Dynamic headers will be populated here -->
+                </thead>
+                <tbody id="studentsTableBody">
+                    <!-- Students and scores will be dynamically added here -->
+                </tbody>
+            </table>
+
+            <button type="button" id="saveScoresButton" class="btn btn-success mt-3">Save Scores</button>
+        </form>
+    </div>
+</div>
+</div>
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="validationModal" tabindex="-1" aria-labelledby="validationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="validationModalLabel">Validation Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Dynamic error message -->
+                <p id="validationMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" aria-labelledby="processingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="processingModalLabel">Processing...</h5>
+            </div>
+            <div class="modal-body d-flex align-items-center">
+                <div class="spinner-border me-3" role="status" style="height: 1.5rem; width: 1.5rem;">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <span>Please wait while we process your request.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">Success!</h5>
+            </div>
+            <div class="modal-body">
+                <p>Your operation was completed successfully.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const shortCode = "{{ school.short_code }}";
+
+        const sessionSelect = document.getElementById('id_session');
+        const termSelect = document.getElementById('id_term');
+        const branchSelect = document.getElementById('id_branch');
+        const subjectSelect = document.getElementById('id_subject');
+        const classesContainer = document.getElementById('classesContainer');
+        const scoresContainer = document.getElementById('scoresContainer');
+        const studentsTableBody = document.getElementById('studentsTableBody');
+        const scoresForm = document.getElementById("scoresForm");
+        const validationModal = new bootstrap.Modal(document.getElementById("validationModal"));
+        const validationMessage = document.getElementById("validationMessage");
+        const caConversionElement = document.getElementById("caConversionTotal");
+
+        let conversionTotal = parseFloat(caConversionElement.textContent);
+        let examTotal = null; // Placeholder for exam total
+        let invalidInput = null;
+
+        // Monitor changes in CA Conversion Total
+        if (caConversionElement) {
+            const observer = new MutationObserver(() => {
+                conversionTotal = parseFloat(caConversionElement.textContent);
+            });
+            observer.observe(caConversionElement, { childList: true });
+        }
+
+        // Fetch data helper
+        function fetchData(url, callback) {
+            fetch(url)
+                .then(response => response.json())
+                .then(callback)
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Fetch sessions
+        fetchData(`/results/${shortCode}/get-sessions/`, (data) => {
+            sessionSelect.innerHTML = '<option value="">Select Session</option>';
+            if (data.sessions) {
+                data.sessions.forEach(session => {
+                    const option = document.createElement('option');
+                    option.value = session.id;
+                    option.textContent = session.session_name;
+                    sessionSelect.appendChild(option);
+                });
+            }
+        });
+
+        // Fetch terms when session changes
+        sessionSelect.addEventListener('change', function () {
+            const sessionId = sessionSelect.value;
+
+            termSelect.disabled = !sessionId;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+
+            if (sessionId) {
+                fetchData(`/results/${shortCode}/get-terms/${sessionId}/`, (data) => {
+                    if (data.terms) {
+                        data.terms.forEach(term => {
+                            const option = document.createElement('option');
+                            option.value = term.id;
+                            option.textContent = term.term_name;
+                            termSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+        });
+
+        // Fetch branches when term changes
+        termSelect.addEventListener('change', function () {
+            const sessionId = sessionSelect.value;
+
+            branchSelect.disabled = !termSelect.value;
+            branchSelect.innerHTML = '<option value="">Select Branch</option>';
+
+            if (sessionId && termSelect.value) {
+                fetchData(`/results/${shortCode}/get-branches/`, (data) => {
+                    if (data.branches) {
+                        data.branches.forEach(branch => {
+                            const option = document.createElement('option');
+                            option.value = branch.id;
+                            option.textContent = `${branch.branch_name} (${branch.branch_type})`;
+                            branchSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+        });
+
+        // Fetch subjects when branch changes
+        branchSelect.addEventListener('change', function () {
+            const branchId = branchSelect.value;
+            const sessionId = sessionSelect.value;
+            const termId = termSelect.value;
+
+            subjectSelect.disabled = !branchId;
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+
+            if (branchId && sessionId && termId) {
+                fetchData(`/results/${shortCode}/get-subjects/${branchId}/?session=${sessionId}&term=${termId}`, (data) => {
+                    if (data.subjects) {
+                        data.subjects.forEach(subject => {
+                            const option = document.createElement('option');
+                            option.value = subject.id;
+                            option.textContent = subject.name;
+                            subjectSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+        });
+
+        // Fetch classes when subject changes
+        subjectSelect.addEventListener('change', function () {
+            const branchId = branchSelect.value;
+            const subjectId = subjectSelect.value;
+            const sessionId = sessionSelect.value;
+            const termId = termSelect.value;
+
+            classesContainer.innerHTML = '';
+
+            if (branchId && sessionId && termId) {
+                fetchData(`/results/${shortCode}/get-classes/${branchId}/${subjectId}/?session=${sessionId}&term=${termId}`, (data) => {
+                    if (data.classes) {
+                        const rows = Math.ceil(data.classes.length / 3);
+                        for (let i = 0; i < rows; i++) {
+                            const rowDiv = document.createElement('div');
+                            rowDiv.classList.add('row', 'mb-3');
+                            for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                                const colDiv = document.createElement('div');
+                                colDiv.classList.add('col-md-4');
+                                colDiv.innerHTML = `
+                                    <div class="form-check">
+                                        <input type="checkbox" name="classes" value="${data.classes[j].id}" class="form-check-input">
+                                        <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department || 'No Department'})</label>
+                                    </div>
+                                `;
+                                rowDiv.appendChild(colDiv);
+                            }
+                            classesContainer.appendChild(rowDiv);
+                        }
+                    }
+                });
+            }
+        });
+
+        // Fetch exam total dynamically
+        function fetchExamTotal() {
+            const selectedSession = sessionSelect.value;
+            const selectedTerm = termSelect.value;
+            const selectedBranch = branchSelect.value;
+            const selectedSubject = subjectSelect.value;
+            const selectedClasses = Array.from(
+                document.querySelectorAll("input[name='classes']:checked")
+            ).map(cb => cb.value);
+
+            if (!selectedSession || !selectedTerm || !selectedBranch || selectedClasses.length === 0) {
+                console.error("Required fields are missing for fetching exam total");
+                return;
+            }
+
+            fetch(`/results/${shortCode}/get-student-scores/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    session: selectedSession,
+                    term: selectedTerm,
+                    branch: selectedBranch,
+                    classes: selectedClasses,
+                    subject: selectedSubject
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exam_total) {
+                        examTotal = parseFloat(data.exam_total);
+                        console.log(`Exam Total: ${examTotal}`);
+                    }
+                })
+                .catch(error => console.error("Error fetching exam total:", error));
+        }
+
+        // Fetch students and scores when filter is applied
+        document.getElementById('filterButton').addEventListener('click', function () {
+             // Show the "Wait a moment..." message
+            loadingMessage.classList.remove('d-none');
+            scoresContainer.classList.add('d-none'); // Hide scores container
+
+           
+            const session = sessionSelect.value;
+            const term = termSelect.value;
+            const branch = branchSelect.value;
+            const subject = subjectSelect.value;
+            const classes = Array.from(document.querySelectorAll('input[name="classes"]:checked')).map(cb => cb.value);
+
+            if (!session || !term || !branch || classes.length === 0) {
+                alert('Please fill in all filter criteria.');
+                return;
+            }
+
+            fetch(`/results/${shortCode}/get-student-scores/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ session, term, branch, subject, classes })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.conversion_total) {
+                        caConversionElement.textContent = data.conversion_total;
+                    }
+
+                    if (data.components) {
+                        const headers = `
+                        <tr>
+                            <th>Student Name</th>
+                            ${data.components.map(c => `
+                                <th>
+                                    ${c.name}
+                                    <br>
+                                    <small>(${c.max_marks})</small>
+                                </th>
+                            `).join('')}
+                            <th>Converted CA</th>
+                            <th>Exam Score</th>
+                        </tr>`;
+                        document.getElementById('dynamicHeaders').innerHTML = headers;
+                    }
+
+                    if (data.students) {
+                        studentsTableBody.innerHTML = '';
+                        data.students.forEach(student => {
+                            const row = `
+                            <tr style="min-width: 120px;">
+                                <td>${student.first_name} ${student.last_name}</td>
+                                ${student.components.map(c => `
+                                    <td>
+                                        <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" placeholder="Max: ${c.max_marks}">
+                                    </td>`).join('')}
+                                <td><input type="number" name="converted-ca-${student.id}" class="form-control" readonly></td>
+                                <td><input type="number" name="exam-score-${student.id}" class="form-control"></td>
+                            </tr>`;
+                            studentsTableBody.innerHTML += row;
+                        });
+                    }
+
+                   scoresContainer.classList.remove('d-none'); // Show scores container
+                    loadingMessage.classList.add('d-none'); // Hide the loading message;
+
+                    // Fetch exam total after loading students
+                    fetchExamTotal();
+                });
+        });
+
+        // Validate input fields and calculate converted CA
+        scoresForm.addEventListener("input", function (event) {
+            const target = event.target;
+
+            // Validate component score fields
+            if (target.name.startsWith("component-")) {
+                const max = parseFloat(target.placeholder.replace("Max: ", "")) || 0;
+                const score = parseFloat(target.value) || 0;
+
+                if (score > max) {
+                    invalidInput = target;
+                    validationMessage.textContent = `Score cannot exceed the maximum of ${max}.`;
+                    validationModal.show();
+                    target.value = ""; // Clear the field immediately
+                    return;
+                }
+            }
+
+            // Validate exam score fields
+            if (target.name.startsWith("exam-score-")) {
+                const score = parseFloat(target.value) || 0;
+
+                if (examTotal !== null && score > examTotal) {
+                    invalidInput = target;
+                    validationMessage.textContent = `Exam score cannot exceed the maximum of ${examTotal}.`;
+                    validationModal.show();
+                    target.value = ""; // Clear the field immediately
+                    return;
+                }
+            }
+
+            // Calculate and update converted CA in real time
+            const studentRows = document.querySelectorAll("#studentsTableBody tr");
+            studentRows.forEach(row => {
+                const componentInputs = row.querySelectorAll("input[name^='component']");
+                const convertedCAField = row.querySelector("input[name^='converted-ca']");
+
+                let totalScore = 0;
+                let maxScore = 0;
+
+                componentInputs.forEach(input => {
+                    const score = parseFloat(input.value) || 0;
+                    const max = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
+                    totalScore += score;
+                    maxScore += max;
+                });
+
+                if (maxScore > 0) {
+                    const convertedCA = (totalScore / maxScore) * conversionTotal;
+                    convertedCAField.value = convertedCA.toFixed(2); // Display converted CA in real time
+                } else {
+                    convertedCAField.value = ""; // Clear field if no scores entered
+                }
+            });
+        });
+
+        // Prevent navigating to other fields until corrected
+        validationModal._element.addEventListener("hidden.bs.modal", function () {
+            if (invalidInput) {
+                invalidInput.focus();
+            }
+        });
+
+        // Save scores
+document.getElementById("saveScoresButton").addEventListener("click", function () {
+    const data = { scores: [], session: null, term: null, branch: null, subject: null };
+
+    // Fetch session, term, branch, and subject from the filter form
+    data.session = sessionSelect.value;
+    data.term = termSelect.value;
+    data.branch = branchSelect.value;
+    data.subject = subjectSelect.value;
+
+    // Validate that required fields are filled
+    if (!data.session || !data.term || !data.branch || !data.subject) {
+        alert("Please ensure all filter fields (Session, Term, Branch, Subject) are selected.");
+        return;
+    }
+
+    // Gather student scores
+    const studentRows = document.querySelectorAll("#studentsTableBody tr");
+    studentRows.forEach(row => {
+        const studentId = row.querySelector("input[name^='converted-ca']").name.split("-")[2];
+        const convertedCAField = row.querySelector("input[name^='converted-ca']");
+        const examScoreField = row.querySelector("input[name^='exam-score']");
+        const componentInputs = row.querySelectorAll("input[name^='component']");
+
+        const components = {};
+        componentInputs.forEach(input => {
+            const componentId = input.name.split("-")[2];
+            components[`component_${componentId}`] = parseFloat(input.value) || 0;
+        });
+
+        data.scores.push({
+            student_id: studentId,
+            converted_ca: parseFloat(convertedCAField.value) || 0,
+            exam_score: parseFloat(examScoreField.value) || 0,
+            ...components,
+        });
+    });
+
+    // Log the data payload
+    console.log(JSON.stringify(data, null, 2));
+
+    // Show the Processing Modal
+    const processingModal = new bootstrap.Modal(document.getElementById("processingModal"));
+    processingModal.show();
+
+    // Submit the data via AJAX
+    fetch(`/results/${shortCode}/save-student-scores/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            processingModal.hide(); // Hide the Processing Modal
+            if (data.success) {
+                // Show the Success Modal
+                const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+                successModal.show();
+            } else {
+                alert(data.error || "An error occurred while saving scores.");
+            }
+        })
+        .catch(error => {
+            processingModal.hide(); // Hide the Processing Modal
+            console.error("Error:", error);
+            alert("An unexpected error occurred. Please try again.");
+        });
+});
+
+    });
+
+</script>
+<style>
+    .table td input.form-control {
+    min-width: 120px;
+}
+
+
+.table-container {
+    max-height: 400px; /* Set the maximum height of the table body */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: auto; /* Enable horizontal scrolling */
+}
+
+.table thead th {
+    position: sticky;
+    top: 0; /* Keeps the header at the top */
+    z-index: 1; /* Ensures the header stays above the body */
+    background-color: #ffffff; /* Match the header's background to the table */
+    border-bottom: 2px solid #dee2e6; /* Optional: Add a border for better visibility */
+}
+
+</style>
+{% endblock %}
+
+
+
+
+@transaction.atomic
+def save_student_scores(request, short_code):
+    """
+    Save or update student scores, calculate class-based highest, lowest, and average scores,
+    and update student averages.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            session_id = data.get("session")
+            term_id = data.get("term")
+            branch_id = data.get("branch")
+            subject_id = data.get("subject")
+            scores = data.get("scores", [])
+
+            # Validate required fields
+            if not session_id or not term_id or not branch_id or not subject_id:
+                return JsonResponse({"error": "Missing required fields."}, status=400)
+
+            # Fetch related objects
+            session = Session.objects.get(id=session_id)
+            term = Term.objects.get(id=term_id)
+            branch = Branch.objects.get(id=branch_id)
+            subject = Subject.objects.get(id=subject_id)
+
+            # Process scores and save/update results
+            for score in scores:
+                student = Student.objects.get(id=score["student_id"])
+                student_class = student.student_class  # Fetch the class directly from the student
+
+                if not student_class:
+                    return JsonResponse({
+                        "error": f"Student {student.id} does not have an associated class."
+                    }, status=400)
+
+                total_score = score["converted_ca"] + score["exam_score"]
+
+                # Save or update final results
+                StudentFinalResult.objects.update_or_create(
+                    student=student,
+                    session=session,
+                    term=term,
+                    branch=branch,
+                    student_class=student_class,
+                    subject=subject,
+                    defaults={
+                        "converted_ca": score["converted_ca"],
+                        "exam_score": score["exam_score"],
+                        "total_score": total_score,
+                        "grade": calculate_grade(total_score),
+                        "remarks": generate_remark(calculate_grade(total_score)),
+                    },
+                )
+
+            # Update highest, lowest, and average scores for each class
+            classes = Student.objects.filter(
+                final_results__session=session,
+                final_results__term=term,
+                final_results__branch=branch
+            ).values_list('student_class', flat=True).distinct()
+
+            for cls in classes:
+                update_class_scores(session, term, branch, cls, subject)
+
+            return JsonResponse({"success": True, "message": "Scores saved successfully."})
+
+        except Exception as e:
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+

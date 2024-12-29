@@ -91,7 +91,7 @@
             </div>
         </div>
     </div>
-
+   
     <!-- Academic Information Section -->
     <div class="card mb-3">
         <div class="card-header">Academic Information</div>
@@ -124,6 +124,7 @@
             </div>
         </div>
     </div>
+    
 
     <!-- Status Information Section -->
     <div class="card mb-3">
@@ -140,6 +141,8 @@
         </div>
     </div>
 
+
+    {% if is_admin  %}
     <!-- Parent/Guardian Relationship Section -->
     <div class="card mb-3">
         <div class="card-header">Parent/Guardian Relationship</div>
@@ -173,6 +176,8 @@
                 {% endfor %}
             </div>
             
+
+
             <!-- Button for adding new parent -->
             <div class="d-flex justify-content-start mt-3">
                 <button type="button" class="btn btn-sm btn-secondary me-2" id="add-parent-relationship">
@@ -186,7 +191,7 @@
         </div>
     </div>
     
-
+{% endif %}
 <!-- Update Student Button -->
 <div class="d-flex justify-content-start mt-3">
     <button type="submit" class="btn btn-primary">Update Student</button>

@@ -410,10 +410,10 @@
                                 <td>${student.first_name} ${student.last_name}</td>
                                 ${student.components.map(c => `
                                     <td>
-                                        <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" placeholder="Max: ${c.max_marks}">
+                                    <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" placeholder="Max: ${c.max_marks}"  value="${c.score || 0}" >
                                     </td>`).join('')}
-                                <td><input type="number" name="converted-ca-${student.id}" class="form-control" readonly></td>
-                                <td><input type="number" name="exam-score-${student.id}" class="form-control"></td>
+                                <td><input type="number" name="converted-ca-${student.id}" class="form-control" value="${student.converted_ca || 0}" readonly></td>
+                                <td><input type="number" name="exam-score-${student.id}" class="form-control"  value="${student.exam_score || 0}" ></td>
                             </tr>`;
                             studentsTableBody.innerHTML += row;
                         });
@@ -427,7 +427,7 @@
                 });
         });
 
-        // Validate input fields and calculate converted CA
+       // Validate input fields and calculate converted CA
         scoresForm.addEventListener("input", function (event) {
             const target = event.target;
 
@@ -458,29 +458,29 @@
                 }
             }
 
-            // Calculate and update converted CA in real time
-            const studentRows = document.querySelectorAll("#studentsTableBody tr");
-            studentRows.forEach(row => {
-                const componentInputs = row.querySelectorAll("input[name^='component']");
-                const convertedCAField = row.querySelector("input[name^='converted-ca']");
+            // Calculate and update converted CA for the specific row
+            const row = target.closest("tr"); // Get the specific row of the changed input
+            const componentInputs = row.querySelectorAll("input[name^='component']");
+            const convertedCAField = row.querySelector("input[name^='converted-ca']");
 
-                let totalScore = 0;
-                let maxScore = 0;
+            let totalScore = 0;
+            let maxScore = 0;
 
-                componentInputs.forEach(input => {
-                    const score = parseFloat(input.value) || 0;
-                    const max = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
-                    totalScore += score;
-                    maxScore += max;
-                });
-
-                if (maxScore > 0) {
-                    const convertedCA = (totalScore / maxScore) * conversionTotal;
-                    convertedCAField.value = convertedCA.toFixed(2); // Display converted CA in real time
-                } else {
-                    convertedCAField.value = ""; // Clear field if no scores entered
-                }
+            // Sum up scores and max scores for the specific row
+            componentInputs.forEach(input => {
+                const score = parseFloat(input.value) || 0;
+                const max = parseFloat(input.placeholder.replace("Max: ", "")) || 0;
+                totalScore += score;
+                maxScore += max;
             });
+
+            // Update the converted CA field for the specific row
+            if (maxScore > 0) {
+                const convertedCA = (totalScore / maxScore) * conversionTotal;
+                convertedCAField.value = convertedCA.toFixed(2); // Display converted CA in real time
+            } else {
+                convertedCAField.value = ""; // Clear field if no scores entered
+            }
         });
 
         // Prevent navigating to other fields until corrected
