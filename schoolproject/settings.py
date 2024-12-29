@@ -100,6 +100,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'utils.context_helpers.user_roles_context',
                 'utils.context_processors.global_context',
+                'utils.breadcrumbs.dynamic_breadcrumbs',
+
             ],
         },
     },

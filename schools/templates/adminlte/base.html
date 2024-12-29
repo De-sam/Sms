@@ -85,9 +85,31 @@
                             {% endblock %}
                         </h1>
                         {% block breadcrumbs %}
-                            {# Breadcrumb implementation left to developers #}
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                {% for breadcrumb in breadcrumbs %}
+                                    {% if forloop.first %}
+                                        <!-- Add the dashboard icon to the first breadcrumb -->
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ breadcrumb.url }}">
+                                                <i class="fas fa-tachometer-alt"></i> <!-- Font Awesome icon for dashboard -->
+                                                {{ breadcrumb.name }}
+                                            </a>
+                                        </li>
+                                    {% elif not forloop.last %}
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ breadcrumb.url }}">{{ breadcrumb.name }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb.name }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ol>
+                        </nav>
+                        
                         {% endblock %}
                     {% endblock no_heading %}
+                    
                 </section>
             {% endblock %}
 

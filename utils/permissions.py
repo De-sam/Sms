@@ -86,7 +86,7 @@ def parent_or_admin_required(view_func):
             ).exists():
                 return view_func(request, *args, **kwargs)
             # Check if user is admin
-            if request.user == school.admin_user:
+        if request.user == school.admin_user:
                 return view_func(request, *args, **kwargs)
 
         raise PermissionDenied("You do not have permission to access this view.")
