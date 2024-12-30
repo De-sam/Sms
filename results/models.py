@@ -51,12 +51,27 @@ class ResultComponent(models.Model):
 
 
 class StudentResult(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results')
-    component = models.ForeignKey(ResultComponent, on_delete=models.CASCADE, related_name='student_results')
-    score = models.PositiveIntegerField(null=True, blank=True)  # Score for this component
-    converted_ca = models.PositiveIntegerField(null=True, blank=True)  # Converted CA
-    exam_score = models.PositiveIntegerField(null=True, blank=True)  # Exam score
-    total_score = models.PositiveIntegerField(null=True, blank=True)  # Total score (CA + Exam)
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='results'
+    )
+    component = models.ForeignKey(
+        ResultComponent, 
+        on_delete=models.CASCADE, 
+        related_name='student_results'
+    )
+    subject = models.ForeignKey(
+        Subject, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="student_results"
+    ) 
+    score = models.PositiveIntegerField(null=True, blank=True)  # Score for this componentr this component
+    # converted_ca = models.PositiveIntegerField(null=True, blank=True)  # Converted CA
+    # exam_score = models.PositiveIntegerField(null=True, blank=True)  # Exam score
+    # total_score = models.PositiveIntegerField(null=True, blank=True)  # Total score (CA + Exam)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
