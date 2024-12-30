@@ -65,8 +65,8 @@ def get_comments(request, short_code):
                 current_session=session,
                 branch=branch,
                 student_class__id__in=class_ids
-            ).select_related('user')
-            print(f"DEBUG: Found {students.count()} students matching criteria.")
+            ).select_related('user').order_by('last_name', 'first_name')
+
 
             student_data = []
             for student in students:

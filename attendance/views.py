@@ -112,8 +112,7 @@ def record_student_attendance(request, short_code):
                 student_class__in=selected_classes,
                 current_session=session,
                 branch=branch
-            ).distinct()
-
+            ).distinct().order_by('last_name', 'first_name')
             if not students.exists():
                 messages.warning(request, "No students found for the selected filter criteria.")
 
@@ -146,11 +145,6 @@ def record_student_attendance(request, short_code):
         **user_roles,  # Include user roles in the context
     }
 
-    # Debugging: Print the context to verify role flags
-    print(f"Attendance View Context for User {user.username}:")
-    print(f"  - is_school_admin: {user_roles['is_school_admin']}")
-    print(f"  - is_teacher: {user_roles['is_teacher']}")
-    
     return render(request, 'attendance/student_attendance.html', context)
 
 @login_required_with_short_code
@@ -188,7 +182,8 @@ def get_attendance(request, short_code):
             student_class=selected_class,
             current_session=session,
             branch=branch
-        )
+        ).order_by('last_name', 'first_name')
+
 
         for student in students:
             attendance_record = StudentAttendance.objects.filter(
@@ -324,13 +319,7 @@ def record_teacher_attendance(request, short_code):
     branches = Branch.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
     assigned_classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).distinct()
 
-    # Debugging: Print sessions, terms, branches, and assigned classes to verify the data
-    print("Filtered Data for Teacher:")
-    print(f"Sessions: {[session.session_name for session in sessions]}")
-    print(f"Terms: {[term.term_name for term in terms]}")
-    print(f"Branches: {[branch.branch_name for branch in branches]}")
-    print(f"Assigned Classes: {[cls.name for cls in assigned_classes]}")
-
+    
     students = []  # Initialize empty list for students
     days_open = None
 
@@ -369,7 +358,7 @@ def record_teacher_attendance(request, short_code):
                 student_class__in=selected_classes,
                 current_session=session,
                 branch=branch
-            ).distinct()
+            ).distinct().order_by('last_name', 'first_name')
 
             if not students.exists():
                 messages.warning(request, "No students found for the selected filter criteria.")

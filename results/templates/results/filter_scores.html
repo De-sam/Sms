@@ -280,6 +280,8 @@
             }
         });
 
+
+
         // Fetch classes when subject changes
         subjectSelect.addEventListener('change', function () {
             const branchId = branchSelect.value;
@@ -407,7 +409,7 @@
                         data.students.forEach(student => {
                             const row = `
                             <tr style="min-width: 120px;">
-                                <td>${student.first_name} ${student.last_name}</td>
+                                <td>${student.last_name} ${student.first_name} </td>
                                 ${student.components.map(c => `
                                     <td>
                                     <input type="number" name="component-${student.id}-${c.component_id}" class="form-control" placeholder="Max: ${c.max_marks}"  value="${c.score || 0}" >

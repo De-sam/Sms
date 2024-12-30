@@ -249,12 +249,12 @@ def get_student_scores(request, short_code):
             # Fetch result structure for the branch
             result_structure = get_object_or_404(ResultStructure, branch=branch)
 
-            # Fetch students in the selected classes
+            # Fetch students in the selected classes, ordered alphabetically
             students = Student.objects.filter(
                 current_session=session,
                 branch=branch,
                 student_class__id__in=class_ids
-            ).select_related('user')
+            ).select_related('user').order_by('last_name', 'first_name')
 
             # Fetch result components for the selected structure and subject
             components = ResultComponent.objects.filter(
@@ -298,8 +298,8 @@ def get_student_scores(request, short_code):
 
                 student_data.append({
                     "id": student.id,
-                    "first_name": student.first_name,
                     "last_name": student.last_name,
+                    "first_name": student.first_name,
                     "components": student_components,
                     "converted_ca": final_result.converted_ca if final_result else "",  # Existing CA
                     "exam_score": final_result.exam_score if final_result else "",  # Existing Exam Score

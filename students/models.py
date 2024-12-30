@@ -146,10 +146,10 @@ class Student(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.last_name} {self.first_name}"
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} (ID: {self.student_id}) - {self.current_session.session_name if self.current_session else 'No Session'}"
+        return f"{self.last_name}  {self.first_name} (ID: {self.student_id}) - {self.current_session.session_name if self.current_session else 'No Session'}"
 
     def save(self, *args, **kwargs):
         # Automatically generate a unique student ID if not provided
