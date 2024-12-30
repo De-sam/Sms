@@ -97,6 +97,8 @@ def get_comments(request, short_code):
     print("DEBUG: Invalid request method.")
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
+
+
 @csrf_exempt
 @transaction.atomic
 def save_comments(request, short_code):
