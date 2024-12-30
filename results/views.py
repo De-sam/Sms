@@ -256,7 +256,7 @@ def get_student_scores(request, short_code):
                 student_class__id__in=class_ids
             ).select_related('user')
 
-            # Fetch result components for the selected structure
+            # Fetch result components for the selected structure and subject
             components = ResultComponent.objects.filter(
                 structure=result_structure
             ).filter(
@@ -266,12 +266,13 @@ def get_student_scores(request, short_code):
             # Prepare data for the response
             student_data = []
             for student in students:
-                # Fetch component scores for the student
+                # Fetch component scores for the student and subject
                 component_scores = {
                     sr.component.id: sr.score
                     for sr in StudentResult.objects.filter(
                         student=student,
-                        component__in=components
+                        component__in=components,
+                        subject=subject  # Ensure scores are filtered by subject
                     )
                 }
 
@@ -324,7 +325,6 @@ def get_student_scores(request, short_code):
 
 
 
-
 @transaction.atomic
 def save_student_scores(request, short_code):
     """
@@ -366,14 +366,37 @@ def save_student_scores(request, short_code):
                         component_id = component_key.split("_")[1]  # Extract component ID
                         component = ResultComponent.objects.get(id=component_id)
 
+                        # Ensure the component matches the subject if subject-specific
+                        if component.subject and component.subject.id != subject.id:
+                            return JsonResponse({
+                                "error": f"Component {component.name} is not associated with subject {subject.name}."
+                            }, status=400)
+
                         StudentResult.objects.update_or_create(
                             student=student,
                             component=component,
+                            subject=subject,  # Associate the component score with the subject
                             defaults={"score": component_score},
                         )
 
+                # Calculate total component score
+                total_component_score = StudentResult.objects.filter(
+                    student=student,
+                    subject=subject,
+                    component__structure__branch=branch  # Ensure same branch
+                ).aggregate(Sum("score"))["score__sum"] or 0
+
+                # Calculate converted CA
+                result_structure = ResultStructure.objects.get(branch=branch)
+                max_component_score = ResultComponent.objects.filter(
+                    structure=result_structure
+                ).aggregate(Sum("max_marks"))["max_marks__sum"] or 1  # Avoid division by zero
+
+                converted_ca = (total_component_score / max_component_score) * result_structure.conversion_total
+
                 # Calculate total score
-                total_score = score["converted_ca"] + score["exam_score"]
+                exam_score = score.get("exam_score", 0)
+                total_score = round(converted_ca + exam_score, 2)
 
                 # Save or update final results
                 StudentFinalResult.objects.update_or_create(
@@ -384,8 +407,8 @@ def save_student_scores(request, short_code):
                     student_class=student_class,
                     subject=subject,
                     defaults={
-                        "converted_ca": score["converted_ca"],
-                        "exam_score": score["exam_score"],
+                        "converted_ca": round(converted_ca, 2),
+                        "exam_score": exam_score,
                         "total_score": total_score,
                         "grade": calculate_grade(total_score),
                         "remarks": generate_remark(calculate_grade(total_score)),
@@ -406,7 +429,6 @@ def save_student_scores(request, short_code):
 
         except Exception as e:
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
-
 
 def update_class_scores(session, term, branch, student_class, subject):
     """

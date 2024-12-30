@@ -23,24 +23,27 @@ class ResultComponentAdmin(admin.ModelAdmin):
 
 @admin.register(StudentResult)
 class StudentResultAdmin(admin.ModelAdmin):
-    list_display = ('student', 'component', 'score', 'created_at', 'updated_at')
-    search_fields = ('student__first_name', 'student__last_name', 'component__name')
-    list_filter = ('component',)
+    list_display = ('student', 'component', 'subject', 'score', 'created_at', 'updated_at')
+    search_fields = ('student__first_name', 'student__last_name', 'component__name', 'subject__name')
+    list_filter = ('component', 'subject')
     ordering = ('-created_at',)
 
+    actions = ['remove_duplicates']
 
     def remove_duplicates(self, request, queryset):
         """
         Custom admin action to remove duplicate StudentResult entries.
+        Considers student, component, and subject for uniqueness.
         """
         from collections import defaultdict
         duplicates = defaultdict(list)
 
+        # Group by (student, component, subject)
         for result in queryset:
-            duplicates[(result.student_id, result.component_id)].append(result)
+            duplicates[(result.student_id, result.component_id, result.subject_id)].append(result)
 
         removed_count = 0
-        for (student_id, component_id), results in duplicates.items():
+        for (student_id, component_id, subject_id), results in duplicates.items():
             if len(results) > 1:
                 # Keep the first result and delete others
                 results_to_delete = results[1:]
