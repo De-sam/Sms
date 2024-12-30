@@ -21,6 +21,13 @@ class ResultStructure(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    class Meta:
+        unique_together = ("branch",)  # Each branch can have only one structure
+        indexes = [
+            models.Index(fields=["branch"]),  # Speeds up queries by branch
+        ]
+
+
     def __str__(self):
         return f"Structure for {self.branch.branch_name} ({self.ca_total} + {self.exam_total})"
 
@@ -43,6 +50,13 @@ class ResultComponent(models.Model):
     )  # Optional subject-specific component
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        unique_together = ("structure", "name", "subject")  # Each component must be unique within a structure
+        indexes = [
+            models.Index(fields=["structure", "subject"]),  # Speeds up filtering by structure and subject
+        ]
+
 
     def __str__(self):
         subject_info = f" for {self.subject.name}" if self.subject else ""
@@ -69,11 +83,15 @@ class StudentResult(models.Model):
         related_name="student_results"
     ) 
     score = models.PositiveIntegerField(null=True, blank=True)  # Score for this componentr this component
-    # converted_ca = models.PositiveIntegerField(null=True, blank=True)  # Converted CA
-    # exam_score = models.PositiveIntegerField(null=True, blank=True)  # Exam score
-    # total_score = models.PositiveIntegerField(null=True, blank=True)  # Total score (CA + Exam)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    
+    class Meta:
+        unique_together = ("student", "component", "subject")
+        indexes = [
+            models.Index(fields=["student", "component"]),  # Speeds up student-component lookups
+        ]
 
     def __str__(self):
         return f"{self.student} - {self.component.name} ({self.score})"
@@ -126,6 +144,9 @@ class StudentFinalResult(models.Model):
 
     class Meta:
         unique_together = ('student', 'session', 'term', 'branch', 'student_class', 'subject')
+        indexes = [
+            models.Index(fields=["student", "session", "term", "subject"]),  # Optimizes result queries by session, term, and subject
+        ]
         verbose_name = "Student Final Result"
         verbose_name_plural = "Student Final Results"
 
@@ -188,6 +209,15 @@ class StudentAverageResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ("student", "session", "term", "branch")
+        indexes = [
+            models.Index(fields=["student", "session", "term"]),  # Optimize average result queries
+        ]
+
+    def __str__(self):
+        return f"{self.student} - {self.session.session_name} ({self.term.term_name})"
+
     def calculate_average(self):
         """
         Calculate the average percentage and update the field,
@@ -239,6 +269,9 @@ class PublishedResult(models.Model):
     
     class Meta:
         unique_together = ('session', 'term', 'branch', 'cls')  # Ensure no duplicate entries for the same class
+        indexes = [
+            models.Index(fields=["session", "term", "branch", "cls"]),  # Optimize result publication queries
+        ]
 
     def __str__(self):
         return f"{self.cls} - {self.session} {self.term} (Published: {self.is_published})"
