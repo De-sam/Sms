@@ -3,6 +3,9 @@ from .models import ResultStructure, ResultComponent
 from classes.models import Class, Subject
 from academics.models import Session, Term
 from schools.models import Branch
+from django.forms import formset_factory
+from .models import GradingSystem
+
 
 class ResultStructureForm(forms.ModelForm):
     """
@@ -117,3 +120,5 @@ class ScoreFilterForm(forms.Form):
             except (ValueError, TypeError):
                 self.fields['subject'].queryset = Subject.objects.none()
                 self.fields['classes'].queryset = Class.objects.none()
+
+

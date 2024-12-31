@@ -143,3 +143,49 @@ class PublishedResultAdmin(admin.ModelAdmin):
         """Optional: Display human-readable datetime if needed."""
         return obj.updated_at.strftime('%Y-%m-%d %H:%M') if obj.updated_at else "Not Published"
     published_at.short_description = "Published At"
+
+
+from django import forms
+from django.contrib import admin
+from .models import GradingSystem
+from schools.models import Branch
+
+class GradingSystemForm(forms.ModelForm):
+    """
+    Form for validating GradingSystem fields.
+    """
+    class Meta:
+        model = GradingSystem
+        fields = ['branch', 'lower_bound', 'upper_bound', 'grade', 'remark']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        lower_bound = cleaned_data.get("lower_bound")
+        upper_bound = cleaned_data.get("upper_bound")
+
+        if lower_bound is not None and upper_bound is not None:
+            if lower_bound > upper_bound:
+                raise forms.ValidationError("Lower bound cannot be greater than upper bound.")
+
+        return cleaned_data
+
+
+@admin.register(GradingSystem)
+class GradingSystemAdmin(admin.ModelAdmin):
+    """
+    Standalone admin for managing GradingSystem entries.
+    """
+    list_display = ('branch', 'lower_bound', 'upper_bound', 'grade', 'remark')
+    search_fields = ('branch__branch_name', 'grade', 'remark')
+    list_filter = ('branch',)
+    ordering = ('branch', '-lower_bound')
+    form = GradingSystemForm
+    save_as = True  # Allow duplicating records for faster entry
+
+    class Media:
+        """
+        Add JavaScript or CSS to enhance admin UI.
+        """
+        css = {
+            'all': ('admin/css/forms.css',)  # Example to customize UI, optional
+        }

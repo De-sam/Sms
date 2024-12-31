@@ -1,0 +1,105 @@
+{% extends 'schools/base_dash.html' %}
+{% block content %}
+<div>
+    <h2>Manage Grading System for {{ school.school_name }}</h2>
+
+    {% if not selected_branch %}
+    <!-- Instruction Card -->
+    <div id="instruction-card" class="card bg-info text-white mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Enter Grades</h5>
+            <p class="card-text">
+                Please select a branch from the dropdown menu to view or manage the grading system for that branch. 
+                Once you select a branch, you can define the following for each grade:
+            </p>
+            <ul>
+                <li><strong>Lower Bound:</strong> The minimum score for the grade.</li>
+                <li><strong>Upper Bound:</strong> The maximum score for the grade.</li>
+                <li><strong>Grade:</strong> The grade label (e.g., A, B, C).</li>
+                <li><strong>Remark:</strong> A short description of the grade (e.g., EXCELLENT, VERY GOOD, GOOD).</li>
+            </ul>
+            <p class="text-white-50">Make sure that the ranges do not overlap and cover all possible scores.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="GET" action="{% url 'manage_grading_system' school.short_code %}">
+        <div class="mb-3">
+            <label for="branch" class="form-label">Select Branch:</label>
+            <select class="form-select" name="branch" id="branch" onchange="this.form.submit()">
+                <option value="">-- Select Branch --</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if selected_branch and branch.id == selected_branch.id %}selected{% endif %}>
+                        {{ branch.branch_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if selected_branch %}
+        <h3 class="mt-4">Grading System for {{ selected_branch.branch_name }}</h3>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="branch" value="{{ selected_branch.id }}">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Lower Bound</th>
+                            <th>Upper Bound</th>
+                            <th>Grade</th>
+                            <th>Remark</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grading-system-rows">
+                        {% for grading in grading_systems %}
+                            <tr>
+                                <td><input type="number" name="lower_bound" value="{{ grading.lower_bound }}" class="form-control" required></td>
+                                <td><input type="number" name="upper_bound" value="{{ grading.upper_bound }}" class="form-control" required></td>
+                                <td><input type="text" name="grade" value="{{ grading.grade }}" class="form-control" required></td>
+                                <td><input type="text" name="remark" value="{{ grading.remark }}" class="form-control"></td>
+                                <td><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></td>
+                            </tr>
+                        {% endfor %}
+                        <!-- New rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="button" id="add-grading-row" class="btn btn-secondary">Add New Row</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+
+<script>
+    document.getElementById('add-grading-row').addEventListener('click', function () {
+        const tableBody = document.getElementById('grading-system-rows');
+        const newRow = `
+            <tr>
+                <td><input type="number" name="lower_bound" class="form-control" required></td>
+                <td><input type="number" name="upper_bound" class="form-control" required></td>
+                <td><input type="text" name="grade" class="form-control" required></td>
+                <td><input type="text" name="remark" class="form-control"></td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></td>
+            </tr>
+        `;
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+        attachRemoveHandlers();
+    });
+
+    function attachRemoveHandlers() {
+        document.querySelectorAll('.remove-row').forEach(function (button) {
+            button.addEventListener('click', function () {
+                this.closest('tr').remove();
+            });
+        });
+    }
+
+    // Attach remove handlers to existing rows
+    attachRemoveHandlers();
+</script>
+{% endblock %}

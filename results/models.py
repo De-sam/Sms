@@ -275,3 +275,55 @@ class PublishedResult(models.Model):
 
     def __str__(self):
         return f"{self.cls} - {self.session} {self.term} (Published: {self.is_published})"
+
+
+class GradingSystem(models.Model):
+    """
+    Represents a grading system for a branch.
+    """
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name="grading_systems",
+        null=True,
+        blank=True,
+        db_index=True  # Index for optimized queries
+    )
+    grade = models.CharField(
+        max_length=10,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True  # Index for optimized queries
+    )  # e.g., A1, B2
+    lower_bound = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        db_index=True  # Index for optimized queries
+    )  # Minimum percentage for the grade
+    upper_bound = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        db_index=True  # Index for optimized queries
+    )  # Maximum percentage for the grade
+    remark = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )  # Remark associated with the grade
+
+    class Meta:
+        unique_together = ("branch", "grade")  # Ensure grades are unique per branch
+        ordering = ['-lower_bound']  # Order by descending lower bound for grading logic
+        indexes = [  # Additional indexing for optimized queries
+            models.Index(fields=['branch', 'grade']),
+            models.Index(fields=['lower_bound']),
+            models.Index(fields=['upper_bound']),
+        ]
+
+    def __str__(self):
+        return f"{self.grade} ({self.lower_bound}% - {self.upper_bound}%) - {self.remark}"

@@ -34,7 +34,8 @@ from results.models import  StudentFinalResult,StudentAverageResult
 from ratings.models import Rating
 from attendance.models import StudentAttendance,SchoolDaysOpen
 from comments.models import Comment
-from .models import PublishedResult
+from .models import PublishedResult, GradingSystem
+from .models import GradingSystem, Branch
 
 
 
@@ -398,6 +399,10 @@ def save_student_scores(request, short_code):
                 exam_score = score.get("exam_score", 0)
                 total_score = round(converted_ca + exam_score, 2)
 
+                # Fetch grade and remark using the database-based logic
+                grade, remark = get_grade_and_remark(total_score, branch)  # Pass branch here
+
+
                 # Save or update final results
                 StudentFinalResult.objects.update_or_create(
                     student=student,
@@ -410,8 +415,8 @@ def save_student_scores(request, short_code):
                         "converted_ca": round(converted_ca, 2),
                         "exam_score": exam_score,
                         "total_score": total_score,
-                        "grade": calculate_grade(total_score),
-                        "remarks": generate_remark(calculate_grade(total_score)),
+                        "grade": grade,
+                        "remarks": remark,  
                     },
                 )
 
@@ -639,6 +644,23 @@ def get_comment_by_percentage(percentage):
         return random.choice(comments[0])
 
 
+def get_grade_and_remark(total_score, branch):
+    """
+    Fetch grade and remark from the database if available.
+    Use default functions as a fallback.
+    """
+    # Check for grading system in the database
+    grading_system = GradingSystem.objects.filter(branch=branch).order_by('-lower_bound')
+
+    # Use grading system from database if available
+    for grade_entry in grading_system:
+        if grade_entry.lower_bound <= total_score <= grade_entry.upper_bound:
+            return grade_entry.grade, grade_entry.remark
+
+    # Fallback to default calculation
+    grade = calculate_grade(total_score)
+    remark = generate_remark(grade)
+    return grade, remark
 
 
 def render_class_result_preview(request, short_code):
@@ -982,7 +1004,19 @@ def fetch_students_result(request, short_code):
                 # Skip subjects where both CA and exam scores are zero
                 if result.converted_ca == 0 and result.exam_score == 0:
                     continue
+                
+                # Ensure the branch is available for the result
+                branch = result.branch
 
+                # Fetch grade and remark dynamically
+                grade, remark = get_grade_and_remark(result.total_score, branch)
+
+                # Update result object if needed (optional)
+                result.grade = grade
+                result.remarks = remark
+                result.save()
+
+                
                 if result.student_id not in grouped_results:
                     attendance = next(
                         (item["total_attendance"] for item in attendance_counts if item["student"] == result.student_id), 0
@@ -1088,8 +1122,8 @@ def fetch_students_result(request, short_code):
                     "converted_ca": result.converted_ca,
                     "exam_score": result.exam_score,
                     "total_score": result.total_score,
-                    "grade": result.grade,
-                    "remark": generate_remark(result.grade),  # Use the grading function here
+                    "grade": grade,  # Add grade here
+                    "remark": remark, # Use the grading function here
                     "highest_score": result.highest_score,  # From database
                     "lowest_score": result.lowest_score,    # From database
                     "average_score": round(result.average_score, 2) if result.average_score else None  # From database
@@ -1248,3 +1282,59 @@ def list_published_results(request, short_code):
         **user_roles,
     }
     return render(request, 'results/list_published_results.html', context)
+
+
+@login_required_with_short_code
+@admin_required
+@transaction.atomic
+def manage_grading_system(request, short_code):
+    """
+    View to manage grading systems for a school's branches.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    branches = Branch.objects.filter(school=school)
+    user_roles = get_user_roles(request.user, school)
+
+    selected_branch = None
+    grading_systems = []
+
+    if request.method == 'POST':
+        branch_id = request.POST.get('branch')
+        print(f"DEBUG: Received Branch ID: {branch_id}")  # Debugging
+        selected_branch = get_object_or_404(Branch, id=branch_id, school=school)
+
+        # Handle grading system entries manually
+        lower_bounds = request.POST.getlist('lower_bound')
+        upper_bounds = request.POST.getlist('upper_bound')
+        grades = request.POST.getlist('grade')
+        remarks = request.POST.getlist('remark')
+
+        # Validate and save grading system entries
+        for lower, upper, grade, remark in zip(lower_bounds, upper_bounds, grades, remarks):
+            if lower and upper and grade:  # Ensure required fields are filled
+                GradingSystem.objects.update_or_create(
+                    branch=selected_branch,
+                    grade=grade,
+                    defaults={
+                        'lower_bound': lower,
+                        'upper_bound': upper,
+                        'remark': remark,
+                    },
+                )
+
+        messages.success(request, f"Grading system for {selected_branch.branch_name} updated successfully!")
+        return redirect('manage_grading_system', short_code=short_code)
+    else:
+        branch_id = request.GET.get('branch')
+        print(f"DEBUG: Query Parameter Branch ID: {branch_id}")  # Debugging
+        if branch_id:
+            selected_branch = get_object_or_404(Branch, id=branch_id, school=school)
+            grading_systems = GradingSystem.objects.filter(branch=selected_branch)
+
+    return render(request, 'results/manage_grading_system.html', {
+        'school': school,
+        'branches': branches,
+        'selected_branch': selected_branch,
+        'grading_systems': grading_systems,
+        **user_roles,
+    })
