@@ -1,7 +1,7 @@
 {% extends 'schools/base_dash.html' %}
 {% block content %}
 <div>
-    <h2>Manage Grading System for {{ school.school_name }}</h2>
+    <h2>Manage Grading System</h2>
 
     {% if not selected_branch %}
     <!-- Instruction Card -->
@@ -13,8 +13,9 @@
                 Once you select a branch, you can define the following for each grade:
             </p>
             <ul>
-                <li><strong>Lower Bound:</strong> The minimum score for the grade.</li>
+                
                 <li><strong>Upper Bound:</strong> The maximum score for the grade.</li>
+                <li><strong>Lower Bound:</strong> The minimum score for the grade.</li>
                 <li><strong>Grade:</strong> The grade label (e.g., A, B, C).</li>
                 <li><strong>Remark:</strong> A short description of the grade (e.g., EXCELLENT, VERY GOOD, GOOD).</li>
             </ul>
@@ -30,15 +31,14 @@
                 <option value="">-- Select Branch --</option>
                 {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if selected_branch and branch.id == selected_branch.id %}selected{% endif %}>
-                        {{ branch.branch_name }}
-                    </option>
+                        {{ branch.branch_name }} ({{ branch.primary_school|yesno:"Primary,Secondary" }})
                 {% endfor %}
             </select>
         </div>
     </form>
 
     {% if selected_branch %}
-        <h3 class="mt-4">Grading System for {{ selected_branch.branch_name }}</h3>
+        <h3 class="mt-4">Grading System for {{ selected_branch.branch_name }} ({{ branch.primary_school|yesno:"Primary,Secondary" }})</h3>
         <form method="POST" action="">
             {% csrf_token %}
             <input type="hidden" name="branch" value="{{ selected_branch.id }}">
@@ -46,8 +46,8 @@
                 <table class="table table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>Lower Bound</th>
                             <th>Upper Bound</th>
+                            <th>Lower Bound</th>
                             <th>Grade</th>
                             <th>Remark</th>
                             <th>Action</th>
@@ -56,8 +56,8 @@
                     <tbody id="grading-system-rows">
                         {% for grading in grading_systems %}
                             <tr>
-                                <td><input type="number" name="lower_bound" value="{{ grading.lower_bound }}" class="form-control" required></td>
                                 <td><input type="number" name="upper_bound" value="{{ grading.upper_bound }}" class="form-control" required></td>
+                                <td><input type="number" name="lower_bound" value="{{ grading.lower_bound }}" class="form-control" required></td>
                                 <td><input type="text" name="grade" value="{{ grading.grade }}" class="form-control" required></td>
                                 <td><input type="text" name="remark" value="{{ grading.remark }}" class="form-control"></td>
                                 <td><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></td>

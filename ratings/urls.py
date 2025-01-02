@@ -15,15 +15,15 @@ urlpatterns = [
     # URL for getting classes for a given branch under a school
     path('<str:short_code>/get-classes/<int:branch_id>/', get_classes_by_branch, name='get_classes_by_branch'),
 
-    # Filter Ratings
-    path('<str:short_code>/filter-ratings/', views.filter_students_for_ratings, name='filter_ratings'),
+    # URL for managing rating criteria
+    path('<str:short_code>/manage-rating-criteria/', views.manage_rating_criteria, name='manage_rating_criteria'),
 
-    # Get Ratings (JSON response for filtered students)
-    path('<str:short_code>/get-ratings/', views.get_ratings, name='get_ratings'),
+    # URL for managing ratings
+    path('<str:short_code>/manage-ratings/', views.manage_ratings, name='manage_ratings'),
 
-    # Save Ratings (save submitted ratings data)
+    # URL to fetch students and criteria for ratings
+    path('<str:short_code>/fetch-students-and-criteria/', views.fetch_students_and_criteria, name='fetch_students_and_criteria'),
+
+    # URL for saving ratings
     path('<str:short_code>/save-ratings/', views.save_ratings, name='save_ratings'),
-
-    path('<short_code>/teacher/ratings/', views.record_teacher_ratings, name='record_teacher_ratings'),
-
 ]

@@ -232,7 +232,7 @@ const getBranchValue = () => {
     filterButton.addEventListener("click", function () {
         const session = sessionSelect.value;
         const term = termSelect.value;
-        const branch = getBranchValue(); 
+        const branch = getBranchValue();
         const classes = Array.from(
             document.querySelectorAll("#classesContainer input[type=checkbox]:checked")
         ).map(input => input.value);
@@ -256,23 +256,40 @@ const getBranchValue = () => {
         })
             .then(response => response.json())
             .then(data => {
-
                 if (data.error) {
-                 // Display alert if results are not published
-                 alert(data.error); // Customize this message if needed
-                resultsContainer.innerHTML = `<p class='text-center text-danger'>${data.error}</p>`;
-                return;
+                    alert(data.error);
+                    resultsContainer.innerHTML = `<p class='text-center text-danger'>${data.error}</p>`;
+                    return;
                 }
 
                 if (data.students.length === 0) {
                     resultsContainer.innerHTML = "<p class='text-center text-danger'>No results found!</p>";
                 } else {
                     resultsContainer.innerHTML = "";
-
                     data.students.forEach(student => {
                         const schoolCommentLabel = data.school_details.school_type === "Primary" ? "Head Teacher" : "Principal";
                         const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
+
+                        // Psychomotor Ratings: Transform to a single row
+                        const psychomotorRatings = `
+                            <tr>
+                                ${student.ratings.psychomotor.map(rating => `<td>${rating.criteria || "N/A"}</td>`).join("")}
+                            </tr>
+                            <tr>
+                                ${student.ratings.psychomotor.map(rating => `<td>${rating.value !== undefined && rating.value !== null ? rating.value : "N/A"}</td>`).join("")}
+                            </tr>`;
+
+                        // Behavioral Ratings: Transform to a single row
+                        const behavioralRatings = `
+                            <tr>
+                                ${student.ratings.behavioral.map(rating => `<td>${rating.criteria || "N/A"}</td>`).join("")}
+                            </tr>
+                            <tr>
+                                ${student.ratings.behavioral.map(rating => `<td>${rating.value !== undefined && rating.value !== null ? rating.value : "N/A"}</td>`).join("")}
+                            </tr>`;
+
+                        
                         const studentCard = `
                             <div class="card mb-0 school-details-card" style="max-width: 80%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                     <!-- School Details -->
@@ -387,47 +404,28 @@ const getBranchValue = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <!-- Psychomotor and Behavioral Ratings -->
-                                        <div class="mt-1">
-                                            <h6 class="text-center text-primary">Psychomotor Ratings</h6>
-                                            <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
-                                                <thead>
-                                                    <tr>
-                                                        ${Object.keys(student.rating.psychomotor || {}).map(key => `
-                                                            <th>${key.replace(/_/g, ' ')}</th>
-                                                        `).join('')}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        ${Object.values(student.rating.psychomotor || {}).map(value => `
-                                                            <td>${value || "N/A"}</td>
-                                                        `).join('')}
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        <!-- Psychomotor Ratings -->
+                                        <div class="mt-3">
+                                        <h6 class="text-primary">Psychomotor Ratings</h6>
+                                        <table class="table table-bordered">
+                                           
+                                            <tbody>
+                                                ${psychomotorRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!-- Behavioral Ratings -->
+                                    <div class="mt-3">
+                                        <h6 class="text-primary">Behavioral Ratings</h6>
+                                        <table class="table table-bordered">
 
-                                        <div class="mt-1">
-                                            <h6 class="text-center text-primary">Behavioral Ratings</h6>
-                                            <table class="table table-bordered" style="font-size: 11px; padding: 4px;">
-                                                <thead>
-                                                    <tr>
-                                                        ${Object.keys(student.rating.behavioral || {}).map(key => `
-                                                            <th>${key.replace(/_/g, ' ')}</th>
-                                                        `).join('')}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        ${Object.values(student.rating.behavioral || {}).map(value => `
-                                                            <td>${value || "N/A"}</td>
-                                                        `).join('')}
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                            <tbody>
+                                                ${behavioralRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
+                                            </tbody>
+                                        </table>
+                                    </div>
 
+                                          
                                         <!-- Comments -->
                                         <div class="mt-1 text-left">
                                             <h6 class="text-primary">Teacher's Comment</h6>

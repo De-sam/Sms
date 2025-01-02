@@ -1,0 +1,375 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div>
+    <!-- Header Card -->
+    <div class="card card-outline card-primary">
+        <div id="cardHeader" class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-star"></i> Manage Student Ratings
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form id="ratingsFilterForm">
+                <div class="row mb-3">
+                    <!-- Session -->
+                    <div class="col-md-3">
+                        <label for="session">Session</label>
+                        <select id="session" name="session" class="form-select" required>
+                            <option value="">-- Select Session --</option>
+                        </select>
+                    </div>
+                    <!-- Term -->
+                    <div class="col-md-3">
+                        <label for="term">Term</label>
+                        <select id="term" name="term" class="form-select" required disabled>
+                            <option value="">-- Select Term --</option>
+                        </select>
+                    </div>
+                    <!-- Rating Type -->
+                    <div class="col-md-3">
+                        <label for="ratingType">Rating Type</label>
+                        <select id="ratingType" name="ratingType" class="form-select" required>
+                            <option value="">-- Select Rating Type --</option>
+                            <option value="psychomotor">Psychomotor</option>
+                            <option value="behavioral">Behavioral</option>
+                        </select>
+                    </div>
+                    <!-- Branch -->
+                    <div class="col-md-3">
+                        <label for="branch">Branch</label>
+                        <select id="branch" name="branch" class="form-select" required>
+                            <option value="">-- Select Branch --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Classes -->
+                <div class="form-group mb-3">
+                    <label for="classes">Class(es)</label>
+                    <div id="classes" class="bg-light p-3 rounded">
+                        <!-- Classes will be dynamically arranged in rows of 3 -->
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="filterButton">Filter</button>
+            </form>
+
+            <!-- Ratings Table -->
+            <div class="table-responsive mt-4">
+                <table class="table table-bordered" id="ratingsTable">
+                    <thead>
+                        <tr id="ratingsTableHeader">
+                            <th>Student Name</th>
+                            <!-- Dynamic header for ratings fields -->
+                        </tr>
+                    </thead>
+                    <tbody id="ratingsTableBody">
+                        <!-- Dynamic rows for students -->
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-success mt-3" id="saveRatingsButton">Save Ratings</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="feedbackModalTitle" class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="feedbackModalBody" class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const feedbackModal = new bootstrap.Modal(document.getElementById("feedbackModal"));
+    const feedbackModalTitle = document.getElementById("feedbackModalTitle");
+    const feedbackModalBody = document.getElementById("feedbackModalBody");
+    const feedbackModalContent = document.querySelector("#feedbackModal .modal-content");
+
+    function showModal(type, title, message) {
+        feedbackModalTitle.textContent = title;
+        feedbackModalBody.textContent = message;
+
+        feedbackModalContent.className = "modal-content";
+        if (type === "success") {
+            feedbackModalContent.classList.add("bg-success", "text-white");
+        } else if (type === "error") {
+            feedbackModalContent.classList.add("bg-danger", "text-white");
+        } else if (type === "warning") {
+            feedbackModalContent.classList.add("bg-warning", "text-dark");
+        }
+
+        feedbackModal.show();
+    }
+
+    const shortCode = "{{ school.short_code }}";
+    const sessionSelect = document.getElementById("session");
+    const termSelect = document.getElementById("term");
+    const branchSelect = document.getElementById("branch");
+    const classesContainer = document.getElementById("classes");
+    const filterButton = document.getElementById("filterButton");
+    const ratingsTableHeader = document.getElementById("ratingsTableHeader");
+    const ratingsTableBody = document.getElementById("ratingsTableBody");
+    const saveRatingsButton = document.getElementById("saveRatingsButton");
+
+    // Fetch and populate sessions
+    fetch(`/ratings/${shortCode}/get-sessions/`)
+        .then(response => response.json())
+        .then(data => {
+            sessionSelect.innerHTML = '<option value="">-- Select Session --</option>';
+            data.sessions.forEach(session => {
+                const option = document.createElement("option");
+                option.value = session.id;
+                option.textContent = session.session_name;
+                sessionSelect.appendChild(option);
+            });
+        });
+
+    // Fetch terms based on session
+    sessionSelect.addEventListener("change", function () {
+        termSelect.disabled = true;
+        termSelect.innerHTML = '<option value="">-- Select Term --</option>';
+        fetch(`/ratings/${shortCode}/get-terms/${sessionSelect.value}/`)
+            .then(response => response.json())
+            .then(data => {
+                data.terms.forEach(term => {
+                    const option = document.createElement("option");
+                    option.value = term.id;
+                    option.textContent = term.term_name;
+                    termSelect.appendChild(option);
+                });
+                termSelect.disabled = false;
+            });
+    });
+
+    // Fetch branches
+    fetch(`/ratings/${shortCode}/get-branches/`)
+        .then(response => response.json())
+        .then(data => {
+            branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+            data.branches.forEach(branch => {
+                const option = document.createElement("option");
+                option.value = branch.id;
+                option.textContent = `${branch.branch_name} (${branch.branch_type})`;
+                branchSelect.appendChild(option);
+            });
+        });
+
+    // Fetch and arrange classes
+    branchSelect.addEventListener("change", function () {
+        fetch(`/ratings/${shortCode}/get-classes/${branchSelect.value}/`)
+            .then(response => response.json())
+            .then(data => {
+                classesContainer.innerHTML = "";
+                for (let i = 0; i < data.classes.length; i += 3) {
+                    const row = document.createElement("div");
+                    row.classList.add("row", "mb-2");
+                    for (let j = i; j < i + 3 && j < data.classes.length; j++) {
+                        const col = document.createElement("div");
+                        col.classList.add("col-md-4");
+                        col.innerHTML = `
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="classes" value="${data.classes[j].id}">
+                                <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department || "No Department"})</label>
+                            </div>
+                        `;
+                        row.appendChild(col);
+                    }
+                    classesContainer.appendChild(row);
+                }
+            });
+    });
+
+    // Filter ratings and populate table
+    filterButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map(c => c.value);
+        const ratingType = document.getElementById("ratingType").value;
+
+        if (!session || !term || !branch || classes.length === 0 || !ratingType) {
+            showModal("warning", "Filter Warning", "Please complete all filters.");
+            return;
+        }
+
+        fetch(`/ratings/${shortCode}/fetch-students-and-criteria/?session=${session}&term=${term}&branch=${branch}&class=${classes.join(",")}&rating_type=${ratingType}`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate table header with criteria
+                ratingsTableHeader.innerHTML = `
+                    <th>Student Name</th>
+                    ${data.criteria.map(criterion => `<th>${criterion.name} (Max Value: ${criterion.max_value})</th>`).join("")}
+                `;
+
+                // Populate table body with students and pre-fill ratings if available
+                ratingsTableBody.innerHTML = data.students.map(student => `
+                    <tr>
+                        <td>${student.name}</td>
+                        ${data.criteria.map(criterion => {
+                            const existingRating = data.ratings?.find(rating => 
+                                rating.student_id === student.id && 
+                                rating.criterion_id === criterion.id
+                            );
+                            const value = existingRating?.value || "";
+                            const isPrepopulated = existingRating ? "prepopulated" : "";
+
+                            return `
+                                <td>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               name="rating_${student.id}_${criterion.id}" 
+                                               class="form-control rating-input ${isPrepopulated}" 
+                                               data-max="${criterion.max_value}" 
+                                               value="${value}" 
+                                               min="1" 
+                                               max="${criterion.max_value}" 
+                                               required>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text checkmark" style="display: ${value ? "inline" : "none"}; color: green;">✓</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                        }).join("")}
+                    </tr>
+                `).join("");
+
+                // Attach validation to all inputs
+                attachValidation();
+            });
+    });
+
+    // Save ratings
+    saveRatingsButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const classes = Array.from(classesContainer.querySelectorAll("input:checked")).map(c => c.value);
+        const ratingType = document.getElementById("ratingType").value;
+
+        if (!session || !term || !branch || classes.length === 0 || !ratingType) {
+            showModal("error", "Save Error", "Please complete all fields before saving.");
+            return;
+        }
+
+        const ratings = [];
+        let isValid = true;
+
+        ratingsTableBody.querySelectorAll("tr").forEach(row => {
+            const studentId = row.querySelector("input").name.split("_")[1];
+            row.querySelectorAll(".rating-input").forEach(input => {
+                const criterionId = input.name.split("_")[2];
+                const value = input.value;
+
+                if (value > input.dataset.max || value < 1) {
+                    input.classList.add("is-invalid");
+                    isValid = false;
+                } else {
+                    input.classList.remove("is-invalid");
+                    ratings.push({ student_id: studentId, criterion_id: criterionId, value });
+                }
+            });
+        });
+
+        if (!isValid) {
+            showModal("error", "Validation Error", "Please ensure all ratings are within valid ranges.");
+            return;
+        }
+
+        fetch(`/ratings/${shortCode}/save-ratings/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ session, term, branch, classes, rating_type: ratingType, ratings }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showModal("success", "Save Successful", "Ratings saved successfully!");
+                } else {
+                    showModal("error", "Save Failed", data.error || "An unexpected error occurred.");
+                }
+            })
+            .catch(() => showModal("error", "Save Failed", "Failed to save ratings. Please try again."));
+    });
+
+    function attachValidation() {
+        document.querySelectorAll(".rating-input").forEach(input => {
+            const checkmark = input.parentElement.querySelector(".checkmark");
+            input.addEventListener("input", function () {
+                const maxValue = parseInt(this.dataset.max, 10);
+                if (this.value > maxValue || this.value < 1) {
+                    this.classList.add("is-invalid");
+                    this.setCustomValidity(`Value must be between 1 and ${maxValue}`);
+                    checkmark.style.display = "none";
+                } else {
+                    this.classList.remove("is-invalid");
+                    this.setCustomValidity("");
+                    checkmark.style.display = "inline";
+                }
+            });
+        });
+    }
+});
+
+</script>
+<style>
+    /* Sticky table headers */
+    #ratingsTable thead th {
+        position: sticky;
+        top: 0; /* Stick to the top of the container */
+        z-index: 3; /* Ensure the header is above everything else */
+        background-color: #f8f9fa; /* Optional: Set a background color */
+        border-bottom: 2px solid #dee2e6; /* Optional: Add a bottom border for clarity */
+    }
+
+    /* Sticky first column (Student Name) */
+    #ratingsTable tbody td:first-child,
+    #ratingsTable thead th:first-child {
+        position: sticky;
+        left: 0; /* Stick to the left of the container */
+        z-index: 1; /* Ensure it's below the headers */
+        background-color: #ffffff; /* Optional: Set a background color */
+        border-right: 1px solid #dee2e6; /* Optional: Add a border for clarity */
+    }
+
+    /* Ensure the table is scrollable horizontally and vertically */
+    .table-responsive {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 500px; /* Set max height for scrolling */
+    }
+
+    /* Prevent input shrinking in the table */
+    .table input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        min-width: 100px;
+    }
+
+    @media (max-width: 768px) {
+        .table input[type="number"] {
+            min-width: 70px;
+        }
+    }
+</style>
+
+
+
+     
+{% endblock %}

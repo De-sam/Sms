@@ -1,266 +1,186 @@
-from django.shortcuts import render, get_object_or_404
-from academics.models import Session, Term
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from ratings.models import RatingCriteria
 from schools.models import Branch
 from landingpage.models import SchoolRegistration
-from utils.context_helpers import get_user_roles
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required, teacher_required,admin_or_teacher_required
-import json
-from django.views.decorators.csrf import csrf_exempt
+from utils.permissions import admin_required
+from academics.models import Session, Term
 from django.http import JsonResponse
-from schools.models import Branch
-from classes.models import Class
 from students.models import Student
-from .models import Rating
-from django.db import transaction
-from students.models import Student
-from classes.models import Class, TeacherClassAssignment
+from ratings.models import Rating, RatingCriteria
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 
 
 @login_required_with_short_code
 @admin_required
-def filter_students_for_ratings(request, short_code):
-    """
-    Render the template for filtering students based on session, term, branch, and class.
-    """
-    print("DEBUG: Entered filter_students_for_ratings view.")
+def manage_rating_criteria(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    user_roles = get_user_roles(request.user, school)
+    branches = Branch.objects.filter(school=school)
+    selected_branch_ids = request.GET.getlist('branches')
+    selected_rating_type = request.GET.get('rating_type')
+    criteria = []
 
-    context = {
-        'school': school,
-        'sessions': Session.objects.filter(school=school),
-        'terms': Term.objects.none(),  # Dynamically populated on the frontend
-        'branches': Branch.objects.filter(school=school),
-        **user_roles,
-    }
+    if request.method == 'POST':
+        selected_branch_ids = request.POST.getlist('branches')
+        selected_rating_type = request.POST.get('rating_type')
+        criteria_names = request.POST.getlist('criteria_name')
+        max_values = request.POST.getlist('max_value')
 
-    print("DEBUG: Context prepared with school and user roles.")
-    return render(request, 'ratings/filter_ratings.html', context)
-
-@admin_or_teacher_required
-@login_required_with_short_code
-def get_ratings(request, short_code):
-    """
-    Fetch filtered students based on session, term, branch, classes, and rating type.
-    Includes relevant rating fields based on the selected rating type.
-    """
-    print("DEBUG: Entered get_ratings view.")
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
-
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            session_id = data.get("session")
-            term_id = data.get("term")
-            branch_id = data.get("branch")
-            class_ids = data.get("classes", [])
-            rating_type = data.get("rating_type")
-
-            print(f"DEBUG: Filter criteria - Session: {session_id}, Term: {term_id}, Branch: {branch_id}, Classes: {class_ids}, Rating Type: {rating_type}")
-
-            if not session_id or not term_id or not branch_id or not class_ids or not rating_type:
-                return JsonResponse({"error": "Missing required fields."}, status=400)
-
-            session = get_object_or_404(Session, id=session_id, school=school)
-            term = get_object_or_404(Term, id=term_id, session=session)
+        # Save criteria for selected branches
+        for branch_id in selected_branch_ids:
             branch = get_object_or_404(Branch, id=branch_id, school=school)
+            for name, max_value in zip(criteria_names, max_values):
+                if name and max_value:
+                    RatingCriteria.objects.update_or_create(
+                        school=school,
+                        branch=branch,
+                        rating_type=selected_rating_type,
+                        criteria_name=name,
+                        defaults={'max_value': max_value},
+                    )
 
-            students = Student.objects.filter(
-                current_session=session,
-                branch=branch,
-                student_class__id__in=class_ids
-            ).select_related('user')
+        messages.success(request, "Rating criteria updated successfully!")
+        return redirect('manage_rating_criteria', short_code=short_code)
 
-            print(f"DEBUG: Found {students.count()} students matching criteria.")
+    # Fetch existing criteria if branches and rating type are selected
+    if selected_branch_ids and selected_rating_type:
+        criteria = RatingCriteria.objects.filter(
+            branch_id__in=selected_branch_ids, 
+            rating_type=selected_rating_type
+        )
 
-            # Define rating fields based on rating_type
-            fields = {
-                        "psychomotor": ["coordination", "handwriting", "sports", "artistry", "verbal_fluency", "games", ],  # Add neatness here
-                        "behavioral": ["punctuality", "attentiveness", "obedience", "leadership", "emotional_stability", "teamwork", "neatness"],  # Add neatness here
-                    }.get(rating_type, [])
+    return render(request, 'ratings/manage_rating_criteria.html', {
+        'school': school,
+        'branches': branches,
+        'selected_branch_ids': [int(b) for b in selected_branch_ids],
+        'selected_rating_type': selected_rating_type,
+        'criteria': criteria,
+    })
 
 
-            student_data = []
-            for student in students:
-                rating = Rating.objects.filter(
-                    student=student,
-                    session=session,
-                    term=term,
-                    branch=branch,
-                    rating_type=rating_type
-                ).first()
 
-                student_info = {
-                    "id": student.id,
-                    "first_name": student.first_name,
-                    "last_name": student.last_name,
-                }
+@login_required_with_short_code
+@admin_required
+def manage_ratings(request, short_code):
+    """
+    View for managing student ratings with filtering options.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
-                for field in fields:
-                    student_info[field] = getattr(rating, field, None)
+    return render(request, 'ratings/manage_ratings.html', {
+        'school': school,
+    })
 
-                student_data.append(student_info)
 
-            print(f"DEBUG: Prepared data for {len(student_data)} students.")
-            return JsonResponse({"students": student_data, "fields": fields}, status=200)
 
-        except json.JSONDecodeError as e:
-            print(f"DEBUG: JSONDecodeError - {e}")
-            return JsonResponse({"error": "Invalid JSON format."}, status=400)
-        except Exception as e:
-            print(f"DEBUG: Exception occurred - {e}")
-            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+@login_required_with_short_code
+@admin_required
+def fetch_students_and_criteria(request, short_code):
+    """
+    API to fetch students, rating criteria, and existing scores based on filters.
+    """
+    branch_id = request.GET.get('branch')
+    class_id = request.GET.get('class')
+    session_id = request.GET.get('session')
+    term_id = request.GET.get('term')
+    rating_type = request.GET.get('rating_type')
 
-    print("DEBUG: Invalid request method.")
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+    if not all([branch_id, class_id, session_id, term_id, rating_type]):
+        return JsonResponse({'error': 'All filters are required.'}, status=400)
 
+    # Fetch students
+    students = Student.objects.filter(
+        student_class_id=class_id,
+        branch_id=branch_id
+    ).select_related('student_class').order_by('last_name')
+
+    # Fetch rating criteria
+    criteria = RatingCriteria.objects.filter(
+        branch_id=branch_id,
+        rating_type=rating_type
+    )
+
+    # Fetch existing ratings
+    ratings = Rating.objects.filter(
+        session_id=session_id,
+        term_id=term_id,
+        branch_id=branch_id,
+        criteria__in=criteria
+    )
+
+    # Prepare student data
+    student_data = [
+        {'id': student.id, 'name': f"{student.last_name} {student.first_name}"}
+        for student in students
+    ]
+
+    # Prepare criteria data
+    criteria_data = [
+        {'id': criterion.id, 'name': criterion.criteria_name, 'max_value': criterion.max_value}
+        for criterion in criteria
+    ]
+
+    # Prepare existing ratings data
+    rating_data = [
+        {'student_id': rating.student.id, 'criterion_id': rating.criteria.id, 'value': rating.value}
+        for rating in ratings
+    ]
+
+    return JsonResponse({
+        'students': student_data,
+        'criteria': criteria_data,
+        'ratings': rating_data
+    })
 
 
 
 @csrf_exempt
-@admin_or_teacher_required
-@login_required_with_short_code
 def save_ratings(request, short_code):
-    """
-    Save ratings for students based on the submitted data.
-    """
-    print("DEBUG: Entered save_ratings view.")
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
-
     if request.method == "POST":
         try:
-            # Parse the JSON payload
-            raw_data = request.body.decode('utf-8')
-            print(f"DEBUG: Raw request body: {raw_data}")
-            data = json.loads(raw_data)
-            print(f"DEBUG: Parsed JSON data: {data}")
-
+            data = json.loads(request.body)
+            
             session_id = data.get("session")
             term_id = data.get("term")
             branch_id = data.get("branch")
-            class_ids = data.get("classes", [])
             rating_type = data.get("rating_type")
-            ratings = data.get("ratings", [])  # List of ratings per student
+            ratings_data = data.get("ratings", [])
 
-            print(f"DEBUG: Filter criteria - Session: {session_id}, Term: {term_id}, Branch: {branch_id}, Rating Type: {rating_type}, Ratings: {ratings}")
-
-            # Validate required fields
-            if not session_id or not term_id or not branch_id or not rating_type or not ratings:
+            if not all([session_id, term_id, branch_id, rating_type, ratings_data]):
                 return JsonResponse({"error": "Missing required fields."}, status=400)
 
-            # Validate session, term, and branch
-            session = get_object_or_404(Session, id=session_id, school=school)
-            term = get_object_or_404(Term, id=term_id, session=session)
-            branch = get_object_or_404(Branch, id=branch_id, school=school)
+            for rating in ratings_data:
+                student_id = rating.get("student_id")
+                criterion_id = rating.get("criterion_id")
+                value = rating.get("value")
 
-            # Process each rating
-            with transaction.atomic():  # Ensure all records are saved or none in case of an error
-                for rating_data in ratings:
-                    student_id = rating_data.get("student_id")
-                    if not student_id:
-                        print("DEBUG: Missing student_id in ratings.")
-                        continue
+                if not all([student_id, criterion_id, value]):
+                    continue  # Skip invalid ratings
 
-                    # Fetch the student
-                    student = get_object_or_404(Student, id=student_id, branch=branch, current_session=session)
-
-                    # Prepare fields for update or create
-                    defaults = {}
-                    if rating_type == "psychomotor":
-                        defaults.update({
-                            "coordination": rating_data.get("coordination") or None,
-                            "handwriting": rating_data.get("handwriting") or None,
-                            "sports": rating_data.get("sports") or None,
-                            "artistry": rating_data.get("artistry") or None,
-                            "verbal_fluency": rating_data.get("verbal") or None, 
-                            "games": rating_data.get("games") or None,
-                        })
-                    elif rating_type == "behavioral":
-                        defaults.update({
-                        "punctuality": rating_data.get("punctuality") or None,
-                        "attentiveness": rating_data.get("attentiveness") or None,
-                        "obedience": rating_data.get("obedience") or None,
-                        "leadership": rating_data.get("leadership") or None,
-                        "emotional_stability": rating_data.get("emotional") or None,  # Map 'emotional' to 'emotional_stability'
-                        "teamwork": rating_data.get("teamwork") or None,
-                        "neatness": rating_data.get("neatness") or None,
-                    })
+                try:
+                    student = Student.objects.get(id=student_id)
+                    criteria = RatingCriteria.objects.get(id=criterion_id)
 
                     # Save or update the rating
-                    rating_obj, created = Rating.objects.update_or_create(
+                    Rating.objects.update_or_create(
                         student=student,
-                        session=session,
-                        term=term,
-                        branch=branch,
-                        rating_type=rating_type,
-                        defaults=defaults
+                        session_id=session_id,
+                        term_id=term_id,
+                        branch_id=branch_id,
+                        criteria=criteria,
+                        defaults={"value": value, "rating_type": rating_type},
                     )
-                    print(f"DEBUG: {'Created' if created else 'Updated'} rating for student {student_id}. Data: {defaults}")
+                except RatingCriteria.DoesNotExist:
+                    return JsonResponse({"error": f"Invalid criterion ID: {criterion_id}"}, status=400)
+                except Student.DoesNotExist:
+                    return JsonResponse({"error": f"Invalid student ID: {student_id}"}, status=400)
 
-            print("DEBUG: Ratings saved successfully.")
-            return JsonResponse({"success": True, "message": "Ratings saved successfully."}, status=200)
-
-        except json.JSONDecodeError as e:
-            print(f"DEBUG: JSONDecodeError - {e}")
-            return JsonResponse({"error": "Invalid JSON format."}, status=400)
+            return JsonResponse({"success": "Ratings saved successfully."})
         except Exception as e:
-            print(f"DEBUG: Exception occurred - {e}")
-            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+            return JsonResponse({"error": str(e)}, status=500)
 
-    print("DEBUG: Invalid request method.")
-    return JsonResponse({"error": "Invalid request method."}, status=405)
-
-
-
-
-@login_required_with_short_code
-@teacher_required
-@transaction.atomic
-def record_teacher_ratings(request, short_code):
-    """
-    View for teachers to record ratings for students.
-    Filters data based on teacher's assignments.
-    """
-    user = request.user
-    school = get_object_or_404(SchoolRegistration, short_code=short_code)
-
-    # Fetch teacher's roles
-    user_roles = get_user_roles(user, school)
-
-    # Ensure the user is a teacher
-    if not user_roles.get('is_teacher', False):
-        return JsonResponse({'error': 'Access denied. Teachers only.'}, status=403)
-
-    # Fetch teacher assignments
-    teacher_assignments = TeacherClassAssignment.objects.filter(teacher=user.staff, branch__school=school)
-
-    # Filter data based on teacher's assignments
-    sessions = Session.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
-    terms = Term.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
-    branches = Branch.objects.filter(teacher_class_assignments__in=teacher_assignments).distinct()
-    assigned_classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).distinct()
-
-    # Debugging: Log teacher assignments and filtered data
-    print(f"Teacher Assignments for {user.username}:")
-    for assignment in teacher_assignments:
-        print(f"Branch: {assignment.branch}, Classes: {[cls.name for cls in assignment.assigned_classes.all()]}")
-
-    print(f"Filtered Data for {user.username}:")
-    print(f"Sessions: {[session.session_name for session in sessions]}")
-    print(f"Terms: {[term.term_name for term in terms]}")
-    print(f"Branches: {[branch.branch_name for branch in branches]}")
-    print(f"Classes: {[cls.name for cls in assigned_classes]}")
-
-    # Pass filtered data to the template
-    context = {
-        'school': school,
-        'sessions': sessions,
-        'terms': terms,
-        'branches': branches,
-        'classes': assigned_classes,
-        **user_roles,  # Add user roles to the context
-    }
-
-    return render(request, 'ratings/filter_ratings.html', context)
+    return JsonResponse({"error": "Invalid request method."}, status=400)

@@ -1041,24 +1041,22 @@ def fetch_students_result(request, short_code):
                         if hasattr(result.student.user, "profile_picture") and result.student.user.profile_picture
                         else None
                     )
-                    # Fetch psychomotor and behavioral ratings for the student
-                    psychomotor_rating = Rating.objects.filter(
-                    rating_type='psychomotor',
-                    session=session, 
-                    term=term,
-                    branch=branch,
-                    student=result.student
-                    ).select_related("student").first()  
+                  # Fetch psychomotor and behavioral ratings for the student
+                    psychomotor_ratings = Rating.objects.filter(
+                        student=result.student,
+                        branch=branch,
+                        session=session,
+                        term=term,
+                        rating_type="psychomotor"
+                    )
 
-
-                    behavioral_rating = Rating.objects.filter(
-                    rating_type='behavioral',
-                    session=session, 
-                    term=term, 
-                    branch=branch, 
-                    student=result.student
-                    ).select_related("student").first()  
-
+                    behavioral_ratings = Rating.objects.filter(
+                        student=result.student,
+                        branch=branch,
+                        session=session,
+                        term=term,
+                        rating_type="behavioral"
+                    )
 
                     grouped_results[result.student_id] = {
                         "first_name": result.student.first_name,
@@ -1080,25 +1078,10 @@ def fetch_students_result(request, short_code):
                             "total_score_maximum": avg_result.total_score_maximum if avg_result else 0,
                             "average_percentage": average_percentage,
                         },
-                        "rating": {
-                            "psychomotor": {
-                                "coordination": psychomotor_rating.coordination if psychomotor_rating else "N/A",
-                                "handwriting": psychomotor_rating.handwriting if psychomotor_rating else "N/A",
-                                "sports": psychomotor_rating.sports if psychomotor_rating else "N/A",
-                                "artistry": psychomotor_rating.artistry if psychomotor_rating else "N/A",
-                                "verbal_fluency": psychomotor_rating.verbal_fluency if psychomotor_rating else "N/A",
-                                "games": psychomotor_rating.games if psychomotor_rating else "N/A",
-                            },
-                            "behavioral": {
-                                "punctuality": behavioral_rating.punctuality if behavioral_rating else "N/A",
-                                "attentiveness": behavioral_rating.attentiveness if behavioral_rating else "N/A",
-                                "obedience": behavioral_rating.obedience if behavioral_rating else "N/A",
-                                "leadership": behavioral_rating.leadership if behavioral_rating else "N/A",
-                                "emotional_stability": behavioral_rating.emotional_stability if behavioral_rating else "N/A",
-                                "teamwork": behavioral_rating.teamwork if behavioral_rating else "N/A",
-                            }
-                        },
-
+                        "ratings": {
+                            "psychomotor": [rating.to_dict() for rating in psychomotor_ratings],
+                            "behavioral": [rating.to_dict() for rating in behavioral_ratings],
+                        },                     
                         "comments": [
                             {
                                 "author": comment.author.get_full_name(),
@@ -1283,7 +1266,6 @@ def list_published_results(request, short_code):
     }
     return render(request, 'results/list_published_results.html', context)
 
-
 @login_required_with_short_code
 @admin_required
 @transaction.atomic
@@ -1297,10 +1279,10 @@ def manage_grading_system(request, short_code):
 
     selected_branch = None
     grading_systems = []
+    branch_type = None  # Initialize branch type
 
     if request.method == 'POST':
         branch_id = request.POST.get('branch')
-        print(f"DEBUG: Received Branch ID: {branch_id}")  # Debugging
         selected_branch = get_object_or_404(Branch, id=branch_id, school=school)
 
         # Handle grading system entries manually
@@ -1323,18 +1305,23 @@ def manage_grading_system(request, short_code):
                 )
 
         messages.success(request, f"Grading system for {selected_branch.branch_name} updated successfully!")
-        return redirect('manage_grading_system', short_code=short_code)
     else:
         branch_id = request.GET.get('branch')
-        print(f"DEBUG: Query Parameter Branch ID: {branch_id}")  # Debugging
         if branch_id:
             selected_branch = get_object_or_404(Branch, id=branch_id, school=school)
             grading_systems = GradingSystem.objects.filter(branch=selected_branch)
+
+            # Determine the branch type (Primary or Secondary)
+            if selected_branch.primary_school:
+                branch_type = "Primary"
+            else:
+                branch_type = "Secondary"
 
     return render(request, 'results/manage_grading_system.html', {
         'school': school,
         'branches': branches,
         'selected_branch': selected_branch,
         'grading_systems': grading_systems,
+        'branch_type': branch_type,  # Include branch type in the context
         **user_roles,
     })

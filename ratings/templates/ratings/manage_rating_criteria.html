@@ -1,0 +1,120 @@
+{% extends 'schools/base_dash.html' %}
+{% block content %}
+<div>
+    <h4>Manage Rating Criteria</h4>
+
+    <!-- Filter Form Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="bi bi-funnel"></i> Filter Criteria
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{% url 'manage_rating_criteria' school.short_code %}">
+                <div class="mb-3">
+                    <label for="rating_type" class="form-label">Select Rating Type:</label>
+                    <select class="form-select" name="rating_type" id="rating_type" required>
+                        <option value="">-- Select Rating Type --</option>
+                        <option value="psychomotor" {% if selected_rating_type == 'psychomotor' %}selected{% endif %}>Psychomotor</option>
+                        <option value="behavioral" {% if selected_rating_type == 'behavioral' %}selected{% endif %}>Behavioral</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Branches:</label>
+                    <div class="form-check">
+                        {% for branch in branches %}
+                        <div>
+                            <input type="checkbox" class="form-check-input" name="branches" id="branch_{{ branch.id }}" value="{{ branch.id }}"
+                                {% if branch.id in selected_branch_ids %}checked{% endif %}>
+                            <label for="branch_{{ branch.id }}" class="form-check-label">
+                                {{ branch.branch_name }}
+                                {% if branch.primary_school %}
+                                    (Primary)
+                                {% else %}
+                                    (Secondary)
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Criteria Table Card -->
+    {% if selected_branch_ids and selected_rating_type %}
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <i class="bi bi-table"></i> Rating Criteria for Selected Branches - {{ selected_rating_type }}
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                {% csrf_token %}
+                {% for branch_id in selected_branch_ids %}
+                    <input type="hidden" name="branches" value="{{ branch_id }}">
+                {% endfor %}
+                <input type="hidden" name="rating_type" value="{{ selected_rating_type }}">
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Criteria Name</th>
+                                <th>Max Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="criteria-rows">
+                            {% for criterion in criteria %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="criteria_name" value="{{ criterion.criteria_name }}" class="form-control" required>
+                                </td>
+                                <td>
+                                    <input type="number" name="max_value" value="{{ criterion.max_value }}" class="form-control" required>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="button" id="add-criteria-row" class="btn btn-secondary">Add New Criterion</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.getElementById('add-criteria-row').addEventListener('click', function () {
+        const tableBody = document.getElementById('criteria-rows');
+        const newRow = `
+            <tr>
+                <td><input type="text" name="criteria_name" class="form-control" required></td>
+                <td><input type="number" name="max_value" class="form-control" required></td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></td>
+            </tr>
+        `;
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+        attachRemoveHandlers();
+    });
+
+    function attachRemoveHandlers() {
+        document.querySelectorAll('.remove-row').forEach(function (button) {
+            button.addEventListener('click', function () {
+                this.closest('tr').remove();
+            });
+        });
+    }
+
+    // Attach remove handlers to existing rows
+    attachRemoveHandlers();
+</script>
+{% endblock %}

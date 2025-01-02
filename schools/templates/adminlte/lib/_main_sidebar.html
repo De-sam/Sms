@@ -181,7 +181,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'filter_ratings' school.short_code %}" class="nav-link">
+                            <a href="" class="nav-link">
                                 <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
                                 Enter Ratings
                             </a>
@@ -289,6 +289,12 @@
                             <a href="{% url 'manage_grading_system' school.short_code %}" class="nav-link">
                                 <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
                                 Grade structure
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'manage_rating_criteria' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                Ratings Structure
                             </a>
                         </li>
                     </ul>
