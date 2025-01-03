@@ -568,23 +568,36 @@ document.getElementById("saveScoresButton").addEventListener("click", function (
 
 </script>
 <style>
-    .table td input.form-control {
-    min-width: 120px;
-}
-
-
-.table-container {
+  .table-container {
     max-height: 400px; /* Set the maximum height of the table body */
     overflow-y: auto; /* Enable vertical scrolling */
     overflow-x: auto; /* Enable horizontal scrolling */
+    position: relative;
 }
 
 .table thead th {
     position: sticky;
     top: 0; /* Keeps the header at the top */
-    z-index: 1; /* Ensures the header stays above the body */
+    z-index: 2; /* Ensures the header stays above the body */
     background-color: #ffffff; /* Match the header's background to the table */
     border-bottom: 2px solid #dee2e6; /* Optional: Add a border for better visibility */
+}
+
+/* Make the first column (student names) sticky */
+.table tbody td:first-child,
+.table thead th:first-child {
+    position: sticky;
+    left: 0; /* Keep the first column fixed */
+    z-index: 3; /* Ensure it remains above other table content */
+    background-color: #ffffff; /* Match the background */
+    border-right: 2px solid #dee2e6; /* Optional: Add a border for better visibility */
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Ensure proper alignment */
+.table td input.form-control {
+    min-width: 120px;
 }
 
 </style>
