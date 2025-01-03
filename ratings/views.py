@@ -4,7 +4,7 @@ from ratings.models import RatingCriteria
 from schools.models import Branch
 from landingpage.models import SchoolRegistration
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required
+from utils.permissions import admin_or_teacher_required,admin_required
 from academics.models import Session, Term
 from django.http import JsonResponse
 from students.models import Student
@@ -64,7 +64,7 @@ def manage_rating_criteria(request, short_code):
 
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 def manage_ratings(request, short_code):
     """
     View for managing student ratings with filtering options.
@@ -78,7 +78,7 @@ def manage_ratings(request, short_code):
 
 
 @login_required_with_short_code
-@admin_required
+@admin_or_teacher_required
 def fetch_students_and_criteria(request, short_code):
     """
     API to fetch students, rating criteria, and existing scores based on filters.
@@ -137,7 +137,7 @@ def fetch_students_and_criteria(request, short_code):
     })
 
 
-
+@admin_or_teacher_required
 @csrf_exempt
 def save_ratings(request, short_code):
     if request.method == "POST":

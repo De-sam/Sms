@@ -103,13 +103,13 @@
                     <i class="nav-icon fas fa-user-check"></i>
                     <p>Academic reports <i class="right fas fa-angle-left"></i></p>
                 </a>
-                <!-- <ul class="nav nav-treeview">
+                <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="{% url 'add-student' school.short_code %}" class="nav-link">
+                        <a href="{% url 'manage_ratings' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
-                            Add students
+                            Enter Ratings
                         </a>
-                    </li> -->
+                    </li>
                     <li class="nav-item">
                         <a href="{% url 'record_teacher_attendance' school.short_code %}" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
@@ -117,7 +117,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'manage_ratings' school.short_code %}" class="nav-link">
+                        <a href="" class="nav-link">
                             <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
                             Enter Ratings
                         </a>
