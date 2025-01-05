@@ -762,13 +762,13 @@ def fetch_class_results(request, short_code):
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
 
+from django.urls import resolve
 
 def render_generate_result_filter(request, short_code):
     """
-    Render the result generation filter template.
-    For admins, all branches and classes are editable.
-    For students, branch and class fields are read-only.
-    For parents, branches and classes are limited to their children's data.
+    Render the result generation filter template based on the request path.
+    If the request is for fetching results, use "generate_result_filter.html".
+    If the request is for fetching broadsheet, use "broadsheet.html".
     """
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     user_roles = get_user_roles(request.user, school)
@@ -805,7 +805,6 @@ def render_generate_result_filter(request, short_code):
             id__in=parent_relationships.values_list('student__student_class_id', flat=True)
         ).distinct()
 
-        
     # Prepare all branches for admins
     branches = [
         {
@@ -832,7 +831,14 @@ def render_generate_result_filter(request, short_code):
         **user_roles,  # Include additional roles for flexibility
     }
 
-    return render(request, "results/generate_result_filter.html", context)
+    # Determine which template to render based on URL name
+    url_name = resolve(request.path_info).url_name
+    if url_name == "fetch_students_broadsheet":
+        template = "results/broadsheet.html"
+    else:
+        template = "results/generate_result_filter.html"
+
+    return render(request, template, context)
 
 
 
@@ -1147,13 +1153,45 @@ def fetch_students_result(request, short_code):
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
 
 
-
 @csrf_exempt
 def fetch_results_wrapper(request, short_code):
-    if request.method == "POST":
+    """
+    Handles both GET requests for rendering templates and POST requests for fetching data.
+    """
+    if request.method == "GET":
+        # Determine which template to render
+        school = get_object_or_404(SchoolRegistration, short_code=short_code)
+        url_name = resolve(request.path_info).url_name
+        
+        if url_name == "fetch_students_broadsheet":
+            template = "results/broadsheet.html"
+        else:
+            template = "results/generate_result_filter.html"
+
+        # Fetch branches and include branch type (Primary/Secondary)
+        branches = [
+            {
+                "id": branch.id,
+                "branch_name": branch.branch_name,
+                "school_type": "Primary" if branch.primary_school else "Secondary"
+            }
+            for branch in Branch.objects.filter(school=school)
+        ]
+
+        context = {
+            'school': school,
+            'sessions': Session.objects.filter(school=school),
+            'terms': Term.objects.none(),  # Initially empty, dynamically loaded
+            'branches': branches,  # List of branches with type
+            'classes': Class.objects.filter(branches__school=school),  # For admins
+        }
+
+        return render(request, template, context)
+
+    elif request.method == "POST":
         try:
             data = json.loads(request.body)
-            
+
             # Log incoming data for debugging
             print(f"Incoming data: {data}")
 

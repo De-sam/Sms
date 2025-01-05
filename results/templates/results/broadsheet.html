@@ -271,180 +271,66 @@ const getBranchValue = () => {
                         const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
 
-                        // Psychomotor Ratings: Transform to a single row
-                        const psychomotorRatings = `
-                            <tr>
-                                ${student.ratings.psychomotor.map(rating => `<td>${rating.criteria || "N/A"}</td>`).join("")}
-                            </tr>
-                            <tr>
-                                ${student.ratings.psychomotor.map(rating => `<td>${rating.value !== undefined && rating.value !== null ? rating.value : "N/A"}</td>`).join("")}
-                            </tr>`;
+                    // Get all unique subjects from the first student
+const allSubjects = [...new Set(data.students.flatMap(student => student.subjects.map(subject => subject.subject)))];
 
-                        // Behavioral Ratings: Transform to a single row
-                        const behavioralRatings = `
-                            <tr>
-                                ${student.ratings.behavioral.map(rating => `<td>${rating.criteria || "N/A"}</td>`).join("")}
-                            </tr>
-                            <tr>
-                                ${student.ratings.behavioral.map(rating => `<td>${rating.value !== undefined && rating.value !== null ? rating.value : "N/A"}</td>`).join("")}
-                            </tr>`;
+const studentTable = `
+    <div class="card mt-3 mx-auto" style="max-width: 95%; width: auto;">
+        <div class="card-header bg-info text-white text-center">
+            <h5>${data.school_details.school_name}</h5>
+            <p class="text-light"><strong>Class: ${data.students[0].class || "N/A"}</strong></p>
+            <p class="text-light"><strong>${data.school_details.term_label || "N/A"}</strong></p>
+        </div>
 
-                        
-                        const studentCard = `
-                            <div class="card mb-0 school-details-card" style="max-width: 80%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                                    <!-- School Details -->
-                                    <div class="card-header d-flex align-items-center justify-content-between border rounded bg-light">
-                                        <div class="d-flex align-items-center justify-content-center w-100">
-                                            <!-- School Logo -->
-                                            <img src="${schoolLogo}" alt="School Logo" class="img-fluid" style="width: 70px; height: 70px; margin-right: 5px;">
-                                            <!-- Middle Details -->
-                                            <div style="text-align: center; flex-grow: 1; margin: 0 10px;">
-                                                <h5 class="mb-0">${data.school_details.school_name}</h5>
-                                                <p class="text-muted mb-0">${data.school_details.school_address}</p>
-                                                <div class="d-flex justify-content-center" style="gap: 1rem;">
-                                                    <span class="text-muted">
-                                                        <strong>Email:</strong> ${data.school_details.school_email || "N/A"}
-                                                    </span>
-                                                    <span class="text-muted">
-                                                        <strong>Phone:</strong> ${data.school_details.school_phone || "N/A"}
-                                                    </span>
-                                                </div>
-                                                <p class="text-primary mt-1">
-                                                    <strong>${data.school_details.term_label || "N/A"}</strong>
-                                                </p>
-                                            </div>
-                                            <!-- Profile Picture -->
-                                            <img src="${profileImage}" alt="Student Profile" class="img-fluid rounded-circle" style="width: 70px; height: 70px; margin-left: 5px;">
-                                        </div>
-                                    </div>
-                                </div>
+        <div class="card-body">
+            <table class="table table-bordered mx-auto text-center" style="font-size: 14px; width: 100%;">
+                <thead class="bg-secondary text-white">
+                    <tr>
+                        <th rowspan="2">Student Name</th>
+                        ${allSubjects.map(subject => `<th colspan="3" style="writing-mode: vertical-lr;">${subject}</th>`).join('')}
+                        <th rowspan="2" style="writing-mode: vertical-lr;"  >Percentage</th>
+                    </tr>
+                    <tr>
+                        ${allSubjects.map(() => `
+                            <th>CA</th>
+                            <th>Exams</th>
+                            <th>Total</th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${
+                        data.students.map(student => {
+                            let subjects = student.subjects.reduce((acc, subj) => {
+                                acc[subj.subject] = subj;
+                                return acc;
+                            }, {}); // Convert array to object with subject name as key
 
-
-
-                                <!-- Student Details -->
-                                <div class="card-body text-center">
-                                    <div class="d-flex justify-content-center ">
-                                        <span class="mr-3" style="font-size: 1.5rem;">
-                                            <strong style="font-size: 1.5rem; font-weight: bold;">
-                                                Name:
-                                            </strong>
-                                             ${student.last_name}  &nbsp;  ${student.first_name}
-                                        </span>
-
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    
-                                        <span style="font-size: 1.5rem; ">
-                                            <strong style="font-size: 1.5rem; font-weight: bold;">
-                                                Class:
-                                            </strong>
-                                             ${student.class}
-                                        </span>
-                                    </div>
-
-                                    <div class="mt-0">
-                                        <span class="badge badge-primary">Subjects Done: ${student.total_subjects}</span>
-                                        <span class="badge badge-success">Subjects Passed: ${student.subjects_passed}</span>
-                                        <span class="badge badge-danger">Subjects Failed: ${student.subjects_failed}</span>
-                                    </div>
-                                   <div class="mt-0">
-                                         <span class="badge badge-info">
-                                            &nbsp;&nbsp;&nbsp; School Opened: ${student.total_days_school_opened || "N/A"} Days &nbsp;&nbsp;&nbsp;
-                                            Present: ${student.attendance_count || "N/A"} Days  &nbsp;&nbsp;&nbsp; 
-                                            Absent: ${student.times_absent || "N/A"} Days &nbsp;&nbsp;&nbsp;
-                                        </span>
-                                    </div>
-
-                                    <!-- Subject Scores -->
-                                   <div class="card mt-0 mx-auto" style="max-width: 80%; width: auto;">
-                                        <div class="card-header bg-secondary text-white">
-                                            <div class="score-details d-flex justify-content-center align-items-center text-center">
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                <span><strong>Total Obtainable Score:</strong> ${student.average.total_score_maximum}</span>
-                                                <span><strong>Total Obtained Score:</strong> ${student.average.total_score_obtained}</span>
-                                                <span><strong>Average Percentage:</strong> ${student.average.average_percentage.toFixed(2)}%</span>
-                                            </div>
-                                        </div>
+                            return `
+                                <tr>
+                                    <td><strong>${student.last_name} ${student.first_name}</strong></td>
+                                    ${allSubjects.map(subject => {
+                                        let subj = subjects[subject] || {}; // Fetch the subject or return empty
+                                        return `
+                                            <td>${subj.converted_ca || "N/A"}</td>
+                                            <td>${subj.exam_score || "N/A"}</td>
+                                            <td>${subj.total_score || "N/A"}</td>
+                                        `;
+                                    }).join('')}
+                                    <td>${student.average?.average_percentage?.toFixed(2) || "N/A"}%</td>
+                                </tr>
+                            `;
+                        }).join('')
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+`;
 
 
-                                        <div class="card-body">
-                                            <table class="table table-bordered mx-auto" style="font-size: 11px; width: auto; text-align: center;">
 
-                                                <thead>
-                                                    <tr>
-                                                        <th>Subjects</th>
-                                                        <th style="writing-mode: vertical-lr;">CA Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Exam Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Total Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Grade</th>
-                                                        <th>Remarks</th>
-                                                        <th style="writing-mode: vertical-lr;">Highest</th>
-                                                        <th style="writing-mode: vertical-lr;">Average</th>
-                                                        <th style="writing-mode: vertical-lr;">Lowest</th>
-                                                        
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${student.subjects.map(subject => `
-                                                        <tr>
-                                                            <td>${subject.subject}</td>
-                                                            <td>${subject.converted_ca || "N/A"}</td>
-                                                            <td>${subject.exam_score || "N/A"}</td>
-                                                            <td>${subject.total_score || "N/A"}</td>
-                                                            <td>${subject.grade || "N/A"}</td>
-                                                            <td>${subject.remark || "N/A"}</td>
-                                                            <td>${subject.highest_score || "N/A"}</td>
-                                                            <td>${subject.average_score ? subject.average_score.toFixed(2) : "N/A"}</td>
-                                                            <td>${subject.lowest_score || "N/A"}</td>
-                                                            
-                                                        </tr>
-                                                    `).join('')}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!-- Psychomotor Ratings -->
-                                        <div class="mt-3">
-                                        <h6 class="text-primary">Psychomotor Ratings</h6>
-                                        <table class="table table-bordered">
-                                           
-                                            <tbody>
-                                                ${psychomotorRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- Behavioral Ratings -->
-                                    <div class="mt-3">
-                                        <h6 class="text-primary">Behavioral Ratings</h6>
-                                        <table class="table table-bordered">
-
-                                            <tbody>
-                                                ${behavioralRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                          
-                                        <!-- Comments -->
-                                        <div class="mt-1 text-left">
-                                            <h6 class="text-primary">Teacher's Comment</h6>
-                                            <p class="comment-text">${student.comments[0]?.text || "N/A"}</p>
-                                            <h6 class="text-primary">${schoolCommentLabel}'s Comment</h6>
-                                            <p class="comment-text">${student.principal_comment || "N/A"}</p>
-                                        </div>
-                                         <!-- Resumption -->
-                                        <div class="mt-1 text-left next-term-section">
-                                         <strong class="text-muted">Next Term Begins: ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}</strong>
-                                        </div>
-                                    </div>
-                                    
-                            </div>
-                                </div>
-                            </div>
-                            
-                        `;
-                        resultsContainer.innerHTML += studentCard;
+                        resultsContainer.innerHTML += studentTable; 
                     });
                     actionButtons.classList.remove("d-none"); // Show action buttons
                 }

@@ -211,6 +211,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{% url 'fetch_students_broadsheet' school.short_code %}" class="nav-link">
+                                <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
+                                Generate broadsheet                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{% url 'list_published_results' school.short_code %}" class="nav-link">
                                 <i class="nav-icon fas fa-circle" style="font-size: 12px;"></i>
                                 Published results

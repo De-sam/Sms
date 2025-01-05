@@ -31,6 +31,8 @@ urlpatterns = [
     # Fetch and display detailed student results
     path('<str:short_code>/generate-result-filter/', views.render_generate_result_filter, name='generate_result_filter'),
     path('<str:short_code>/fetch-students-result/', views.fetch_results_wrapper, name='fetch_students_result'),
+    path('<str:short_code>/fetch-students-broadsheet/', views.fetch_results_wrapper, name='fetch_students_broadsheet'),
+
 
     # Grading System
     path('<str:short_code>/grading-systems/', views.manage_grading_system, name='manage_grading_system'),
