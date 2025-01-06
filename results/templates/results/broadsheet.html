@@ -272,65 +272,62 @@ const getBranchValue = () => {
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
 
                     // Get all unique subjects from the first student
-const allSubjects = [...new Set(data.students.flatMap(student => student.subjects.map(subject => subject.subject)))];
+                            const allSubjects = [...new Set(data.students.flatMap(student => student.subjects.map(subject => subject.subject)))];
 
-const studentTable = `
-    <div class="card mt-3 mx-auto" style="max-width: 95%; width: auto;">
-        <div class="card-header bg-info text-white text-center">
-            <h5>${data.school_details.school_name}</h5>
-            <p class="text-light"><strong>Class: ${data.students[0].class || "N/A"}</strong></p>
-            <p class="text-light"><strong>${data.school_details.term_label || "N/A"}</strong></p>
-        </div>
+                            // Construct the student table
+                            const studentTable = `
+                                <div class="card mt-3 mx-auto" style="max-width: 95%; width: auto;">
+                                    <div class="card-header bg-info text-white text-center">
+                                        <h5>${data.school_details.school_name}</h5>
+                                        <p class="text-light"><strong>Class: ${data.students[0].class || "N/A"}</strong></p>
+                                        <p class="text-light"><strong>${data.school_details.term_label || "N/A"}</strong></p>
+                                    </div>
 
-        <div class="card-body">
-            <table class="table table-bordered mx-auto text-center" style="font-size: 14px; width: 100%;">
-                <thead class="bg-secondary text-white">
-                    <tr>
-                        <th rowspan="2">Student Name</th>
-                        ${allSubjects.map(subject => `<th colspan="3" style="writing-mode: vertical-lr;">${subject}</th>`).join('')}
-                        <th rowspan="2" style="writing-mode: vertical-lr;"  >Percentage</th>
-                    </tr>
-                    <tr>
-                        ${allSubjects.map(() => `
-                            <th>CA</th>
-                            <th>Exams</th>
-                            <th>Total</th>
-                        `).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${
-                        data.students.map(student => {
-                            let subjects = student.subjects.reduce((acc, subj) => {
-                                acc[subj.subject] = subj;
-                                return acc;
-                            }, {}); // Convert array to object with subject name as key
+                                    <div class="card-body">
+                                        <table class="table table-bordered mx-auto text-center" style="font-size: 14px; width: 100%;">
+                                            <thead class="bg-secondary text-white">
+                                                <tr>
+                                                    <th rowspan="2">Student Name</th>
+                                                    ${allSubjects.map(subject => `<th colspan="3" style="writing-mode: vertical-lr;">${subject}</th>`).join('')}
+                                                    <th rowspan="2" style="writing-mode: vertical-lr;">Percentage</th>
+                                                </tr>
+                                                <tr>
+                                                    ${allSubjects.map(() => `
+                                                        <th>CA</th>
+                                                        <th>Exams</th>
+                                                        <th>Total</th>
+                                                    `).join('')}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.students.map(student => {
+                                                    let subjects = student.subjects.reduce((acc, subj) => {
+                                                        acc[subj.subject] = subj;
+                                                        return acc;
+                                                    }, {}); // Convert subjects array to object for quick lookup
 
-                            return `
-                                <tr>
-                                    <td><strong>${student.last_name} ${student.first_name}</strong></td>
-                                    ${allSubjects.map(subject => {
-                                        let subj = subjects[subject] || {}; // Fetch the subject or return empty
-                                        return `
-                                            <td>${subj.converted_ca || "N/A"}</td>
-                                            <td>${subj.exam_score || "N/A"}</td>
-                                            <td>${subj.total_score || "N/A"}</td>
-                                        `;
-                                    }).join('')}
-                                    <td>${student.average?.average_percentage?.toFixed(2) || "N/A"}%</td>
-                                </tr>
+                                                    return `
+                                                        <tr>
+                                                            <td><strong>${student.last_name} ${student.first_name}</strong></td>
+                                                            ${allSubjects.map(subject => {
+                                                                let subj = subjects[subject] || {}; // Fetch subject or return empty
+                                                                return `
+                                                                    <td>${subj.converted_ca || "N/A"}</td>
+                                                                    <td>${subj.exam_score || "N/A"}</td>
+                                                                    <td>${subj.total_score || "N/A"}</td>
+                                                                `;
+                                                            }).join('')}
+                                                            <td>${student.average?.average_percentage?.toFixed(2) || "N/A"}%</td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             `;
-                        }).join('')
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-`;
 
-
-
-                        resultsContainer.innerHTML += studentTable; 
+                        resultsContainer.innerHTML = studentTable; 
                     });
                     actionButtons.classList.remove("d-none"); // Show action buttons
                 }

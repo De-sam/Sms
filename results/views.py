@@ -923,14 +923,16 @@ def fetch_students_result(request, short_code):
             school_name = school.school_name
             school_address = branch.address  # Use branch's address
 
-            # Determine the term label based on term_name
+            # Include session in the term label
+            session_year = session.session_name  # Fetch session name (e.g., "2023/24")
             term_label_map = {
                 "First Term": "FIRST TERM EXAMINATION REPORT",
                 "Second Term": "SECOND TERM EXAMINATION REPORT",
                 "Third Term": "THIRD TERM EXAMINATION REPORT",
             }
-            term_label = term_label_map.get(term.term_name, "TERM EXAMINATION REPORT")
 
+            term_label = f"{term.term_name.upper()} ACADEMIC REPORT - {session_year} ACADEMIC SESSION"
+            
             # Determine next term begins date
             next_term_start_date = None
             if term.term_name == "First Term":
@@ -1047,7 +1049,8 @@ def fetch_students_result(request, short_code):
                         if hasattr(result.student.user, "profile_picture") and result.student.user.profile_picture
                         else None
                     )
-                  # Fetch psychomotor and behavioral ratings for the student
+                    
+                    # Fetch psychomotor and behavioral ratings for the student
                     psychomotor_ratings = Rating.objects.filter(
                         student=result.student,
                         branch=branch,
