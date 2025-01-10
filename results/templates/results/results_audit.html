@@ -1,0 +1,264 @@
+{% extends 'schools/base_dash.html' %}
+
+{% block content %}
+<div>
+    <!-- Header Card -->
+    <div class="card card-outline card-primary">
+        <div id="cardHeader" class="card-header bg-primary text-white">
+            <h3 class="card-title">
+                <i class="fas fa-chart-bar"></i> Results Audit
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form id="resultsAuditForm" method="GET">
+                {% csrf_token %}
+
+                <div class="row mb-3">
+                    <!-- Session -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="session">Session</label>
+                            <select id="session" name="session" class="form-control" required>
+                                <option value="">Select Session</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Term -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="term">Term</label>
+                            <select id="term" name="term" class="form-control" required disabled>
+                                <option value="">Select Term</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Branch -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="branch">Branch</label>
+                            <select id="branch" name="branch" class="form-control" required>
+                                <option value="">Select Branch</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classes -->
+                <div class="form-group mb-3">
+                    <label for="classes">Class(es)</label>
+                    <div id="classes" class="bg-light p-3 rounded">
+                        <!-- Classes will be dynamically populated in rows of 3 -->
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="filterButton">Filter</button>
+            </form>
+            <hr>
+
+            <!-- Results Audit Table -->
+            <div class="table-responsive" style="overflow-y: auto; max-height: 400px; position: relative;">
+                <table class="table table-bordered mt-3" id="resultsAuditTable">
+                    <thead style="position: sticky; top: 0; background-color: white; z-index: 2;">
+                        <tr id="resultsAuditTableHeader">
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsAuditTableBody">
+                        <!-- Dynamically populated audit data -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alertsModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div id="modalHeader" class="modal-header">
+                <h5 id="modalTitle" class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+            <div id="modalFooter" class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Apply width restriction for subject column */
+    #resultsAuditTable th:nth-child(1), 
+    #resultsAuditTable td:nth-child(1) {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+<!-- JavaScript for Dynamic Filtering & Fetching Audit Data -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modalElement = new bootstrap.Modal(document.getElementById("alertsModal"));
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalHeader = document.getElementById("modalHeader");
+    const modalFooter = document.getElementById("modalFooter");
+
+    const shortCode = "{{ school.short_code }}";
+    const sessionSelect = document.getElementById("session");
+    const termSelect = document.getElementById("term");
+    const branchSelect = document.getElementById("branch");
+    const classesContainer = document.getElementById("classes");
+    const resultsAuditTableBody = document.getElementById("resultsAuditTableBody");
+    const filterButton = document.getElementById("filterButton");
+
+    // Utility function to get CSRF token
+    function getCSRFToken() {
+        return document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1];
+    }
+
+    const csrfToken = getCSRFToken();
+
+    // Show modal for alerts
+    function showModal(type, title, message) {
+        modalTitle.textContent = title;
+        modalBody.textContent = message;
+
+        modalHeader.className = `modal-header bg-${type} text-white`;
+        modalFooter.className = `modal-footer bg-${type} text-white`;
+
+        modalElement.show();
+    }
+
+    // Fetch sessions
+    fetch(`/results/${shortCode}/get-sessions/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.sessions) {
+                data.sessions.forEach(session => {
+                    sessionSelect.innerHTML += `<option value="${session.id}">${session.session_name}</option>`;
+                });
+            }
+        });
+
+    // Fetch terms when session changes
+    sessionSelect.addEventListener("change", function () {
+        const sessionId = sessionSelect.value;
+
+        if (sessionId) {
+            termSelect.disabled = false;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+
+            fetch(`/results/${shortCode}/get-terms/${sessionId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.terms) {
+                        data.terms.forEach(term => {
+                            termSelect.innerHTML += `<option value="${term.id}">${term.term_name}</option>`;
+                        });
+                    }
+                });
+        } else {
+            termSelect.disabled = true;
+        }
+    });
+
+    // Fetch branches
+    fetch(`/results/${shortCode}/get-branches/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.branches) {
+                data.branches.forEach(branch => {
+                    branchSelect.innerHTML += `<option value="${branch.id}">${branch.branch_name} (${branch.branch_type})</option>`;
+                });
+            }
+        });
+
+    // Fetch classes when branch changes
+    branchSelect.addEventListener("change", function () {
+        const branchId = branchSelect.value;
+
+        if (branchId) {
+            classesContainer.innerHTML = "";
+
+            fetch(`/results/${shortCode}/get-classes/${branchId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.classes) {
+                        const rows = Math.ceil(data.classes.length / 3);
+                        for (let i = 0; i < rows; i++) {
+                            const row = document.createElement("div");
+                            row.classList.add("row", "mb-2");
+                            for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                                const col = document.createElement("div");
+                                col.classList.add("col-md-4");
+                                col.innerHTML = `
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="class" value="${data.classes[j].id}">
+                                        <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department})</label>
+                                    </div>
+                                `;
+                                row.appendChild(col);
+                            }
+                            classesContainer.appendChild(row);
+                        }
+                    }
+                });
+        }
+    });
+
+   // Fetch results audit data when filter button is clicked
+   filterButton.addEventListener("click", function () {
+        const session = sessionSelect.value;
+        const term = termSelect.value;
+        const branch = branchSelect.value;
+        const studentClass = document.querySelector("input[name='class']:checked");
+
+        if (!session || !term || !branch || !studentClass) {
+            showModal("warning", "Incomplete Fields", "Please fill in all fields.");
+            return;
+        }
+
+        fetch(`/results/${shortCode}/get-results-audit/?session=${session}&term=${term}&branch=${branch}&student_class=${studentClass.value}`)
+            .then(response => response.text())  // First get as text
+            .then(data => {
+                console.log("Audit Data Response:", data);  // Log response
+                return JSON.parse(data);  // Convert to JSON
+            })
+            .then(jsonData => {
+                console.log("Parsed JSON Audit Data:", jsonData);
+
+                resultsAuditTableBody.innerHTML = "";
+                if (jsonData.results) {
+                    jsonData.results.forEach(result => {
+                        resultsAuditTableBody.innerHTML += `
+                            <tr>
+                                <td>${result.subject}</td>
+                                <td>${result.status}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: ${result.progress}%" aria-valuenow="${result.progress}" aria-valuemin="0" aria-valuemax="100">${result.progress}%</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    resultsAuditTableBody.innerHTML = `<tr><td colspan="3">No results found.</td></tr>`;
+                }
+            })
+            .catch(error => console.error("JSON Parsing Error:", error));
+    });
+});
+</script>
+
+{% endblock %}

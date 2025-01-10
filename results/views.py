@@ -1366,3 +1366,115 @@ def manage_grading_system(request, short_code):
         'branch_type': branch_type,  # Include branch type in the context
         **user_roles,
     })
+
+
+def results_audit_view(request, short_code):
+    """
+    Renders the results audit page with the filter form.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    sessions = Session.objects.filter(school=school)
+    branches = Branch.objects.filter(school=school)
+    classes = Class.objects.filter(branches__school=school)
+
+    context = {
+        "school": school,
+        "sessions": sessions,
+        "branches": branches,
+        "classes": classes,
+    }
+
+    return render(request, "results/results_audit.html", context)
+def get_results_audit(request, short_code):
+    """
+    Returns JSON data for the results audit based on selected session, term, branch, and class.
+    It calculates the percentage based on the total number of students in the class.
+    """
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+
+    session_id = request.GET.get("session")
+    term_id = request.GET.get("term")
+    branch_id = request.GET.get("branch")
+    class_id = request.GET.get("student_class")
+
+    if not all([session_id, term_id, branch_id, class_id]):
+        return JsonResponse({"error": "Missing filter parameters"}, status=400)
+
+    try:
+        # Get all subjects for the class
+        subjects = Subject.objects.filter(classes__id=class_id)
+
+        # Get total number of students in the class
+        total_students = StudentFinalResult.objects.filter(
+            student_class_id=class_id,
+            branch_id=branch_id,
+            session_id=session_id,
+            term_id=term_id,
+            branch__school=school
+        ).values("student").distinct().count()
+
+        results_audit_data = []
+
+        for subject in subjects:
+            # Fetch all student results for this subject
+            student_results = StudentFinalResult.objects.filter(
+                student_class_id=class_id,
+                branch_id=branch_id,
+                session_id=session_id,
+                term_id=term_id,
+                subject=subject,
+                branch__school=school
+            )
+
+            students_with_valid_scores = 0
+            student_score_details = []
+
+            # Iterate through each student's record
+            for student_result in student_results:
+                student_id = student_result.student.id
+                ca_score = student_result.converted_ca
+                exam_score = student_result.exam_score
+
+                # Check if student has valid scores (either CA or Exam should be > 0)
+                has_valid_score = (
+                    (ca_score is not None and ca_score > 0) or
+                    (exam_score is not None and exam_score > 0)
+                )
+
+                if has_valid_score:
+                    students_with_valid_scores += 1
+
+                # Append student details for debugging
+                student_score_details.append({
+                    "student_id": student_id,
+                    "ca_score": ca_score,
+                    "exam_score": exam_score,
+                    "status": "✅ Complete" if has_valid_score else "❌ Incomplete"
+                })
+
+            # Calculate progress percentage
+            progress = int((students_with_valid_scores / total_students) * 100) if total_students else 0
+
+            # Determine status
+            if students_with_valid_scores == total_students:
+                status = "✅ Completed"
+            elif students_with_valid_scores > 0:
+                status = f"⚠ {progress}% completed"
+            else:
+                status = "❌ No Scores"
+
+            # Add result to audit data
+            results_audit_data.append({
+                "subject": subject.name,
+                "total_students": total_students,
+                "students_with_scores": students_with_valid_scores,
+                "status": status,
+                "progress": progress,
+                "student_scores": student_score_details  # Include student details for debugging
+            })
+
+        return JsonResponse({"results": results_audit_data}, json_dumps_params={"indent": 4})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
