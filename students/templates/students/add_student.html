@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data">
+<form id="add-student-form" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.non_field_errors }}
     
@@ -170,10 +170,30 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-3">Add Student</button>
+    <button type="submit" class="btn btn-primary mt-3" id="add-student-btn">Add Student</button>
 </form>
 
 <script>
+     document.getElementById('add-student-btn').addEventListener('click', function(event) {
+        const button = event.target;
+
+        // Disable the button
+        button.disabled = true;
+
+        // Change the button text
+        button.innerHTML =  `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Processing...
+            `;
+
+        // Allow the form to submit normally
+        const form = document.getElementById('add-student-form');
+        form.submit();
+    });
+</script>
+<script>
+     
+
     document.addEventListener('DOMContentLoaded', function() {
     const shortCode = "{{ school.short_code }}";
 

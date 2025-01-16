@@ -15,6 +15,7 @@ from .tasks import send_student_creation_email
 from django_select2.forms import Select2Widget
 from django_select2.forms import ModelSelect2Widget
 from academics.models import Session
+from django.core.mail import send_mail
 
 class StudentCreationForm(forms.ModelForm):
     # Additional fields
@@ -56,23 +57,15 @@ class StudentCreationForm(forms.ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        school = kwargs.pop('school', None)
+        self.school = kwargs.pop('school', None)  # Extract the school if provided
+        self.request = kwargs.pop('request', None)  # Extract the request object if provided
         super().__init__(*args, **kwargs)
 
-        # Populate email from User instance if editing
-        if self.instance.pk and self.instance.user:
-            self.fields['email'].initial = self.instance.user.email
-
         # Set branch queryset based on school
-        if school:
-            self.fields['branch'].queryset = Branch.objects.filter(school=school)
+        if self.school:
+            self.fields['branch'].queryset = Branch.objects.filter(school=self.school)
         else:
             self.fields['branch'].queryset = Branch.objects.none()
-
-        # Pre-fill student_class queryset based on branch if editing
-        if self.instance.pk and self.instance.branch:
-            self.fields['student_class'].queryset = Class.objects.filter(branches=self.instance.branch)
-            self.fields['student_class'].initial = self.instance.student_class
 
         # Dynamically load classes based on selected branch during form submission
         if 'branch' in self.data:
@@ -81,7 +74,7 @@ class StudentCreationForm(forms.ModelForm):
                 self.fields['student_class'].queryset = Class.objects.filter(branches__id=branch_id)
             except (ValueError, TypeError):
                 self.fields['student_class'].queryset = Class.objects.none()
-
+            
     def save(self, commit=True):
         # Determine if this is a new student record
         new_record = self.instance.pk is None
@@ -127,19 +120,40 @@ class StudentCreationForm(forms.ModelForm):
 
         # Only send the creation email if it's a new student record
         if new_record:
+            from django.shortcuts import reverse  # Import reverse to generate the relative URL
+            from django.contrib.sites.models import Site
+    
+
             school_shortcode = getattr(student.branch.school, 'short_code', None)
             if school_shortcode:
-                send_student_creation_email.delay(
-                    user.email,
-                    user.username,
-                    school_shortcode,
-                    self.cleaned_data['first_name'],
-                    self.cleaned_data['last_name']
-                )
-            else:
-                print("Error: School short_code not found while sending email.")
+                
+                try:
+                    # Use the request object to construct the domain
+                    scheme = self.request.scheme  # 'http' or 'https'
+                    host = self.request.get_host()  # 'localhost:8000' or the domain name
 
-        return student
+                    # Construct the full login URL
+                    relative_login_url = reverse('login-page', kwargs={'short_code': school.short_code})
+                    login_url = f"{scheme}://{host}{relative_login_url}"
+
+                    # Send the email
+                    full_name = f"{self.cleaned_data['first_name']} {self.cleaned_data['last_name']}"
+                    subject = 'Your New Account'
+                    message = (
+                        f'Dear {full_name},\n\n'
+                        f'Your account has been created.\n\n'
+                        f'Username: "{user.username}"\n'
+                        f'Password: "student"\n\n'
+                        f'Please log in using the following URL: {login_url}\n'
+                        f'Remember to change your password after your first login.'
+                    )
+                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
+                    send_mail(subject, message, from_email, [user.email])
+
+                except Exception as e:
+                    print(f"Error sending email to {user.email}: {e}")
+
+            return student
 
 
 
@@ -152,7 +166,8 @@ class ParentGuardianCreationForm(forms.ModelForm):
         labels = {'last_name': 'Surname'}
 
     def __init__(self, *args, **kwargs):
-        self.school = kwargs.pop('school', None)  # Extract school if passed
+        self.school = kwargs.pop('school', None)
+        self.request = kwargs.pop('request', None)  # Accept request
         super().__init__(*args, **kwargs)
 
     def clean_email(self):
@@ -219,17 +234,40 @@ class ParentGuardianCreationForm(forms.ModelForm):
             parent.save()
 
             # Send creation email only for new parents
-            if is_new:
-                short_code = self.school.short_code if self.school else 'default'
-                send_parent_creation_email.delay(
-                    email=email,
-                    username=user.username,
-                    short_code=short_code,
-                    first_name=first_name,
-                    last_name=last_name
-                )
+            if is_new and email:
+                from django.shortcuts import reverse
+                from django.contrib.sites.models import Site
 
-        return parent
+                try:
+                    # Dynamically determine the domain using the request object
+                    scheme =self.request.scheme  # 'http' or 'https'
+                    host = self.request.get_host()  # 'localhost:8000' or the domain name
+
+                    # Construct the full login URL
+                    relative_login_url = reverse('login-page', kwargs={'short_code': self.school.short_code})
+                    login_url = f"{scheme}://{host}{relative_login_url}"
+
+                    # Prepare the email content
+                    full_name = f"{last_name} {first_name}"
+                    subject = 'Your Parent Account Details'
+                    message = (
+                        f'Dear {full_name},\n\n'
+                        f'Your account has been successfully created.\n\n'
+                        f'Username: "{user.username}"\n'
+                        f'Password: "parent"\n\n'
+                        f'Please log in using the following URL: {login_url}\n'
+                        f'Remember to change your password after your first login.'
+                    )
+                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
+
+                    # Send the email
+                    send_mail(subject, message, from_email, [email])
+
+                except Exception as e:
+                    print(f"Error sending email to {email}: {e}")
+
+                return parent
+
 
 
 class ParentGuardianWidget(ModelSelect2Widget):

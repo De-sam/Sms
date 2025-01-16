@@ -21,7 +21,7 @@ from academics.models import Session
 @admin_required
 def add_parent_guardian(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    form = ParentGuardianCreationForm(request.POST or None, school=school)
+    form = ParentGuardianCreationForm(request.POST or None, school=school, request=request)
 
     if request.method == 'POST' and form.is_valid():
         form.save()
@@ -97,7 +97,7 @@ def delete_parent(request, short_code, parent_id):
 @transaction.atomic
 def add_student(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    form = StudentCreationForm(request.POST or None, request.FILES or None, school=school)
+    form = StudentCreationForm(request.POST or None, request.FILES or None, school=school, request=request )
 
     # Initialize parent assignment forms with the school context
     parent_assignment_forms = [

@@ -7,7 +7,7 @@
 
 
 {% block content %}
-<form method="post" enctype="multipart/form-data">
+<form id="add-student-form"  method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.non_field_errors }}
     
@@ -194,9 +194,27 @@
 {% endif %}
 <!-- Update Student Button -->
 <div class="d-flex justify-content-start mt-3">
-    <button type="submit" class="btn btn-primary">Update Student</button>
+    <button type="submit" class="btn btn-primary mt-3" id="add-student-btn">Add Student</button>
 </div>
 
+
+<script>
+    document.getElementById('add-student-btn').addEventListener('click', function(event) {
+       const button = event.target;
+
+       // Disable the button
+       button.disabled = true;
+
+       // Change the button text
+       button.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Processing...
+            `;
+       // Allow the form to submit normally
+       const form = document.getElementById('add-student-form');
+       form.submit();
+   });
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

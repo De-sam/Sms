@@ -8,10 +8,10 @@
     </h5>
     <div class="card-outline card-primary">
         <div class="card-body">
-            <form method="post">
+            <form method="post" id="editParentForm">
                 {% csrf_token %}
                 {{ form|crispy }}
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="saveParentButton">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
                 <a href="{% url 'parent_guardian_list' school.short_code %}" class="btn btn-secondary">
@@ -21,4 +21,23 @@
         </div>
     </div>
 </div>
+
+<!-- Add JavaScript to handle the button behavior -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const saveParentButton = document.getElementById('saveParentButton'); // Select the button
+        const editParentForm = document.getElementById('editParentForm'); // Select the form
+
+        editParentForm.addEventListener('submit', function () {
+            // Disable the button
+            saveParentButton.disabled = true;
+
+            // Change the button text to "Processing..."
+            saveParentButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Processing...
+            `;
+        });
+    });
+</script>
 {% endblock %}

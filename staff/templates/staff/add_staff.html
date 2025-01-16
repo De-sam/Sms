@@ -232,6 +232,24 @@
 
 <!-- JavaScript to handle tab switching validation and modal logic -->
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addStaffButton = document.getElementById('addStaffButton'); // Select the button
+        const staffForm = document.getElementById('staffForm'); // Select the form
+
+        staffForm.addEventListener('submit', function () {
+            // Disable the button
+            addStaffButton.disabled = true;
+
+            // Change the button text to "Processing..."
+            addStaffButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Processing...
+            `;
+        });
+    });
+</script>
+
+<script>
     
     document.addEventListener('DOMContentLoaded', function() {
     // Get form fields
