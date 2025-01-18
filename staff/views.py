@@ -589,8 +589,13 @@ def teacher_assignments_view(request, short_code):
 
         # Pagination for Subject Assignments
         paginator = Paginator(assignments, 10)
-        page_number = request.GET.get('page')
-        page_obj_subjects = paginator.get_page(page_number)
+        page_number = request.GET.get('page', 1)
+        try:
+            page_obj_subjects = paginator.get_page(page_number)
+        except PageNotAnInteger:
+            page_obj_subjects = paginator.get_page(1)
+        except EmptyPage:
+            page_obj_subjects = paginator.get_page(paginator.num_pages)
 
         # Organize Subject Assignments by Teacher
         for assignment in page_obj_subjects:
@@ -620,8 +625,13 @@ def teacher_assignments_view(request, short_code):
 
         # Pagination for Class Assignments
         paginator_classes = Paginator(class_assignments_queryset, 10)
-        page_number_classes = request.GET.get('page_classes')
-        page_obj_classes = paginator_classes.get_page(page_number_classes)
+        page_number_classes = request.GET.get('page_classes', 1)
+        try:
+            page_obj_classes = paginator_classes.get_page(page_number_classes)
+        except PageNotAnInteger:
+            page_obj_classes = paginator_classes.get_page(1)
+        except EmptyPage:
+            page_obj_classes = paginator_classes.get_page(paginator_classes.num_pages)
 
         # Organize Class Assignments by Teacher
         for assignment in page_obj_classes:
@@ -631,11 +641,7 @@ def teacher_assignments_view(request, short_code):
             class_assignments[teacher].append({
                 'classes': assignment.assigned_classes.all()
             })
-    print("Class Assignments:", class_assignments)
-    print("Selected Branch:", selected_branch)
-    print("Selected Session:", selected_session)
-    print("Selected Term:", selected_term)
-
+    
     return render(request, 'staff/teacher_assignments.html', {
         'school': school,
         'branches': branches,
