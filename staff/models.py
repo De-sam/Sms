@@ -63,7 +63,8 @@ class Staff(models.Model):
     account_number = models.CharField(max_length=10, blank=True, null=True)
     account_name = models.CharField(max_length=100, blank=True, null=True)
 
-
+    # New salary field
+    salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Enter the staff's salary")
 
 
     class Meta:

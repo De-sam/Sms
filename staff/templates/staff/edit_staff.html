@@ -193,7 +193,12 @@
                                                 <div class="form-group">
                                                     {{ form.account_name|as_crispy_field }}
                                                 </div>
-                                               
+
+                                                {% if is_school_admin %}
+                                                <div class="form-group">
+                                                    {{ form.salary|as_crispy_field }}
+                                                </div>
+                                                {% endif %}
                                             </div>
                                 <div class="card-footer d-flex justify-content-center">
                                     <button type="submit" class="btn btn-primary" id="addStaffButton">

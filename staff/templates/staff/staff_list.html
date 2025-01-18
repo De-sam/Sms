@@ -124,7 +124,8 @@
                                                            data-staff-id="{{ staff.id }}" 
                                                            data-staff-name="{{ staff.user.first_name }} {{ staff.user.last_name }}" 
                                                            data-staff-gender="{{ staff.gender }}" 
-                                                           data-staff-phone="{{ staff.phone_number }}" 
+                                                           data-staff-phone="{{ staff.phone_number }}"
+                                                           data-staff-salary="{{ staff.salary}}"
                                                            data-staff-address="{{ staff.address }}" 
                                                            data-staff-nationality="{{ staff.nationality }}" 
                                                            data-staff-category="{{ staff.staff_category }}" 
@@ -290,7 +291,7 @@
                         <h5 id="staffName"></h5>
                         <p><strong>Gender:</strong> <span id="staffGender"></span></p>
                         <p><strong>Phone Number:</strong> <span id="staffPhone"></span></p>
-                        <p><strong>Address:</strong> <span id="staffAddress"></span></p>
+                        <p><strong>Salary:</strong> <span id="staffSalary"></span> Naira</p> <!-- New salary field -->                        <p><strong>Address:</strong> <span id="staffAddress"></span></p>
                         <p><strong>Nationality:</strong> <span id="staffNationality"></span></p>
                         <p><strong>Staff Category:</strong> <span id="staffCategory"></span></p>
                         <p><strong>Status:</strong> <span id="staffStatus"></span></p>
@@ -344,7 +345,7 @@
             var staffName = button.getAttribute('data-staff-name');
             var staffGender = button.getAttribute('data-staff-gender');
             var staffPhone = button.getAttribute('data-staff-phone');
-            var staffAddress = button.getAttribute('data-staff-address');
+            var staffSalary = button.getAttribute('data-staff-salary');            var staffAddress = button.getAttribute('data-staff-address');
             var staffNationality = button.getAttribute('data-staff-nationality');
             var staffCategory = button.getAttribute('data-staff-category');
             var staffStatus = button.getAttribute('data-staff-status');
@@ -356,6 +357,13 @@
             var nameElement = document.getElementById('staffName');
             var genderElement = document.getElementById('staffGender');
             var phoneElement = document.getElementById('staffPhone');
+            var salaryElement = document.getElementById('staffSalary');
+            if (salaryElement) 
+            {
+            salaryElement.textContent = staffSalary || 'Not specified';
+            } else {
+            console.error('Element with id "staffSalary" not found in the modal.');
+            }
             var addressElement = document.getElementById('staffAddress');
             var nationalityElement = document.getElementById('staffNationality');
             var categoryElement = document.getElementById('staffCategory');
@@ -368,6 +376,7 @@
             nameElement.textContent = staffName;
             genderElement.textContent = staffGender;
             phoneElement.textContent = staffPhone;
+            salaryElement.textContent = staffSalary || '-';
             addressElement.textContent = staffAddress;
             nationalityElement.textContent = staffNationality;
             categoryElement.textContent = staffCategory;

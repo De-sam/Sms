@@ -44,6 +44,14 @@ class StaffCreationForm(UserCreationForm):
     account_number = forms.CharField(max_length=20, required=False)
     account_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
+    # New salary field
+    salary = forms.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        required=False, 
+        help_text="Enter the staff's salary (optional)"
+    )
+
     password1 = forms.CharField(
         required=True,
         label="Password",
@@ -142,6 +150,7 @@ class StaffCreationForm(UserCreationForm):
                     'bank_name': self.cleaned_data.get('bank_name'),
                     'account_number': self.cleaned_data.get('account_number'),
                     'account_name': self.cleaned_data.get('account_name'),
+                    'salary': self.cleaned_data.get('salary'),
                 }
             )
 
@@ -178,6 +187,14 @@ class UserUpdateForm(forms.ModelForm):
     account_number = forms.CharField(max_length=20, required=False)
     account_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
+    # New salary field
+    salary = forms.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        required=False, 
+        help_text="Enter the staff's salary (optional)"
+    )
+
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
@@ -207,6 +224,8 @@ class UserUpdateForm(forms.ModelForm):
             self.fields['bank_name'].initial = staff_instance.bank_name
             self.fields['account_number'].initial = staff_instance.account_number
             self.fields['account_name'].initial = staff_instance.account_name
+            self.fields['salary'].initial = staff_instance.salary 
+
 
         # Populate bank_name choices dynamically
         from utils.banking import fetch_bank_codes
@@ -241,6 +260,7 @@ class UserUpdateForm(forms.ModelForm):
                     'bank_name': self.cleaned_data.get('bank_name'),
                     'account_number': self.cleaned_data.get('account_number'),
                     'account_name': self.cleaned_data.get('account_name'),
+                    'salary': self.cleaned_data.get('salary'),
                 }
             )
 

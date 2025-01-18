@@ -121,12 +121,10 @@ class StudentCreationForm(forms.ModelForm):
         # Only send the creation email if it's a new student record
         if new_record:
             from django.shortcuts import reverse  # Import reverse to generate the relative URL
-            from django.contrib.sites.models import Site
-    
+            from django.core.mail import EmailMultiAlternatives  # For sending both plain text and HTML
 
             school_shortcode = getattr(student.branch.school, 'short_code', None)
             if school_shortcode:
-                
                 try:
                     # Use the request object to construct the domain
                     scheme = self.request.scheme  # 'http' or 'https'
@@ -136,19 +134,51 @@ class StudentCreationForm(forms.ModelForm):
                     relative_login_url = reverse('login-page', kwargs={'short_code': school.short_code})
                     login_url = f"{scheme}://{host}{relative_login_url}"
 
-                    # Send the email
+                    # Prepare email content
                     full_name = f"{self.cleaned_data['first_name']} {self.cleaned_data['last_name']}"
-                    subject = 'Your New Account'
-                    message = (
+                    subject = 'Welcome to [School Name] - Your New Account Details'
+                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
+                    to_email = [user.email]
+
+                    # Plain text version
+                    text_content = (
                         f'Dear {full_name},\n\n'
-                        f'Your account has been created.\n\n'
+                        f'Your account has been successfully created.\n\n'
                         f'Username: "{user.username}"\n'
                         f'Password: "student"\n\n'
                         f'Please log in using the following URL: {login_url}\n'
-                        f'Remember to change your password after your first login.'
+                        f'Remember to change your password after your first login.\n\n'
+                        f'Thank you,\nThe [School Name] Team'
                     )
-                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
-                    send_mail(subject, message, from_email, [user.email])
+
+                    # HTML version
+                    html_content = f"""
+                    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
+                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                <h2 style="margin: 0; font-size: 24px;">Welcome to [School Name]</h2>
+                            </div>
+                            <div style="padding: 20px;">
+                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                                <p>Your account has been successfully created. Below are your login details:</p>
+                                <p><strong>Username:</strong> {user.username}</p>
+                                <p><strong>Password:</strong> 'student' (please change it after your first login)</p>
+                                <p style="margin: 20px 0; text-align: center;">
+                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
+                                </p>
+                                <p>Thank you,<br>The [School Name] Team</p>
+                            </div>
+                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                                <small>If you have any questions, contact us at support@school.com.</small>
+                            </div>
+                        </div>
+                    </body>
+                    """
+
+                    # Send the email
+                    email = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+                    email.attach_alternative(html_content, "text/html")
+                    email.send()
 
                 except Exception as e:
                     print(f"Error sending email to {user.email}: {e}")
@@ -233,14 +263,14 @@ class ParentGuardianCreationForm(forms.ModelForm):
         if commit:
             parent.save()
 
-            # Send creation email only for new parents
+           # Send creation email only for new parents
             if is_new and email:
                 from django.shortcuts import reverse
-                from django.contrib.sites.models import Site
+                from django.core.mail import EmailMultiAlternatives  # For sending both plain text and HTML
 
                 try:
                     # Dynamically determine the domain using the request object
-                    scheme =self.request.scheme  # 'http' or 'https'
+                    scheme = self.request.scheme  # 'http' or 'https'
                     host = self.request.get_host()  # 'localhost:8000' or the domain name
 
                     # Construct the full login URL
@@ -249,25 +279,54 @@ class ParentGuardianCreationForm(forms.ModelForm):
 
                     # Prepare the email content
                     full_name = f"{last_name} {first_name}"
-                    subject = 'Your Parent Account Details'
-                    message = (
+                    subject = 'Welcome to [School Name] - Your Parent Account Details'
+                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
+                    to_email = [email]
+
+                    # Plain text version
+                    text_content = (
                         f'Dear {full_name},\n\n'
                         f'Your account has been successfully created.\n\n'
                         f'Username: "{user.username}"\n'
                         f'Password: "parent"\n\n'
                         f'Please log in using the following URL: {login_url}\n'
-                        f'Remember to change your password after your first login.'
+                        f'Remember to change your password after your first login.\n\n'
+                        f'Thank you,\nThe [School Name] Team'
                     )
-                    from_email = 'no-reply@academiQ.com'  # Replace with your admin email
+
+                    # HTML version
+                    html_content = f"""
+                    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
+                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                <h2 style="margin: 0; font-size: 24px;">Welcome to [School Name]</h2>
+                            </div>
+                            <div style="padding: 20px;">
+                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                                <p>Your account has been successfully created. Below are your login details:</p>
+                                <p><strong>Username:</strong> {user.username}</p>
+                                <p><strong>Password:</strong> 'parent' (please change it after your first login)</p>
+                                <p style="margin: 20px 0; text-align: center;">
+                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
+                                </p>
+                                <p>Thank you,<br>The [School Name] Team</p>
+                            </div>
+                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                                <small>If you have any questions, contact us at support@school.com.</small>
+                            </div>
+                        </div>
+                    </body>
+                    """
 
                     # Send the email
-                    send_mail(subject, message, from_email, [email])
+                    email_message = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+                    email_message.attach_alternative(html_content, "text/html")
+                    email_message.send()
 
                 except Exception as e:
                     print(f"Error sending email to {email}: {e}")
 
                 return parent
-
 
 
 class ParentGuardianWidget(ModelSelect2Widget):

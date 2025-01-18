@@ -180,10 +180,17 @@
             <div class="form-group">
                 {{ form.account_number|as_crispy_field }}
             </div>
-        
+
             <div class="form-group">
                 {{ form.account_name|as_crispy_field }}
             </div>
+
+            {% if is_school_admin %}
+            <div class="form-group">
+                {{ form.salary|as_crispy_field }}
+            </div>
+            {% endif %}
+
             <div class="form-group">
                 {{ form.username|as_crispy_field }} <!-- This will be read-only -->
             </div>

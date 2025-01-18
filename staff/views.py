@@ -29,7 +29,8 @@ from classes.forms import TeacherClassAssignmentForm
 from utils.academics import get_sessions, get_terms
 from academics.models import Session, Term
 from utils.banking import verify_account_details,fetch_bank_codes
-
+from django.core.mail import EmailMultiAlternatives
+from django.urls import reverse 
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -178,6 +179,8 @@ def pre_add_staff(request, short_code):
     })
 
 
+
+
 @login_required_with_short_code
 @admin_required
 @transaction.atomic
@@ -194,15 +197,60 @@ def add_staff(request, short_code):
             # Save the user and staff object from the form
             user = form.save()
 
-            # Send the account creation email asynchronously
-            send_staff_creation_email.delay(user.email, user.username, school.short_code)
+            # Generate the login URL with the short_code
+            login_url = f"http://{request.get_host()}{reverse('login-page', kwargs={'short_code': short_code})}"
+
+            # Email content
+            full_name = f"{user.first_name} {user.last_name}"
+            subject = "Your Staff Account Details"
+            text_content = (
+                f"Dear {full_name},\n\n"
+                f"Your account has been successfully created.\n\n"
+                f"Username: {user.username}\n"
+                f"Password: 'staff' (please change it after your first login)\n\n"
+                f"Log in at: {login_url}\n"
+                f"Thank you."
+            )
+            html_content = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
+                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                <h2 style="margin: 0; font-size: 24px;">Account Created Successfully</h2>
+                            </div>
+                            <div style="padding: 20px;">
+                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                                <p>Your account has been successfully created. Below are your login details:</p>
+                                <p><strong>Username:</strong> {user.username}</p>
+                                <p><strong>Password:</strong> 'staff' (please change it after your first login)</p>
+                                <p style="margin: 20px 0; text-align: center;">
+                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
+                                </p>
+                                <p>Thank you,<br>The Team</p>
+                            </div>
+                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                                <small>For support, contact us at support@example.com.</small>
+                            </div>
+                        </div>
+                    </body>
+            </html>
+            """
+
+            # Send the email
+            from_email = "no-reply@academiQ.com"  # Replace with your desired sender email
+            to_email = [user.email]
+            email = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+            email.attach_alternative(html_content, "text/html")
+            email.send()
 
             # Success message and redirect to staff list
-            messages.success(request, f'Staff member {user.username} added successfully! An email has been sent with login details.')
-            return redirect('staff_list', short_code=school.short_code)
+            messages.success(
+                request, f"Staff member {user.username} added successfully! An email has been sent with login details."
+            )
+            return redirect("staff_list", short_code=school.short_code)
         else:
             # Handle form errors and show error messages
-            messages.error(request, 'There was an error with your submission. Please correct the issues below.')
+            messages.error(request, "There was an error with your submission. Please correct the issues below.")
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"Error in {field}: {error}")
@@ -215,6 +263,7 @@ def add_staff(request, short_code):
         'form': form,
         'school': school,
     })
+
 
 
 
