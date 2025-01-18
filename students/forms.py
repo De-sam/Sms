@@ -157,21 +157,21 @@ class StudentCreationForm(forms.ModelForm):
                    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
                             <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
                                 <!-- Header with logo -->
-                                <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                <div style="background: #191970; color: #ffffff; padding: 20px; text-align: center;">
                                     <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1736445064/1735602377004_kiewca.png" 
                                         alt="Logo" 
                                         style="max-width: 100px; margin-bottom: 10px;">
-                                    <h3 style="margin: 0; font-size: 24px;">Account Created!!!</h3>
+                                    <h5 style="margin: 0; font-size: 24px;">Account Created!!!</h5>
                                 </div>
                                 <!-- Main content -->
                                 <div style="padding: 20px;">
                                     <h3 style="margin-top: 0;">Dear {full_name},</h3>
-                                    <p>Your account has been successfully created at {school_name}. Below are your login details:</p>
+                                    <p>Your account has been successfully created at <strong>{school_name}</strong>. Below are your login details:</p>
                                     <p><strong>Username:</strong> {user.username}</p>
                                     <p><strong>Password:</strong> 'student' (please change it after your first login)</p>
                                     <p style="margin: 20px 0; text-align: center;">
                                         <a href="{login_url}" target="_blank" 
-                                        style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                        style="display: inline-block; padding: 10px 20px; background: #191970; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
                                             Click here to log in
                                         </a>
                                     </p>
@@ -183,7 +183,6 @@ class StudentCreationForm(forms.ModelForm):
                                 </div>
                             </div>
                         </body>
-
                     """
 
                     # Send the email
@@ -310,11 +309,11 @@ class ParentGuardianCreationForm(forms.ModelForm):
                     <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
                             <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
                                 <!-- Header with logo -->
-                                <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                <div style="background: #191970; color: #ffffff; padding: 20px; text-align: center;">
                                     <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1736445064/1735602377004_kiewca.png" 
                                         alt="Logo" 
                                         style="max-width: 100px; margin-bottom: 10px;">
-                                    <h2 style="margin: 0; font-size: 24px;">Account Created!!!</h2>
+                                    <h5 style="margin: 0; font-size: 24px;">Account Created!!!</h5>
                                 </div>
                                 <!-- Main content -->
                                 <div style="padding: 20px;">
@@ -324,7 +323,7 @@ class ParentGuardianCreationForm(forms.ModelForm):
                                     <p><strong>Password:</strong> 'parent' (please change it after your first login)</p>
                                     <p style="margin: 20px 0; text-align: center;">
                                         <a href="{login_url}" target="_blank" 
-                                        style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                        style="display: inline-block; padding: 10px 20px; background: #191970; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
                                             Click here to log in
                                         </a>
                                     </p>
@@ -336,7 +335,6 @@ class ParentGuardianCreationForm(forms.ModelForm):
                                 </div>
                             </div>
                         </body>
-
                     """
 
                     # Send the email
