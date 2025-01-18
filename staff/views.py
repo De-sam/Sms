@@ -202,39 +202,51 @@ def add_staff(request, short_code):
 
             # Email content
             full_name = f"{user.first_name} {user.last_name}"
-            subject = "Your Staff Account Details"
+            school_name = school.school_name  # Add school name dynamically
+            subject = f"Welcome to {school_name} - Your Account Details"
             text_content = (
                 f"Dear {full_name},\n\n"
-                f"Your account has been successfully created.\n\n"
+                f"Your account has been successfully created for {school_name}.\n\n"
                 f"Username: {user.username}\n"
                 f"Password: 'staff' (please change it after your first login)\n\n"
-                f"Log in at: {login_url}\n"
-                f"Thank you."
+                f"Log in at: {login_url}\n\n"
+                f"Thank you,\nThe {school_name} Team"
             )
+
             html_content = f"""
             <html>
-                <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
-                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
-                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
-                                <h2 style="margin: 0; font-size: 24px;">Account Created Successfully</h2>
-                            </div>
-                            <div style="padding: 20px;">
-                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
-                                <p>Your account has been successfully created. Below are your login details:</p>
-                                <p><strong>Username:</strong> {user.username}</p>
-                                <p><strong>Password:</strong> 'staff' (please change it after your first login)</p>
-                                <p style="margin: 20px 0; text-align: center;">
-                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
-                                </p>
-                                <p>Thank you,<br>The Team</p>
-                            </div>
-                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
-                                <small>For support, contact us at support@example.com.</small>
-                            </div>
+            <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
+                    <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                        <!-- Header with logo -->
+                        <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                            <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1736445064/1735602377004_kiewca.png" 
+                                alt="Logo" 
+                                style="max-width: 100px; margin-bottom: 10px;">
+                            <h4 style="margin: 0; font-size: 24px;">Welcome to {school_name}</h4>
                         </div>
-                    </body>
+                        <!-- Main content -->
+                        <div style="padding: 20px;">
+                            <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                            <p>Your account has been successfully created for <strong>{school_name}</strong>. Below are your login details:</p>
+                            <p><strong>Username:</strong> {user.username}</p>
+                            <p><strong>Password:</strong> 'staff' (please change it after your first login)</p>
+                            <p style="margin: 20px 0; text-align: center;">
+                                <a href="{login_url}" target="_blank" 
+                                style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                    Click here to log in
+                                </a>
+                            </p>
+                            <p>Thank you,<br>The {school_name} Team</p>
+                        </div>
+                        <!-- Footer -->
+                        <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                            <small>If you have any questions, contact us at support@school.com.</small>
+                        </div>
+                    </div>
+                </body>
             </html>
             """
+
 
             # Send the email
             from_email = "no-reply@academiQ.com"  # Replace with your desired sender email

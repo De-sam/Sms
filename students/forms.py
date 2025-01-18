@@ -124,6 +124,7 @@ class StudentCreationForm(forms.ModelForm):
             from django.core.mail import EmailMultiAlternatives  # For sending both plain text and HTML
 
             school_shortcode = getattr(student.branch.school, 'short_code', None)
+            school_name = getattr(student.branch.school, 'school_name', 'Your School')
             if school_shortcode:
                 try:
                     # Use the request object to construct the domain
@@ -136,43 +137,53 @@ class StudentCreationForm(forms.ModelForm):
 
                     # Prepare email content
                     full_name = f"{self.cleaned_data['first_name']} {self.cleaned_data['last_name']}"
-                    subject = 'Welcome to [School Name] - Your New Account Details'
+                    subject = f'Welcome to {school_name} - Your New Account Details'
                     from_email = 'no-reply@academiQ.com'  # Replace with your admin email
                     to_email = [user.email]
 
                     # Plain text version
                     text_content = (
                         f'Dear {full_name},\n\n'
-                        f'Your account has been successfully created.\n\n'
+                        f'Your account at {school_name} has been successfully created.\n\n'
                         f'Username: "{user.username}"\n'
                         f'Password: "student"\n\n'
                         f'Please log in using the following URL: {login_url}\n'
                         f'Remember to change your password after your first login.\n\n'
-                        f'Thank you,\nThe [School Name] Team'
+                        f'Thank you,\nThe {school_name} Team'
                     )
 
                     # HTML version
                     html_content = f"""
-                    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
-                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
-                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
-                                <h2 style="margin: 0; font-size: 24px;">Welcome to [School Name]</h2>
+                   <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
+                            <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                                <!-- Header with logo -->
+                                <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                    <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1736445064/1735602377004_kiewca.png" 
+                                        alt="Logo" 
+                                        style="max-width: 100px; margin-bottom: 10px;">
+                                    <h3 style="margin: 0; font-size: 24px;">Account Created!!!</h3>
+                                </div>
+                                <!-- Main content -->
+                                <div style="padding: 20px;">
+                                    <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                                    <p>Your account has been successfully created at {school_name}. Below are your login details:</p>
+                                    <p><strong>Username:</strong> {user.username}</p>
+                                    <p><strong>Password:</strong> 'student' (please change it after your first login)</p>
+                                    <p style="margin: 20px 0; text-align: center;">
+                                        <a href="{login_url}" target="_blank" 
+                                        style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                            Click here to log in
+                                        </a>
+                                    </p>
+                                    <p>Thank you,<br>The AcademiQ Team</p>
+                                </div>
+                                <!-- Footer -->
+                                <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                                    <small>If you have any questions, contact us at support@school.com.</small>
+                                </div>
                             </div>
-                            <div style="padding: 20px;">
-                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
-                                <p>Your account has been successfully created. Below are your login details:</p>
-                                <p><strong>Username:</strong> {user.username}</p>
-                                <p><strong>Password:</strong> 'student' (please change it after your first login)</p>
-                                <p style="margin: 20px 0; text-align: center;">
-                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
-                                </p>
-                                <p>Thank you,<br>The [School Name] Team</p>
-                            </div>
-                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
-                                <small>If you have any questions, contact us at support@school.com.</small>
-                            </div>
-                        </div>
-                    </body>
+                        </body>
+
                     """
 
                     # Send the email
@@ -279,7 +290,7 @@ class ParentGuardianCreationForm(forms.ModelForm):
 
                     # Prepare the email content
                     full_name = f"{last_name} {first_name}"
-                    subject = 'Welcome to [School Name] - Your Parent Account Details'
+                    subject = 'Welcome to your child\'s - Your Parent Account Details'
                     from_email = 'no-reply@academiQ.com'  # Replace with your admin email
                     to_email = [email]
 
@@ -291,31 +302,41 @@ class ParentGuardianCreationForm(forms.ModelForm):
                         f'Password: "parent"\n\n'
                         f'Please log in using the following URL: {login_url}\n'
                         f'Remember to change your password after your first login.\n\n'
-                        f'Thank you,\nThe [School Name] Team'
+                        f'Thank you,\nThe AcademiQ Team'
                     )
 
                     # HTML version
                     html_content = f"""
                     <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
-                        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
-                            <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
-                                <h2 style="margin: 0; font-size: 24px;">Welcome to [School Name]</h2>
+                            <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                                <!-- Header with logo -->
+                                <div style="background: #007bff; color: #ffffff; padding: 20px; text-align: center;">
+                                    <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1736445064/1735602377004_kiewca.png" 
+                                        alt="Logo" 
+                                        style="max-width: 100px; margin-bottom: 10px;">
+                                    <h2 style="margin: 0; font-size: 24px;">Account Created!!!</h2>
+                                </div>
+                                <!-- Main content -->
+                                <div style="padding: 20px;">
+                                    <h3 style="margin-top: 0;">Dear {full_name},</h3>
+                                    <p>Your account has been successfully created. Below are your login details:</p>
+                                    <p><strong>Username:</strong> {user.username}</p>
+                                    <p><strong>Password:</strong> 'parent' (please change it after your first login)</p>
+                                    <p style="margin: 20px 0; text-align: center;">
+                                        <a href="{login_url}" target="_blank" 
+                                        style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                            Click here to log in
+                                        </a>
+                                    </p>
+                                    <p>Thank you,<br>The AcademiQ Team</p>
+                                </div>
+                                <!-- Footer -->
+                                <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
+                                    <small>If you have any questions, contact us at support@school.com.</small>
+                                </div>
                             </div>
-                            <div style="padding: 20px;">
-                                <h3 style="margin-top: 0;">Dear {full_name},</h3>
-                                <p>Your account has been successfully created. Below are your login details:</p>
-                                <p><strong>Username:</strong> {user.username}</p>
-                                <p><strong>Password:</strong> 'parent' (please change it after your first login)</p>
-                                <p style="margin: 20px 0; text-align: center;">
-                                    <a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">Click here to log in</a>
-                                </p>
-                                <p>Thank you,<br>The [School Name] Team</p>
-                            </div>
-                            <div style="background: #f8f9fa; color: #6c757d; text-align: center; padding: 10px;">
-                                <small>If you have any questions, contact us at support@school.com.</small>
-                            </div>
-                        </div>
-                    </body>
+                        </body>
+
                     """
 
                     # Send the email
