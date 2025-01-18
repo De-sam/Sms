@@ -229,7 +229,7 @@ def add_staff(request, short_code):
                             <h3 style="margin-top: 0;">Dear {full_name},</h3>
                             <p>Your account has been successfully created for <strong>{school_name}</strong>. Below are your login details:</p>
                             <p><strong>Username:</strong> {user.username}</p>
-                            <p><strong>Password:</strong> 'staff' (please change it after your first login)</p>
+                            <p><strong>Password:</strong> 'new_staff' (please change it after your first login)</p>
                             <p style="margin: 20px 0; text-align: center;">
                                 <a href="{login_url}" target="_blank" 
                                 style="display: inline-block; padding: 10px 20px; background: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;">
