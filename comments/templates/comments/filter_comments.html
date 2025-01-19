@@ -6,13 +6,14 @@
     <div class="card card-outline card-primary">
         <div id="cardHeader" class="card-header bg-primary text-white">
             <h3 class="card-title">
-                <i class="fas fa-table"></i> Generate Broadsheet
+                <i class="fas fa-comment"></i> Manage Student Comments
             </h3>
         </div>
         <div class="card-body">
             <!-- Filters -->
-            <form id="broadsheetFilterForm" method="GET">
+            <form id="commentsFilterForm" method="GET">
                 {% csrf_token %}
+
                 <div class="row mb-3">
                     <!-- Session -->
                     <div class="col-md-4">
@@ -36,7 +37,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="branch">Branch</label>
-                            <select id="branch" name="branch" class="form-control" required disabled>
+                            <select id="branch" name="branch" class="form-control" required>
                                 <option value="">Select Branch</option>
                             </select>
                         </div>
@@ -47,29 +48,35 @@
                 <div class="form-group mb-3">
                     <label for="classes">Class(es)</label>
                     <div id="classes" class="bg-light p-3 rounded">
-                        <!-- Classes will be dynamically populated -->
+                        <!-- Classes will be dynamically populated in rows of 3 -->
                     </div>
                 </div>
 
-                <button type="button" class="btn btn-primary" id="filterButton">Generate Broadsheet</button>
+                <button type="button" class="btn btn-primary" id="filterButton">Filter</button>
             </form>
             <hr>
 
-            <!-- Broadsheet Table -->
-            <div class="table-responsive" id="broadsheetContainer" style="overflow-y: auto; max-height: 500px;">
-                <!-- Broadsheet data will be populated dynamically -->
+            <!-- Scrollable Comments Table -->
+            <div class="table-responsive" style="overflow-y: auto; max-height: 400px; position: relative;">
+                <table class="table table-bordered mt-3" id="commentsTable">
+                    <thead style="position: sticky; top: 0; background-color: white; z-index: 2;">
+                        <tr id="commentsTableHeader">
+                            <th>Student Name</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commentsTableBody">
+                        <!-- Dynamically populated student data -->
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="text-center mt-3 d-none" id="actionButtons">
-                <button type="button" class="btn btn-success" id="publishBroadsheetButton">Publish Broadsheet</button>
-                <button type="button" class="btn btn-primary" id="printBroadsheetButton">Print Broadsheet</button>
-            </div>
+            <button type="button" class="btn btn-success mt-3" id="submitCommentsButton">Save Comments</button>
         </div>
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Alert Modal -->
 <div id="alertsModal" class="modal fade" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -110,28 +117,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const termSelect = document.getElementById("term");
     const branchSelect = document.getElementById("branch");
     const classesContainer = document.getElementById("classes");
-    const broadsheetContainer = document.getElementById("broadsheetContainer");
+    const commentsTableHeader = document.getElementById("commentsTableHeader");
+    const commentsTableBody = document.getElementById("commentsTableBody");
     const filterButton = document.getElementById("filterButton");
-    const actionButtons = document.getElementById("actionButtons");
-    const publishBroadsheetButton = document.getElementById("publishBroadsheetButton");
-    const printBroadsheetButton = document.getElementById("printBroadsheetButton");
+    const submitCommentsButton = document.getElementById("submitCommentsButton");
 
-    // Utility function for alerts
+    // Utility function to get CSRF token
+    function getCSRFToken() {
+        return document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1];
+    }
+
+    const csrfToken = getCSRFToken();
+
+    // Show modal for alerts
     function showModal(type, title, message) {
         modalTitle.textContent = title;
         modalBody.textContent = message;
 
-        modalHeader.className = `modal-header bg-${type} text-white`;
-        modalFooter.className = `modal-footer bg-${type} text-white`;
+        if (type === "error") {
+            modalHeader.className = "modal-header bg-danger text-white";
+            modalFooter.className = "modal-footer bg-danger text-white";
+        } else if (type === "success") {
+            modalHeader.className = "modal-header bg-success text-white";
+            modalFooter.className = "modal-footer bg-success text-white";
+        } else if (type === "warning") {
+            modalHeader.className = "modal-header bg-warning text-dark";
+            modalFooter.className = "modal-footer bg-warning text-dark";
+        }
+
         modalElement.show();
     }
 
     // Fetch sessions
-    fetch(`/broadsheet/${shortCode}/get-sessions/`)
-        .then(response => response.json())
-        .then(data => {
+    fetch(`/comments/${shortCode}/get-sessions/`)
+        .then((response) => response.json())
+        .then((data) => {
             if (data.sessions) {
-                data.sessions.forEach(session => {
+                data.sessions.forEach((session) => {
                     const option = document.createElement("option");
                     option.value = session.id;
                     option.textContent = session.session_name;
@@ -140,17 +165,19 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-    // Fetch terms
+    // Fetch terms when session changes
     sessionSelect.addEventListener("change", function () {
-        termSelect.disabled = true;
-        termSelect.innerHTML = '<option value="">Select Term</option>';
-        if (sessionSelect.value) {
-            fetch(`/broadsheet/${shortCode}/get-terms/${sessionSelect.value}/`)
-                .then(response => response.json())
-                .then(data => {
+        const sessionId = sessionSelect.value;
+
+        if (sessionId) {
+            termSelect.disabled = false;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+
+            fetch(`/comments/${shortCode}/get-terms/${sessionId}/`)
+                .then((response) => response.json())
+                .then((data) => {
                     if (data.terms) {
-                        termSelect.disabled = false;
-                        data.terms.forEach(term => {
+                        data.terms.forEach((term) => {
                             const option = document.createElement("option");
                             option.value = term.id;
                             option.textContent = term.term_name;
@@ -158,52 +185,65 @@ document.addEventListener("DOMContentLoaded", function () {
                         });
                     }
                 });
+        } else {
+            termSelect.disabled = true;
+            termSelect.innerHTML = '<option value="">Select Term</option>';
         }
     });
 
     // Fetch branches
-    termSelect.addEventListener("change", function () {
-        branchSelect.disabled = true;
-        branchSelect.innerHTML = '<option value="">Select Branch</option>';
-        if (termSelect.value) {
-            fetch(`/broadsheet/${shortCode}/get-branches/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.branches) {
-                        branchSelect.disabled = false;
-                        data.branches.forEach(branch => {
-                            const option = document.createElement("option");
-                            option.value = branch.id;
-                            option.textContent = branch.branch_name;
-                            branchSelect.appendChild(option);
-                        });
-                    }
+    fetch(`/comments/${shortCode}/get-branches/`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.branches) {
+                data.branches.forEach((branch) => {
+                    const option = document.createElement("option");
+                    option.value = branch.id;
+                    option.textContent = `${branch.branch_name} (${branch.branch_type})`;
+                    branchSelect.appendChild(option);
                 });
-        }
-    });
+            }
+        });
 
-    // Fetch classes
+    // Fetch classes when branch changes
     branchSelect.addEventListener("change", function () {
-        classesContainer.innerHTML = '';
-        if (branchSelect.value) {
-            fetch(`/broadsheet/${shortCode}/get-classes/${branchSelect.value}/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.classes) {
-                        data.classes.forEach(cls => {
-                            const div = document.createElement("div");
-                            div.classList.add("form-check");
-                            div.innerHTML = `
-                                <input class="form-check-input" type="checkbox" value="${cls.id}">
-                                <label class="form-check-label">${cls.name}</label>
+    const branchId = branchSelect.value;
+    const sessionId = sessionSelect.value;
+    const termId = termSelect.value;
+
+    if (!sessionId || !termId) {
+        showModal("warning", "Missing Filters", "Please select both session and term before fetching classes.");
+        return;
+    }
+
+    if (branchId && sessionId && termId) {
+        classesContainer.innerHTML = "";
+
+        fetch(`/comments/${shortCode}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.classes) {
+                    const rows = Math.ceil(data.classes.length / 3);
+                    for (let i = 0; i < rows; i++) {
+                        const row = document.createElement("div");
+                        row.classList.add("row", "mb-2");
+                        for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                            const col = document.createElement("div");
+                            col.classList.add("col-md-4");
+                            col.innerHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="classes" value="${data.classes[j].id}">
+                                    <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department || 'No Department'})</label>
+                                </div>
                             `;
-                            classesContainer.appendChild(div);
-                        });
+                            row.appendChild(col);
+                        }
+                        classesContainer.appendChild(row);
                     }
-                });
-        }
-    });
-    
+                }
+            });
+    }
+});
     // Filter students for comments
     filterButton.addEventListener("click", function () {
         const session = sessionSelect.value;

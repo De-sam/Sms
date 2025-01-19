@@ -190,32 +190,43 @@ if (isStudent) {
         </div>
     `;
 } else {
-    // Fetch classes dynamically when branch changes (Admins only)
+    // Fetch classes dynamically when branch changes
     branchSelect.addEventListener("change", function () {
-        classesContainer.innerHTML = "";
+        const branchId = branchSelect.value;
+        const sessionId = sessionSelect.value;
+        const termId = termSelect.value;
+        classesContainer.innerHTML = '<p class="text-muted">Loading classes...</p>';
 
-        if (branchSelect.value) {
-            fetch(`/results/${shortCode}/get-classes/${branchSelect.value}/`)
+        if (branchId && sessionId && termId) {
+            fetch(`/results/${shortCode}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
                 .then(response => response.json())
                 .then(data => {
-                    data.classes.forEach(cls => {
-                        const department = cls.department ? `(${cls.department})` : "";
-                        const col = document.createElement("div");
-                        col.classList.add("col-md-4", "mb-3");
-                        col.innerHTML = `
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
-                                <label class="form-check-label" for="class-${cls.id}">
-                                     ${cls.name}${department}
-                                </label>
-                            </div>
-                        `;
-                        classesContainer.appendChild(col);
-                    });
+                    classesContainer.innerHTML = ""; // Clear container
+                    if (data.classes) {
+                        data.classes.forEach(cls => {
+                            const col = document.createElement("div");
+                            col.classList.add("col-md-4", "mb-3");
+                            col.innerHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="${cls.id}" id="class-${cls.id}">
+                                    <label class="form-check-label" for="class-${cls.id}">
+                                        ${cls.name} (${cls.department || "No Department"})
+                                    </label>
+                                </div>
+                            `;
+                            classesContainer.appendChild(col);
+                        });
+                    } else {
+                        classesContainer.innerHTML = '<p class="text-danger">No classes available for the selected branch.</p>';
+                    }
+                })
+                .catch(() => {
+                    classesContainer.innerHTML = '<p class="text-danger">Failed to fetch classes. Please try again later.</p>';
                 });
         }
     });
 }
+
 
 // Adjust branch value retrieval for both students and admins
 const getBranchValue = () => {
