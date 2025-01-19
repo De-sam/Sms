@@ -118,10 +118,9 @@ def get_classes_by_branch(request, short_code, branch_id):
 
     return JsonResponse({'classes': classes_data})
 
-# Fetch subjects by branch
 def get_subjects_by_branch(request, short_code, branch_id):
     """
-    Fetch subjects related to a given branch, filtered by user role.
+    Fetch subjects related to a given branch, filtered by user role, and sorted alphabetically.
     """
     branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
     user = request.user
@@ -135,10 +134,10 @@ def get_subjects_by_branch(request, short_code, branch_id):
             session_id=request.GET.get('session'),
             term_id=request.GET.get('term')
         ).select_related('subject')
-        subjects = Subject.objects.filter(teacher_assignments__in=teacher_assignments).distinct()
+        subjects = Subject.objects.filter(teacher_assignments__in=teacher_assignments).distinct().order_by('name')
     else:
         # Admins can see all subjects in the branch
-        subjects = Subject.objects.filter(classes__branches=branch).distinct()
+        subjects = Subject.objects.filter(classes__branches=branch).distinct().order_by('name')
 
     subjects_data = [{'id': subject.id, 'name': subject.name} for subject in subjects]
     return JsonResponse({'subjects': subjects_data})
