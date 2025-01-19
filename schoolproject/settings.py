@@ -103,6 +103,7 @@ TEMPLATES = [
                 'utils.context_helpers.user_roles_context',
                 'utils.context_processors.global_context',
                 'utils.breadcrumbs.dynamic_breadcrumbs',
+                'utils.context_processors.school_context',
 
             ],
         },
