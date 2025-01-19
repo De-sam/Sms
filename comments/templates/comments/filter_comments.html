@@ -207,37 +207,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fetch classes when branch changes
     branchSelect.addEventListener("change", function () {
-        const branchId = branchSelect.value;
+    const branchId = branchSelect.value;
+    const sessionId = sessionSelect.value;
+    const termId = termSelect.value;
 
-        if (branchId) {
-            classesContainer.innerHTML = "";
+    if (!sessionId || !termId) {
+        showModal("warning", "Missing Filters", "Please select both session and term before fetching classes.");
+        return;
+    }
 
-            fetch(`/comments/${shortCode}/get-classes/${branchId}/`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.classes) {
-                        const rows = Math.ceil(data.classes.length / 3);
-                        for (let i = 0; i < rows; i++) {
-                            const row = document.createElement("div");
-                            row.classList.add("row", "mb-2");
-                            for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
-                                const col = document.createElement("div");
-                                col.classList.add("col-md-4");
-                                col.innerHTML = `
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="classes" value="${data.classes[j].id}">
-                                        <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department})</label>
-                                    </div>
-                                `;
-                                row.appendChild(col);
-                            }
-                            classesContainer.appendChild(row);
+    if (branchId && sessionId && termId) {
+        classesContainer.innerHTML = "";
+
+        fetch(`/comments/${shortCode}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.classes) {
+                    const rows = Math.ceil(data.classes.length / 3);
+                    for (let i = 0; i < rows; i++) {
+                        const row = document.createElement("div");
+                        row.classList.add("row", "mb-2");
+                        for (let j = i * 3; j < (i + 1) * 3 && j < data.classes.length; j++) {
+                            const col = document.createElement("div");
+                            col.classList.add("col-md-4");
+                            col.innerHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="classes" value="${data.classes[j].id}">
+                                    <label class="form-check-label">${data.classes[j].name} (${data.classes[j].department || 'No Department'})</label>
+                                </div>
+                            `;
+                            row.appendChild(col);
                         }
+                        classesContainer.appendChild(row);
                     }
-                });
-        }
-    });
-
+                }
+            });
+    }
+});
     // Filter students for comments
     filterButton.addEventListener("click", function () {
         const session = sessionSelect.value;

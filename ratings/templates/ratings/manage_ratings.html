@@ -169,10 +169,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fetch and arrange classes
     branchSelect.addEventListener("change", function () {
-        fetch(`/ratings/${shortCode}/get-classes/${branchSelect.value}/`)
+        const branchId = branchSelect.value;
+        const sessionId = sessionSelect.value;
+        const termId = termSelect.value;
+
+        classesContainer.innerHTML = '';
+
+        if (!branchId || !sessionId || !termId) {
+            showModal("warning", "Filter Warning", "Please select session, term, and branch before fetching classes.");
+            return;
+        }
+
+        fetch(`/ratings/${shortCode}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
             .then(response => response.json())
             .then(data => {
-                classesContainer.innerHTML = "";
                 for (let i = 0; i < data.classes.length; i += 3) {
                     const row = document.createElement("div");
                     row.classList.add("row", "mb-2");
@@ -191,6 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
     });
+
 
     // Filter ratings and populate table
     filterButton.addEventListener("click", function () {

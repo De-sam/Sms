@@ -168,54 +168,59 @@
                 }
             });
 
-        // Fetch classes
-        branchSelect.addEventListener('change', function() {
-            const branchId = branchSelect.value;
+        // Fetch classes based on session, term, and branch
+    branchSelect.addEventListener('change', function() {
+        const branchId = branchSelect.value;
+        const sessionId = sessionSelect.value;
+        const termId = termSelect.value;
 
-            if (branchId) {
-                classesContainer.innerHTML = '';
+        if (branchId && sessionId && termId) {
+            classesContainer.innerHTML = '';
 
-                fetch(`/attendance/${shortCode}/get-classes/${branchId}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.classes) {
-                            let rowDiv = document.createElement('div');
-                            rowDiv.classList.add('row', 'mb-2');
+            fetch(`/attendance/${shortCode}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.classes) {
+                        let rowDiv = document.createElement('div');
+                        rowDiv.classList.add('row', 'mb-2');
 
-                            data.classes.forEach((cls, index) => {
-                                const colDiv = document.createElement('div');
-                                colDiv.classList.add('col-md-4');
+                        data.classes.forEach((cls, index) => {
+                            const colDiv = document.createElement('div');
+                            colDiv.classList.add('col-md-4');
 
-                                const checkbox = document.createElement('input');
-                                checkbox.type = 'checkbox';
-                                checkbox.name = 'classes';
-                                checkbox.value = cls.id;
-                                checkbox.id = `class_${cls.id}`;
-                                checkbox.classList.add('form-check-input');
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.name = 'classes';
+                            checkbox.value = cls.id;
+                            checkbox.id = `class_${cls.id}`;
+                            checkbox.classList.add('form-check-input');
 
-                                const label = document.createElement('label');
-                                label.htmlFor = `class_${cls.id}`;
-                                label.innerHTML = `${cls.name} <span style="font-size: 0.9em; color: grey;">(${cls.department || 'No Department'})</span>`;
-                                label.classList.add('form-check-label');
+                            const label = document.createElement('label');
+                            label.htmlFor = `class_${cls.id}`;
+                            label.innerHTML = `${cls.name} <span style="font-size: 0.9em; color: grey;">(${cls.department || 'No Department'})</span>`;
+                            label.classList.add('form-check-label');
 
-                                const checkboxDiv = document.createElement('div');
-                                checkboxDiv.classList.add('form-check');
-                                checkboxDiv.appendChild(checkbox);
-                                checkboxDiv.appendChild(label);
+                            const checkboxDiv = document.createElement('div');
+                            checkboxDiv.classList.add('form-check');
+                            checkboxDiv.appendChild(checkbox);
+                            checkboxDiv.appendChild(label);
 
-                                colDiv.appendChild(checkboxDiv);
-                                rowDiv.appendChild(colDiv);
+                            colDiv.appendChild(checkboxDiv);
+                            rowDiv.appendChild(colDiv);
 
-                                if ((index + 1) % 3 === 0 || index === data.classes.length - 1) {
-                                    classesContainer.appendChild(rowDiv);
-                                    rowDiv = document.createElement('div');
-                                    rowDiv.classList.add('row', 'mb-2');
-                                }
-                            });
-                        }
-                    });
-            }
-        });
+                            if ((index + 1) % 3 === 0 || index === data.classes.length - 1) {
+                                classesContainer.appendChild(rowDiv);
+                                rowDiv = document.createElement('div');
+                                rowDiv.classList.add('row', 'mb-2');
+                            }
+                        });
+                    }
+                });
+        } else {
+            showModal("Please select a session, term, and branch before fetching classes.", 'alert-warning');
+        }
+    });
+
 
         // Filter attendance records and display them
         filterButton.addEventListener('click', function() {

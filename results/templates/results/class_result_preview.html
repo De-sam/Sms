@@ -125,13 +125,15 @@
             }
         });
 
-        // Fetch classes based on branch
+        // Fetch classes based on session, term, and branch
         branchSelect.addEventListener("change", function () {
             const branchId = branchSelect.value;
+            const sessionId = sessionSelect.value;
+            const termId = termSelect.value;
             classesContainer.innerHTML = "";
 
-            if (branchId) {
-                fetch(`/results/{{ school.short_code }}/get-classes/${branchId}/`)
+            if (branchId && sessionId && termId) {
+                fetch(`/results/{{ school.short_code }}/get-classes/${branchId}/?session=${sessionId}&term=${termId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.classes) {

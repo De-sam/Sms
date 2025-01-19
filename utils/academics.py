@@ -9,7 +9,9 @@ from students.models import ParentStudentRelationship
 # Fetch sessions for a given school identified by the short_code
 def get_sessions(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-    sessions = Session.objects.filter(school=school)
+    
+    # Sort sessions by ID in ascending order
+    sessions = Session.objects.filter(school=school).order_by('id')
 
     sessions_data = [{'id': session.id, 'session_name': session.session_name} for session in sessions]
     return JsonResponse({'sessions': sessions_data})
@@ -18,7 +20,9 @@ def get_sessions(request, short_code):
 # Fetch terms for a given session
 def get_terms(request, short_code, session_id):
     session = get_object_or_404(Session, id=session_id, school__short_code=short_code)
-    terms = Term.objects.filter(session=session)
+    
+    # Sort terms by ID in ascending order
+    terms = Term.objects.filter(session=session).order_by('id')
 
     terms_data = [{'id': term.id, 'term_name': term.term_name} for term in terms]
     return JsonResponse({'terms': terms_data})
@@ -58,34 +62,51 @@ def get_branches(request, short_code):
     return JsonResponse({'branches': branches_data})
 
 
-# Fetch classes by branch for a given school
 def get_classes_by_branch(request, short_code, branch_id):
-    # Fetch the branch ensuring it belongs to the correct school
+    """
+    Fetch classes for a given branch and school, filtered by session, term, and user role.
+    """
     branch = get_object_or_404(Branch, id=branch_id, school__short_code=short_code)
     user = request.user
 
-    # Check if the user is an admin or teacher
-    if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
-        # If the user is a teacher, only show the classes assigned to them within this branch
-        teacher = user.staff
-        teacher_assignments = TeacherClassAssignment.objects.filter(teacher=teacher, branch=branch)
+    # Fetch session and term from the request
+    session_id = request.GET.get('session')
+    term_id = request.GET.get('term')
 
-        # Get the classes assigned to this teacher for the branch
-        classes = Class.objects.filter(teacher_assignments__in=teacher_assignments).select_related('department').distinct()
+    # Validate session and term
+    if not session_id or not term_id:
+        return JsonResponse({'error': 'Session and term are required to fetch classes.'}, status=400)
+
+    session = get_object_or_404(Session, id=session_id, school=branch.school)
+    term = get_object_or_404(Term, id=term_id, session=session)
+
+    # Check the user role
+    if hasattr(user, 'staff') and user.staff.role.name.lower() == 'teacher':
+        # Fetch classes assigned to the teacher for the branch, session, and term
+        teacher = user.staff
+        teacher_assignments = TeacherClassAssignment.objects.filter(
+            teacher=teacher,
+            branch=branch,
+            session=session,
+            term=term
+        )
+        classes = Class.objects.filter(
+            teacher_assignments__in=teacher_assignments
+        ).select_related('department').distinct().order_by('id')
     elif hasattr(user, 'parent_profile'):
-        # If the user is a parent, fetch classes related to their children in the branch
+        # Fetch classes related to the parent's children in the branch
         parent_relationships = ParentStudentRelationship.objects.filter(
             parent_guardian=user.parent_profile,
             student__branch=branch
         )
         classes = Class.objects.filter(
             id__in=parent_relationships.values_list('student__student_class_id', flat=True)
-        ).distinct()
+        ).distinct().order_by('id')
     else:
-        # Admins or other authorized roles fetch all classes in the branch
-        classes = Class.objects.filter(branches=branch).distinct()
+        # Fetch all classes for admins or authorized roles
+        classes = Class.objects.filter(branches=branch).distinct().order_by('id')
 
-    # Prepare the data to send as JSON response
+    # Prepare data for JSON response
     classes_data = [
         {
             'id': cls.id,
@@ -147,11 +168,7 @@ def get_classes_by_subject(request, short_code, branch_id, subject_id):
             teacher_subject_classes__session_id=session_id,
             teacher_subject_classes__term_id=term_id
         )
-        direct_class_assignments = Class.objects.filter(
-            teacher_assignments__teacher=teacher,
-            branches=branch
-        )
-        classes = (subject_class_assignments | direct_class_assignments).distinct()
+        classes = (subject_class_assignments).distinct()
     else:
         # Admins can see all classes for the branch and subject
         classes = Class.objects.filter(
