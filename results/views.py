@@ -273,7 +273,9 @@ def get_student_scores(request, short_code):
                     for sr in StudentResult.objects.filter(
                         student=student,
                         component__in=components,
-                        subject=subject  # Ensure scores are filtered by subject
+                        subject=subject,
+                        session=session,
+                        term=term   # Ensure scores are filtered by subject
                     )
                 }
 
@@ -376,7 +378,9 @@ def save_student_scores(request, short_code):
                         StudentResult.objects.update_or_create(
                             student=student,
                             component=component,
-                            subject=subject,  # Associate the component score with the subject
+                            subject=subject, 
+                            session=session,
+                            term=term,  # Associate the component score with the subject
                             defaults={"score": component_score},
                         )
 
@@ -1386,6 +1390,7 @@ def results_audit_view(request, short_code):
     }
 
     return render(request, "results/results_audit.html", context)
+
 def get_results_audit(request, short_code):
     """
     Returns JSON data for the results audit based on selected session, term, branch, and class.

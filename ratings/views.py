@@ -76,7 +76,7 @@ def manage_ratings(request, short_code):
     })
 
 
-
+@csrf_exempt
 @login_required_with_short_code
 @admin_or_teacher_required
 def fetch_students_and_criteria(request, short_code):
@@ -89,52 +89,68 @@ def fetch_students_and_criteria(request, short_code):
     term_id = request.GET.get('term')
     rating_type = request.GET.get('rating_type')
 
+    # Ensure all required filters are provided
     if not all([branch_id, class_id, session_id, term_id, rating_type]):
         return JsonResponse({'error': 'All filters are required.'}, status=400)
 
-    # Fetch students
-    students = Student.objects.filter(
-        student_class_id=class_id,
-        branch_id=branch_id
-    ).select_related('student_class').order_by('last_name')
+    try:
+        # Validate school
+        school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
-    # Fetch rating criteria
-    criteria = RatingCriteria.objects.filter(
-        branch_id=branch_id,
-        rating_type=rating_type
-    )
+        # Get related objects
+        session = get_object_or_404(Session, id=session_id, school=school)
+        term = get_object_or_404(Term, id=term_id, session=session)
+        branch = get_object_or_404(Branch, id=branch_id, school=school)
 
-    # Fetch existing ratings
-    ratings = Rating.objects.filter(
-        session_id=session_id,
-        term_id=term_id,
-        branch_id=branch_id,
-        criteria__in=criteria
-    )
+        # Fetch students filtered by session, term, branch, and class
+        students = Student.objects.filter(
+            current_session=session,
+            branch=branch,
+            student_class_id=class_id
+        ).select_related('student_class').order_by('last_name')
 
-    # Prepare student data
-    student_data = [
-        {'id': student.id, 'name': f"{student.last_name} {student.first_name}"}
-        for student in students
-    ]
+        # Fetch rating criteria
+        criteria = RatingCriteria.objects.filter(
+            branch=branch,
+            rating_type=rating_type
+        )
 
-    # Prepare criteria data
-    criteria_data = [
-        {'id': criterion.id, 'name': criterion.criteria_name, 'max_value': criterion.max_value}
-        for criterion in criteria
-    ]
+        # Fetch existing ratings for the filtered students and criteria
+        ratings = Rating.objects.filter(
+            session=session,
+            term=term,
+            branch=branch,
+            criteria__in=criteria,
+            student__in=students  # Ensure ratings belong to the filtered students
+        )
 
-    # Prepare existing ratings data
-    rating_data = [
-        {'student_id': rating.student.id, 'criterion_id': rating.criteria.id, 'value': rating.value}
-        for rating in ratings
-    ]
+        # Prepare student data
+        student_data = [
+            {'id': student.id, 'name': f"{student.last_name} {student.first_name}"}
+            for student in students
+        ]
 
-    return JsonResponse({
-        'students': student_data,
-        'criteria': criteria_data,
-        'ratings': rating_data
-    })
+        # Prepare criteria data
+        criteria_data = [
+            {'id': criterion.id, 'name': criterion.criteria_name, 'max_value': criterion.max_value}
+            for criterion in criteria
+        ]
+
+        # Prepare existing ratings data
+        rating_data = [
+            {'student_id': rating.student.id, 'criterion_id': rating.criteria.id, 'value': rating.value}
+            for rating in ratings
+        ]
+
+        return JsonResponse({
+            'students': student_data,
+            'criteria': criteria_data,
+            'ratings': rating_data
+        })
+
+    except Exception as e:
+        # Handle errors gracefully
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @admin_or_teacher_required

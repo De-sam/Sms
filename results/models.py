@@ -81,7 +81,22 @@ class StudentResult(models.Model):
         null=True, 
         blank=True, 
         related_name="student_results"
-    ) 
+    )
+    session = models.ForeignKey(
+        Session, 
+        on_delete=models.CASCADE,
+        null=True, 
+        blank=True, 
+        related_name="student_results"
+    )
+    term = models.ForeignKey(
+        Term, 
+        on_delete=models.CASCADE,
+        null=True, 
+        blank=True,
+        related_name="student_results"
+    )
+
     score = models.PositiveIntegerField(null=True, blank=True)  # Score for this componentr this component
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -90,7 +105,7 @@ class StudentResult(models.Model):
     class Meta:
         unique_together = ("student", "component", "subject")
         indexes = [
-            models.Index(fields=["student", "component"]),  # Speeds up student-component lookups
+            models.Index(fields=["student", "component", "session", "term"]),  # Speeds up student-component lookups
         ]
 
     def __str__(self):
