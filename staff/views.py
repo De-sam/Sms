@@ -352,10 +352,6 @@ def staff_list(request, short_code):
         'per_page': per_page,
         'status_filter': status_filter,
     })
-
-    # Cache the rendered response for 5 minutes (300 seconds)
-
-
     return response
 
 @login_required_with_short_code
