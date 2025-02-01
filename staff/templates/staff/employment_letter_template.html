@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employment Letter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 40px;
+        }
+        .letter-container {
+            max-width: 700px;
+            margin: auto;
+            background: #ffffff;
+            padding: 40px;
+            border: 5px solid {{ school.theme_color1 }};
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid {{ school.theme_color2 }};
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .header-logo img {
+            max-width: 100px;
+            height: auto;
+        }
+        .header-info {
+            text-align: right;
+            font-size: 14px;
+            color: #333;
+        }
+        .header-info p {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .school-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: {{ school.theme_color1 }};
+        }
+        .icon {
+            width: 14px;
+            height: 14px;
+        }
+        /* BODY */
+        .letter-content {
+            text-align: justify;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        /* SIGNATURE */
+        .footer {
+            margin-top: 40px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .signature {
+            font-style: italic;
+            font-size: 18px;
+            color: {{ school.theme_color1 }};
+            margin-top: 20px;
+        }
+        .signature img {
+            max-width: 150px;
+            height: auto;
+            display: block;
+        }
+        /* DECORATIVE BOTTOM BAR */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background-color: {{ school.theme_color1 }};
+        }
+    </style>
+</head>
+<body>
+
+    <div class="letter-container">
+        <!-- HEADER -->
+        <div class="header">
+            <!-- School Logo -->
+            <div class="header-logo">
+                {% if school.logo %}
+                    <img src="{{ school.logo.url }}" alt="School Logo">
+                {% endif %}
+            </div>
+
+            <!-- School Contact Information -->
+            <div class="header-info">
+                <p class="school-name">{{ school.school_name }}</p>
+                <p><img class="icon" src="https://img.icons8.com/ios-filled/50/000000/place-marker.png" alt="Address"> {{ school.address }}</p>
+                <p><img class="icon" src="https://img.icons8.com/ios-filled/50/000000/phone.png" alt="Phone"> {{ school.admin_phone_number }}</p>
+                <p><img class="icon" src="https://img.icons8.com/ios-filled/50/000000/email.png" alt="Email"> {{ school.email }}</p>
+            </div>
+        </div>
+
+        <!-- Date -->
+        <p style="text-align: right; font-weight: bold;">{{ date }}</p>
+
+        <!-- LETTER CONTENT -->
+        <div class="letter-content">
+            <p>Dear <strong>{{ staff.user.first_name }} {{ staff.user.last_name }}</strong>,</p>
+
+            <p>{{ role_content }}</p>
+
+            <p>Your employment with us is subject to the terms and conditions outlined in your contract/agreement letter, which we encourage you to review carefully. If you have any questions or concerns, please reach out to the management team or sectional head.</p>
+
+            <p>We look forward to working with you and are excited to see your contributions to our school. Welcome to the team!</p>
+        </div>
+
+        <!-- SIGNATURE SECTION -->
+        <div class="footer">
+            <p>Sincerely,</p>
+
+            <div class="signature">
+                {% if school.admin_signature %}
+                    <img src="{{ school.admin_signature.url }}" alt="Admin Signature">
+                {% else %}
+                    <div style="width: 150px; height: 50px; border-bottom: 2px solid black;"></div>
+                {% endif %}
+            </div>
+
+            <p><strong>{{ school.admin_user.first_name }} {{ school.admin_user.last_name }}</strong></p>
+            <p><em>The Management</em></p>
+            <p>{{ school.school_name }}</p>
+        </div>
+
+        <!-- DECORATIVE BOTTOM BAR -->
+        <div class="bottom-bar"></div>
+    </div>
+
+</body>
+</html>

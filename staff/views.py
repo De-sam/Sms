@@ -352,6 +352,7 @@ def staff_list(request, short_code):
         'per_page': per_page,
         'status_filter': status_filter,
     })
+
     return response
 
 @login_required_with_short_code
@@ -864,81 +865,7 @@ def assign_teacher_to_class(request, short_code, teacher_id):
             messages.success(request, f"Classes assigned to {teacher.user.first_name} successfully.")
             return redirect('teacher_assignments', short_code=short_code)
         else:
-            # Debug: Print form errors if invalid
-
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            # Debug: Print form errors if invalid  
             print("Form errors:", form.errors)
     else:
         # Initialize the form with the teacher's branches
@@ -966,3 +893,62 @@ def get_classes_by_branch(request, short_code, branch_id):
     classes_data = [{'id': cls.id, 'name': cls.name, 'department': cls.department.name if cls.department else None} for cls in classes]
 
     return JsonResponse({'classes': classes_data})
+
+from django.utils.timezone import localtime
+from weasyprint import HTML
+
+def generate_employment_letter(request, short_code, staff_id):
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    staff = get_object_or_404(Staff, id=staff_id)
+
+    # Ensure staff has a valid role
+    role = staff.role.name.lower() if staff.role else "teacher"
+
+    # Define custom messages for each role
+    role_messages = {
+        "teacher": f"We are pleased to welcome you to {school.school_name} as a valued teacher. "
+                   "you will be expected to uphold the values and mission of our school, which include a commitment to excellence in education, a focus on student success, and a dedication to creating a safe and inclusive learning environment for all, "
+                   "ensuring that learning is engaging and impactful.",
+
+        "accountant": f"We are pleased to welcome you to {school.school_name} as an accountant. "
+                      "Your expertise in financial management will ensure the school’s financial "
+                      "health and transparency.",
+
+        "coordinator": f"We are pleased to welcome you to {school.school_name} as a coordinator. "
+                       "Your leadership in overseeing operations and supporting staff will be key "
+                       "to maintaining excellence in our school.",
+
+        "librarian": f"We are pleased to welcome you to {school.school_name} as a librarian. "
+                     "Your role in managing resources and guiding students in literacy will be "
+                     "critical to our academic success.",
+
+        "nurse": f"We are pleased to welcome you to {school.school_name} as our school nurse. "
+                 "Ensuring the health and well-being of our students is a vital part of their "
+                 "academic and personal growth.",
+
+        "principal": f"We are pleased to welcome you as the principal/Headteacher of {school.school_name}. "
+                     "Your leadership, vision, and commitment to education will shape the future "
+                     "of our school community."
+    }
+
+    # Get the appropriate message, default to teacher if role not found
+    role_content = role_messages.get(role, role_messages["teacher"])
+
+    context = {
+        "school": school,
+        "staff": staff,
+        "date": staff.user.date_joined.strftime("%B %d, %Y"),  # Using the date the staff joined
+        "role_content": role_content,  # Pass the role-based message
+    }
+
+     # Render the existing employment letter template
+    html_string = render(request, "staff/employment_letter_template.html", context).content.decode()
+
+     # Convert HTML to PDF
+    pdf_file = HTML(string=html_string).write_pdf()
+
+    # Create a response to serve the PDF
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{staff.user.first_name}_{staff.user.last_name}_Employment_Letter.pdf"'
+
+    return response
