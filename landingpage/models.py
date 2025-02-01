@@ -28,6 +28,8 @@ class SchoolRegistration(models.Model):
     admin_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='school')
     referral_source = models.CharField(max_length=50, choices=REFERRAL_SOURCES, default='other')
     school_id = models.CharField(max_length=10, unique=True, editable=False)
+    admin_signature = models.ImageField(upload_to='signatures/', null=True, blank=True)
+
 
     class Meta:
         indexes = [

@@ -9,6 +9,7 @@ class LoginForm(forms.Form):
 class SchoolProfileUpdateForm(forms.ModelForm):
     
     logo = forms.ImageField(required=False)
+    admin_signature = forms.ImageField(required=False)  # ✅ Add the signature field
     theme_color1 = forms.CharField(widget=forms.TextInput(attrs={'type': 'color'}), error_messages={'required': 'Primary theme color is required.'})
     theme_color2 = forms.CharField(widget=forms.TextInput(attrs={'type': 'color'}), error_messages={'required': 'Secondary theme color is required.'})
     email = forms.EmailField(required=True)
@@ -20,6 +21,7 @@ class SchoolProfileUpdateForm(forms.ModelForm):
             'school_name',
             'address',
             'logo',
+             'admin_signature',  # ✅ Ensure it's included in fields
             'theme_color1',
             'theme_color2', 
             'email',
