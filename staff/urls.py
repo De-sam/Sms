@@ -22,5 +22,7 @@ urlpatterns = [
     path('<str:short_code>/copy-term-assignments/', views.copy_term_assignments, name='copy_term_assignments'),
     path('<str:short_code>/copy-session-assignments/', views.copy_session_assignments, name='copy_session_assignments'),
     path('<str:short_code>/employment-letter/<int:staff_id>/', views.generate_employment_letter, name='employment_letter'),
+    path('<str:short_code>/agreement-letter/<int:staff_id>/', views.generate_agreement_letter, name='agreement_letter'),
+
     # Other URLs...
 ]

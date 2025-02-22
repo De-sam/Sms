@@ -31,6 +31,9 @@ from academics.models import Session, Term
 from utils.banking import verify_account_details,fetch_bank_codes
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse 
+from django.utils.timezone import localtime
+from weasyprint import HTML
+
 
 def save_temp_file(uploaded_file):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_files')
@@ -894,9 +897,8 @@ def get_classes_by_branch(request, short_code, branch_id):
 
     return JsonResponse({'classes': classes_data})
 
-from django.utils.timezone import localtime
-from weasyprint import HTML
 
+@login_required_with_short_code
 def generate_employment_letter(request, short_code, staff_id):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
     staff = get_object_or_404(Staff, id=staff_id)
@@ -950,5 +952,48 @@ def generate_employment_letter(request, short_code, staff_id):
     # Create a response to serve the PDF
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{staff.user.first_name}_{staff.user.last_name}_Employment_Letter.pdf"'
+
+    return response
+
+# @login_required_with_short_code
+# def generate_agreement_letter(request, short_code, staff_id):
+#     school = get_object_or_404(SchoolRegistration, short_code=short_code)
+#     staff = get_object_or_404(Staff, id=staff_id)
+
+#     context = {
+#         "school": school,
+#         "staff": staff,
+#         "date": staff.user.date_joined.strftime("%B %d, %Y"),  # Using the staff join date
+#         "salary": staff.salary if hasattr(staff, 'salary') else "Negotiable",  # Assuming salary exists in the Staff model
+#         "employment_date": staff.user.date_joined.strftime("%B %d, %Y"),  # Employment start date
+#     }
+
+#     return render(request, "staff/agreement_letter.html", context)
+
+
+@login_required_with_short_code
+def generate_agreement_letter(request, short_code, staff_id):
+    # Fetch the school and staff details
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    staff = get_object_or_404(Staff, id=staff_id)
+
+    # Prepare the context
+    context = {
+        "school": school,
+        "staff": staff,
+        "date": staff.user.date_joined.strftime("%B %d, %Y"),  # Using the staff join date
+        "salary": staff.salary if hasattr(staff, 'salary') else "Negotiable",  # Check if salary exists
+        "employment_date": staff.user.date_joined.strftime("%B %d, %Y"),  # Employment start date
+    }
+
+    # Render the existing agreement letter template as an HTML string
+    html_string = render(request, "staff/agreement_letter.html", context).content.decode()
+
+    # Convert HTML to PDF using WeasyPrint
+    pdf_file = HTML(string=html_string).write_pdf()
+
+    # Serve the PDF as a downloadable file
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{staff.user.first_name}_{staff.user.last_name}_Agreement_Letter.pdf"'
 
     return response

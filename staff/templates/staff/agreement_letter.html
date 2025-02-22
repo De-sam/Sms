@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employment Agreement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 40px;
+        }
+        .letter-container {
+            max-width: 700px;
+            margin: auto;
+            background: #ffffff;
+            padding: 40px;
+            border: 5px solid {{ school.theme_color1 }};
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid {{ school.theme_color2 }};
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .header-logo img {
+            max-width: 100px;
+            height: auto;
+        }
+        .header-info {
+            text-align: right;
+            font-size: 14px;
+            color: #333;
+        }
+        .school-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: {{ school.theme_color1 }};
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            margin: 0; /* Remove default paragraph spacing */
+        }
+
+        .info-item svg {
+            width: 14px;
+            height: 14px;
+            fill: {{ school.theme_color1 }};
+        }
+        .letter-content {
+            text-align: justify;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 50px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 14px;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 200px;
+            text-align: center;
+        }
+        .signature-box {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+            height: 50px;
+        }
+        .signature-box p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .signature-line {
+            width: 120px;
+            height: 20px;
+            border-bottom: 2px solid black;
+            margin: auto;
+            position: relative;
+        }
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background-color: {{ school.theme_color1 }};
+        }
+    </style>
+</head>
+<body>
+    <div class="letter-container">
+        <div class="header">
+            <div class="header-logo">
+                {% if school.logo %}
+                    <img src="{{ school.logo.url }}" alt="School Logo">
+                {% endif %}
+            </div>
+            <div class="header-info">
+                <p class="school-name">{{ school.school_name }}</p>
+                
+                <div class="info-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
+                    </svg>
+                    <p>{{ school.address }}</p>
+                </div>
+                
+                <div class="info-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M6.62 10.79a15.07 15.07 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24a9.03 9.03 0 003.48.68c.55 0 1 .45 1 1v3.75c0 .55-.45 1-1 1A19 19 0 013 4c0-.55.45-1 1-1h3.75c.55 0 1 .45 1 1a9.03 9.03 0 00.68 3.48c.12.35.03.75-.24 1.02l-2.2 2.2z"></path>
+                    </svg>
+                    <p>{{ school.admin_phone_number }}</p>
+                </div>
+                
+                <div class="info-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 12.713l-11.99-7.273v14.56h23.98v-14.56l-11.99 7.273zm0-2.713l12-7.5h-24l12 7.5z"></path>
+                    </svg>
+                    <p>{{ school.email }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <p style="text-align: right; font-weight: bold;">{{ date }}</p>
+        
+        <div class="letter-content">
+            <p>Dear <strong>{{ staff.user.first_name }} {{ staff.user.last_name }}</strong>,</p>
+            <p>AGREEMENT LETTER</p>
+            <p>Having become a member of our staff at {{ school.school_name }} from <strong>{{ employment_date }}</strong>, you will be entitled to a monthly salary of <strong>₦{{ salary }}</strong> as agreed. However, the above-mentioned amount shall be your initial salary, and is open to increment based on the discretion or recommendation of the management relative to the quality of your service to the school.</p>
+            <p>You will be required to give the school a one-month notice whenever you consider quitting your employment or resigning. This is to enable the school to provide a relevant replacement towards the continuity of your duties.</p>
+        </div>
+        
+        <!-- SIGNATURE SECTION -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Principal’s<br> Signature</p>
+            </div>
+
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Employee’s <br> Signature</p>
+            </div>
+
+            <div class="signature-box">
+                <div class="signature-line" style="position: relative;">
+                    {% if school.admin_signature %}
+                        <img src="{{ school.admin_signature.url }}" alt="Admin Signature" 
+                            style="width: 170px; height: 50px; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); object-fit: contain;">
+                    {% endif %}
+                </div>
+                <p>Director’s <br> Signature</p>
+            </div>
+        </div>
+
+        <div class="bottom-bar"></div>
+    </div>
+</body>
+</html>
