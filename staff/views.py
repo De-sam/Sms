@@ -221,12 +221,12 @@ def add_staff(request, short_code):
             <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #343a40;">
                 <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); overflow: hidden;">
                     <!-- Header with logo -->
-                    <div style="background: #191970; color: #ffffff; padding: 20px; text-align: center;">
-                        <img src="https://res-console.cloudinary.com/dnt2rpflv/thumbnails/v1/image/upload/v1740309146/Qmx1ZV9Qcm9mZXNzaW9uYWxfQ29ycG9yYXRlX0VtYWlsX0hlYWRlcl8yMDI1MDIyM18xMjA0NTdfMDAwMF93eGRkMmw=/preview" 
-                            alt="Logo" 
-                            style="max-width: 100px; margin-bottom: 10px;">
-                        <h5 style="margin: 0; font-size: 24px;">Account Created!!!</h5>
+                <div style="background: #191970; padding: 20px; text-align: center;">
+                        <img src="https://res.cloudinary.com/dnt2rpflv/image/upload/v1740309146/Blue_Professional_Corporate_Email_Header_20250223_120457_0000_wxdd2l.png" 
+                            alt="Header Image" 
+                            style="max-width: 100%; height: auto;">
                     </div>
+
                     <!-- Main content -->
                     <div style="padding: 20px;">
                         <h3 style="margin-top: 0;">Dear {full_name},</h3>
