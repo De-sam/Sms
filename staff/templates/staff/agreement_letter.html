@@ -153,7 +153,12 @@
             </div>
 
             <div class="signature-box">
-                <div class="signature-line"></div>
+                <div class="signature-line" style="position: relative;">
+                    {% if staff.staff_signature %}
+                        <img src="{{ staff.staff_signature.url }}" alt="Staff Signature" 
+                            style="width: 170px; height: 50px; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); object-fit: contain;">
+                    {% endif %}
+                </div>
                 <p>Employee’s <br> Signature</p>
             </div>
 
