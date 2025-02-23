@@ -1,0 +1,213 @@
+{% extends "adminlte/base.html" %}
+{% block content %}
+<div class="container mt-2">
+    <h2 class="text-center">Code of Conduct for Staff Members</h2>    
+    <h4>Introduction</h4>
+    <p>
+        This Code of Conduct outlines the expected professional behavior and ethical standards for all staff members employed at 
+        <strong>{{ school.school_name }}</strong>. Every staff member is expected to adhere to these principles to ensure a productive, respectful, and professional working 
+        environment that aligns with the school’s vision and values.
+    </p>
+
+    <h4>1. Professionalism and Ethical Standards</h4>
+    <ul>
+        <li>Staff must maintain high ethical and professional standards at all times.</li>
+        <li>Punctuality and regular attendance are required for all duties, including staff meetings, assigned duties, etc.</li>
+        <li>Staff should dress professionally and appropriately, adhering to the school’s dress code.</li>
+        <li>Confidentiality of student records and sensitive school information must be maintained.</li>
+        <li>Staff must refrain from engaging in any form of discrimination, harassment, or unethical behavior.</li>
+    </ul>
+
+    <h4>2. Commitment to Students' Welfare</h4>
+    <ul>
+        <li>Staff members must create a safe, inclusive, and nurturing learning environment for all students.</li>
+        <li>Any form of bullying, abuse, or discrimination toward students is strictly prohibited.</li>
+        <li>Staff should be approachable and supportive, fostering positive relationships with students.</li>
+        <li>Staff must report any concerns about student safety and well-being to the designated authorities.</li>
+    </ul>
+
+    <h4>3. Teaching and Classroom Management</h4>
+    <ul>
+        <li>Teachers must deliver high-quality instruction and maintain a well-managed classroom.</li>
+        <li>Lesson plans should be prepared in advance, ensuring engaging and effective teaching.</li>
+        <li>Fair and constructive discipline methods should be used to manage student behavior.</li>
+        <li>Staff must ensure equal opportunities for all students to learn and participate.</li>
+    </ul>
+
+    <h4>4. Interaction with Parents and the School Community</h4>
+    <ul>
+        <li>Staff should communicate with parents and guardians professionally and respectfully.</li>
+        <li>Concerns about a student's academic progress or behavior should be communicated appropriately.</li>
+        <li>Participation in parent-teacher conferences, open days, and other school events is encouraged.</li>
+    </ul>
+
+    <h4>5. Collaboration and Teamwork</h4>
+    <ul>
+        <li>Staff should work cooperatively with colleagues, supporting one another in achieving the school’s goals.</li>
+        <li>Conflicts should be resolved professionally, following proper school procedures.</li>
+        <li>Constructive feedback should be given and received with respect and openness.</li>
+    </ul>
+
+    <h4>6. Use of School Resources</h4>
+    <ul>
+        <li>School resources, including facilities, technology, and materials, should be used responsibly.</li>
+        <li>Personal use of school resources should be minimized and must not interfere with work responsibilities.</li>
+        <li>Any damages or issues with school property should be reported promptly.</li>
+    </ul>
+
+    <h4>7. Compliance with Policies and Regulations</h4>
+    <ul>
+        <li>Staff must adhere to all school policies, including child protection, health and safety, and ICT usage policies.</li>
+        <li>Staff must comply with national and local educational regulations.</li>
+        <li>Any violations of policies may result in disciplinary action.</li>
+    </ul>
+
+    <h4>8. Reporting Violations</h4>
+    <ul>
+        <li>Any staff member who witnesses unethical behavior or violations of school policies should report it to the appropriate authority.</li>
+        <li>Reports should be made in good faith and handled with confidentiality.</li>
+    </ul>
+
+    <!-- Agree and Continue Button -->
+    <div class="text-center mt-4">
+        <button id="agreeButton" class="btn btn-primary">
+            <span id="buttonText">Agree and Continue</span>
+            <span id="buttonSpinner" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+        </button>
+    </div>
+
+    <!-- Hidden Sections Initially -->
+    <div id="hiddenContent" style="display: none;">
+        <hr> <!-- Line added before section 9 -->
+
+        <h4>9. Acknowledgment and Agreement</h4>
+        <p>
+            All new staff members are required to read, understand, and comply with this Code of Conduct. By signing below, the staff 
+            member agrees to uphold the principles and policies outlined in this document.
+        </p>
+
+        <table class="table table-bordered">
+            <tr>
+                <td><strong>Staff Member’s Name:</strong></td>
+                <td>{{ staff.user.first_name }} {{ staff.user.last_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Signature:</strong></td>
+                <td>
+                    {% if staff.staff_signature %}
+                        <img src="{{ staff.staff_signature.url }}" alt="Signature" style="width: 100px; height: 30px;">
+                    {% else %}
+                        _________________________
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Date Signed:</strong></td>
+                <td id="dateSigned">N/A</td>
+            </tr>
+            <tr>
+                <td><strong>Time Signed:</strong></td>
+                <td id="timeSigned">N/A</td>
+            </tr>
+        </table>
+
+        <p><em>This document is subject to periodic review and updates by the school administration. Staff members will be notified of any changes.</em></p>
+
+        <hr> <!-- Line added before Employment Letter section -->
+
+<!-- Employment Letters Section -->
+<div id="employment-letter-section" class="container mt-4">
+    <div class="row d-flex justify-content-center">
+        <!-- Letter of Agreement Card -->
+        <div class="col-md-5 mb-3">
+            <div class="d-flex align-items-center justify-content-between border p-3 rounded">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-file-alt fa-2x me-2"></i>
+                    <h5 class="mb-0">Letter of Agreement</h5>
+                </div>
+                <a href="{% url 'agreement_letter' short_code=school.short_code staff_id=staff.id %}" 
+                   class="btn btn-dark btn-sm">
+                    Download
+                </a>
+            </div>
+        </div>
+
+        <!-- Letter of Employment Card -->
+        <div class="col-md-5 mb-3">
+            <div class="d-flex align-items-center justify-content-between border p-3 rounded">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-file-alt fa-2x me-2"></i>
+                    <h5 class="mb-0">Letter of Employment</h5>
+                </div>
+                <a href="{% url 'employment_letter' short_code=school.short_code staff_id=staff.id %}" 
+                   class="btn btn-dark btn-sm">
+                    Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+
+<!-- JavaScript for Persistent Button State using LocalStorage -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var agreeButton = document.getElementById("agreeButton");
+        var buttonText = document.getElementById("buttonText");
+        var buttonSpinner = document.getElementById("buttonSpinner");
+        var hiddenContent = document.getElementById("hiddenContent");
+        var dateSigned = document.getElementById("dateSigned");
+        var timeSigned = document.getElementById("timeSigned");
+
+        // Unique identifier for each user (use email, ID, or username)
+        var userIdentifier = "{{ staff.user.email }}";  // Example: Use staff email
+
+        // Generate user-specific LocalStorage keys
+        var agreementKey = "buttonClicked_" + userIdentifier;
+        var dateKey = "signedDate_" + userIdentifier;
+        var timeKey = "signedTime_" + userIdentifier;
+
+        // Retrieve stored values from LocalStorage
+        var buttonClicked = localStorage.getItem(agreementKey);
+        var storedDate = localStorage.getItem(dateKey);
+        var storedTime = localStorage.getItem(timeKey);
+
+        if (buttonClicked === "true") {
+            agreeButton.disabled = true;
+            buttonText.innerText = "Agreed ✔";
+            hiddenContent.style.display = "block";
+            dateSigned.innerText = storedDate || "N/A";
+            timeSigned.innerText = storedTime || "N/A";
+        }
+
+        // Button Click Event
+        agreeButton.addEventListener("click", function() {
+            var now = new Date();
+            var formattedDate = now.toLocaleDateString();
+            var formattedTime = now.toLocaleTimeString();
+
+            // Disable button & show spinner
+            agreeButton.disabled = true;
+            buttonText.innerText = "Processing...";
+            buttonSpinner.style.display = "inline-block";
+
+            // Save data to LocalStorage for the specific user
+            localStorage.setItem(agreementKey, "true");
+            localStorage.setItem(dateKey, formattedDate);
+            localStorage.setItem(timeKey, formattedTime);
+
+            // Delay by 3 seconds before revealing content
+            setTimeout(function() {
+                hiddenContent.style.display = "block"; 
+                buttonText.innerText = "Agreed ✔"; 
+                buttonSpinner.style.display = "none";
+                dateSigned.innerText = formattedDate;
+                timeSigned.innerText = formattedTime;
+            }, 3000);
+        });
+    });
+</script>
+
+{% endblock %}

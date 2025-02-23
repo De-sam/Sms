@@ -955,22 +955,6 @@ def generate_employment_letter(request, short_code, staff_id):
 
     return response
 
-# @login_required_with_short_code
-# def generate_agreement_letter(request, short_code, staff_id):
-#     school = get_object_or_404(SchoolRegistration, short_code=short_code)
-#     staff = get_object_or_404(Staff, id=staff_id)
-
-#     context = {
-#         "school": school,
-#         "staff": staff,
-#         "date": staff.user.date_joined.strftime("%B %d, %Y"),  # Using the staff join date
-#         "salary": staff.salary if hasattr(staff, 'salary') else "Negotiable",  # Assuming salary exists in the Staff model
-#         "employment_date": staff.user.date_joined.strftime("%B %d, %Y"),  # Employment start date
-#     }
-
-#     return render(request, "staff/agreement_letter.html", context)
-
-
 @login_required_with_short_code
 def generate_agreement_letter(request, short_code, staff_id):
     # Fetch the school and staff details
@@ -997,3 +981,16 @@ def generate_agreement_letter(request, short_code, staff_id):
     response["Content-Disposition"] = f'attachment; filename="{staff.user.first_name}_{staff.user.last_name}_Agreement_Letter.pdf"'
 
     return response
+
+
+@login_required_with_short_code
+def document_view(request, short_code, staff_id):
+    # Fetch school and staff details
+    school = get_object_or_404(SchoolRegistration, short_code=short_code)
+    staff = get_object_or_404(Staff, id=staff_id, branches__school=school)  # Ensure staff belongs to the school
+
+    context = {
+        "school": school,
+        "staff": staff,
+    }
+    return render(request, "staff/document.html", context)
