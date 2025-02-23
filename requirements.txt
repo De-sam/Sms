@@ -92,3 +92,4 @@ webencodings==0.5.1
 whitenoise==6.8.2
 yarl==1.18.3
 zopfli==0.2.3.post1
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
