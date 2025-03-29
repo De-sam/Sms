@@ -241,7 +241,7 @@ class CustomPasswordResetConfirmView(View):
 
         # Check if the token is older than 1 minute
         token_age = datetime.now() - datetime.fromtimestamp(timestamp)
-        return token_age <= timedelta(minutes=1) and default_token_generator.check_token(user, token)
+        return token_age <= timedelta(minutes=5) and default_token_generator.check_token(user, token)
 
 def forgot_password(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
