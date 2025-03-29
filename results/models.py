@@ -306,7 +306,6 @@ class GradingSystem(models.Model):
     )
     grade = models.CharField(
         max_length=10,
-        unique=True,
         null=True,
         blank=True,
         db_index=True  # Index for optimized queries
