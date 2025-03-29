@@ -279,19 +279,21 @@ def forgot_password(request, short_code):
 
              # Send the email
             send_mail(
-                subject="Password Reset Request",
-                message=(
-                    f"Hello {email}!\n\n"
-                    "Someone has requested a link to change your password. You can do this through the link below.\n\n"
-                    f"Change my password: {reset_link}\n\n"
-                    "or copy and open this link in your browser:\n"
-                    f"{reset_link}\n\n"
-                    "If you didn't request this, please ignore this email.\n\n"
-                    "Your password won't change until you access the link above and create a new one."
-                ),
-                from_email="noreply@AcadémiQ.com",
-                recipient_list=[email],
-            )
+            subject="Password Reset Request",
+            message=(
+                f"Hello {email}!\n\n"
+                f"Username: {user.username}\n\n"
+                "Someone has requested a link to change your password. You can do this through the link below.\n\n"
+                f"Change my password: {reset_link}\n\n"
+                "or copy and open this link in your browser:\n"
+                f"{reset_link}\n\n"
+                "If you didn't request this, please ignore this email.\n\n"
+                "Your password won't change until you access the link above and create a new one."
+            ),
+            from_email="noreply@AcadémiQ.com",
+            recipient_list=[email],
+        )
+
 
 
             messages.success(request, "A password reset link has been sent to your email.")
