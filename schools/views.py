@@ -228,21 +228,7 @@ class CustomPasswordResetConfirmView(View):
         messages.error(request, "The password reset link is invalid or has expired.")
         return redirect('forgot_password', short_code=short_code)
 
-    def is_token_valid(self, user, token):
-        """
-        Check if the token is valid and not expired.
-        """
-        try:
-            # Extract the timestamp from the token
-            ts_b36, _ = token.split("-")
-            timestamp = int(ts_b36, 36)
-        except ValueError:
-            return False
-
-        # Check if the token is older than 1 minute
-        token_age = datetime.now() - datetime.fromtimestamp(timestamp)
-        return token_age <= timedelta(minutes=5) and default_token_generator.check_token(user, token)
-
+    
 def forgot_password(request, short_code):
     school = get_object_or_404(SchoolRegistration, short_code=short_code)
 
