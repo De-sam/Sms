@@ -203,7 +203,7 @@ def list_result_structures(request, short_code):
 
 
 
-
+@login_required_with_short_code
 def filter_students_for_scores(request, short_code):
     """
     Render the template for filtering students for score entry.
@@ -666,7 +666,7 @@ def get_grade_and_remark(total_score, branch):
     remark = generate_remark(grade)
     return grade, remark
 
-
+@login_required_with_short_code
 def render_class_result_preview(request, short_code):
     """
     Render the class result preview template.
@@ -767,7 +767,7 @@ def fetch_class_results(request, short_code):
 
 
 from django.urls import resolve
-
+@login_required_with_short_code
 def render_generate_result_filter(request, short_code):
     """
     Render the result generation filter template based on the request path.
@@ -1280,7 +1280,8 @@ def publish_results(request, short_code):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 
-
+@login_required_with_short_code
+@admin_required
 def list_published_results(request, short_code):
     """
     Display a paginated table of published results for the admin.
@@ -1371,7 +1372,8 @@ def manage_grading_system(request, short_code):
         **user_roles,
     })
 
-
+@login_required_with_short_code
+@admin_or_teacher_required
 def results_audit_view(request, short_code):
     """
     Renders the results audit page with the filter form.
