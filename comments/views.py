@@ -10,7 +10,12 @@ from landingpage.models import SchoolRegistration
 from utils.context_helpers import get_user_roles
 from .models import Comment
 import json
+from utils.decorator import login_required_with_short_code
+from utils.permissions import admin_or_teacher_required
 
+
+@admin_or_teacher_required
+@login_required_with_short_code
 def filter_students_for_comments(request, short_code):
     """
     Render the template for filtering students based on session, term, branch, and class.
@@ -29,6 +34,8 @@ def filter_students_for_comments(request, short_code):
 
 
 @csrf_exempt
+@admin_or_teacher_required
+@login_required_with_short_code
 def get_comments(request, short_code):
     """
     Fetch filtered students based on session, term, branch, and classes, including their comments.
@@ -101,6 +108,8 @@ def get_comments(request, short_code):
 
 @csrf_exempt
 @transaction.atomic
+@admin_or_teacher_required
+@login_required_with_short_code
 def save_comments(request, short_code):
     """
     Save comments for students based on the submitted data.

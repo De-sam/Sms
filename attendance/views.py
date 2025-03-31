@@ -397,11 +397,11 @@ def record_teacher_attendance(request, short_code):
         **user_roles,  # Include user roles in the context
     }
 
-    # Debugging: Print out the context values to verify
-    print(f"Teacher Attendance View Context for User {user.username}:")
-    print(f"  - is_school_admin: {user_roles['is_school_admin']}")
-    print(f"  - is_teacher: {user_roles['is_teacher']}")
-    print(f"  - branches: {branches}")
-    print(f"  - assigned_classes: {assigned_classes}")
+    # # Debugging: Print out the context values to verify
+    # print(f"Teacher Attendance View Context for User {user.username}:")
+    # print(f"  - is_school_admin: {user_roles['is_school_admin']}")
+    # print(f"  - is_teacher: {user_roles['is_teacher']}")
+    # print(f"  - branches: {branches}")
+    # print(f"  - assigned_classes: {assigned_classes}")
 
     return render(request, 'attendance/student_attendance.html', context)

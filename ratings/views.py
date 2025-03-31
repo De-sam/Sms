@@ -152,7 +152,7 @@ def fetch_students_and_criteria(request, short_code):
         # Handle errors gracefully
         return JsonResponse({"error": str(e)}, status=500)
 
-
+@login_required_with_short_code
 @admin_or_teacher_required
 @csrf_exempt
 def save_ratings(request, short_code):
