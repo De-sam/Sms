@@ -116,14 +116,47 @@
         <i class="fas fa-upload"></i> Publish Results
     </button>
     {% endif %}
+    <button id="downloadPdfButton" class="btn btn-danger">
+        <i class="fas fa-file-pdf"></i> Download PDF
+    </button>    
     <button id="printButton" class="btn btn-primary">
         <i class="fas fa-print"></i> Print Results
     </button>
 </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const downloadPdfButton = document.getElementById("downloadPdfButton");
+
+    if (downloadPdfButton) {
+        downloadPdfButton.addEventListener("click", function () {
+            const element = document.getElementById("resultsContainer");
+
+            if (!element || !element.innerHTML.trim()) {
+                alert("Please generate results first.");
+                return;
+            }
+
+            // Optional: clone to clean extra margins for PDF
+            const clone = element.cloneNode(true);
+            clone.style.margin = "0 auto";
+
+            const opt = {
+                margin: 0.3,
+                filename: 'student-results.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(clone).set(opt).save();
+        });
+    }
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     const shortCode = "{{ school.short_code }}";
     const isStudent = "{{ is_student|yesno:'true,false' }}" === "true";
@@ -310,6 +343,7 @@ const getBranchValue = () => {
 
                         
                         const studentCard = `
+                         <div class="pdf-page">
                             <div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 <div class="header" style="background: #1a3a6e; color: white; padding: 20px; display: flex; align-items: center;">
                                     <!-- School Logo Image inside a styled circle -->
@@ -633,35 +667,35 @@ const getBranchValue = () => {
                                     </div>
                                       <!-- Result Footer -->
 
-                                                <div class="footer" style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 15px 20px;
-                background-color: #f0f4f8;
-                border-top: 2px solid #d4af37;
-                margin-top: 20px;
-                flex-wrap: wrap;
-            ">
-                <!-- Left: Resumption Date -->
-                <div class="next-term" style="font-size: 14px; color: #555;">
-                    <strong>Next Term Begins:</strong> ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}
-                </div>
+                                    <div class="footer" style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        padding: 15px 20px;
+                                        background-color: #f0f4f8;
+                                        border-top: 2px solid #d4af37;
+                                        margin-top: 20px;
+                                        flex-wrap: wrap;
+                                    ">
+                                        <!-- Left: Resumption Date -->
+                                        <div class="next-term" style="font-size: 14px; color: #555;">
+                                            <strong>Next Term Begins:</strong> ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}
+                                        </div>
 
-                <!-- Right: QR Section -->
-                <div class="qr-section" style="display: flex; align-items: center; gap: 10px;">
-                    <div class="qr-text" style="font-size: 12px; text-align: right;">
-                        <div style="font-weight: bold;">Scan to verify</div>
-                        <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
-                    </div>
-                    <div class="qr-image" id="qrcode-${student.student_id}" style="width: 70px; height: 70px;"></div>
-                </div>
-            </div>
+                                        <!-- Right: QR Section -->
+                                        <div class="qr-section" style="display: flex; align-items: center; gap: 10px;">
+                                            <div class="qr-text" style="font-size: 12px; text-align: right;">
+                                                <div style="font-weight: bold;">Scan to verify</div>
+                                                <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
+                                            </div>
+                                            <div class="qr-image" id="qrcode-${student.student_id}" style="width: 70px; height: 70px;"></div>
+                                        </div>
+                                    </div>
 
                             </div>
                                 </div>
                             </div>
-                            
+                         </div>
                         `;
                         resultsContainer.innerHTML += studentCard;
                     });
@@ -775,6 +809,21 @@ if (printButton) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
+ .pdf-page {
+    page-break-before: always;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-before: always;
+    break-after: always;
+    break-inside: avoid;
+    min-height: 700px; /* optional - ensure full page usage */
+}
+@media print {
+  .pdf-page {
+    min-height: auto;
+    overflow: hidden;
+  }
+}   
 @media print {
     /* General settings */
     body {
