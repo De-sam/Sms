@@ -664,12 +664,19 @@ const getBranchValue = () => {
                             
                         `;
                         resultsContainer.innerHTML += studentCard;
-                        new QRCode(document.getElementById(`qrcode-${student.student_id}`), {
-                            text: `${window.location.origin}/verify-result/${student.verification_token}/`,
-                            width: 70,
-                            height: 70
-                        });
                     });
+                     // ✅ Generate QR codes for all students after rendering
+                        data.students.forEach(student => {
+                            const qrContainer = document.getElementById(`qrcode-${student.student_id}`);
+                            if (qrContainer) {
+                                new QRCode(qrContainer, {
+                                    text: `${window.location.origin}/verify-result/${student.verification_token}/`,
+                                    width: 70,
+                                    height: 70
+                                });
+                            }
+                        });
+
                     actionButtons.classList.remove("d-none"); // Show action buttons
                 }
             })
