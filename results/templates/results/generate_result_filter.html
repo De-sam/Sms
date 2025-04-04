@@ -288,6 +288,8 @@ const getBranchValue = () => {
                         const profileImage = student.profile_picture || "https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
                         const schoolLogo = data.school_details.logo || "https://via.placeholder.com/80";
 
+                        
+
                         // Psychomotor Ratings: Transform to a single row
                         const psychomotorRatings = `
                             <tr>
@@ -629,7 +631,7 @@ const getBranchValue = () => {
 
 
                                     </div>
-                                                                            <!-- Result Footer -->
+                                      <!-- Result Footer -->
 
                                                 <div class="footer" style="
                 display: flex;
@@ -652,9 +654,7 @@ const getBranchValue = () => {
                         <div style="font-weight: bold;">Scan to verify</div>
                         <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
                     </div>
-                    <div class="qr-image" style="width: 70px; height: 70px;">
-                        <img src="${student.verification_token}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
-                    </div>
+                    <div class="qr-image" id="qrcode-${student.student_id}" style="width: 70px; height: 70px;"></div>
                 </div>
             </div>
 
@@ -664,6 +664,11 @@ const getBranchValue = () => {
                             
                         `;
                         resultsContainer.innerHTML += studentCard;
+                        new QRCode(document.getElementById(`qrcode-${student.student_id}`), {
+                            text: `${window.location.origin}/verify-result/${student.verification_token}/`,
+                            width: 70,
+                            height: 70
+                        });
                     });
                     actionButtons.classList.remove("d-none"); // Show action buttons
                 }
@@ -760,7 +765,8 @@ if (printButton) {
 
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
 @media print {
     /* General settings */

@@ -1,4 +1,4 @@
-def get_full_result_data(school, session, term, branch, class_ids, students):
+def get_full_result_data(school, session, term, branch, class_ids, students, request=None):
     from results.models import (
         StudentFinalResult, StudentAverageResult,
         ResultVerificationToken, GradingSystem
@@ -89,7 +89,8 @@ def get_full_result_data(school, session, term, branch, class_ids, students):
                 term=term,
                 branch=branch,
             )
-
+            # Generate full verification URL
+            verification_url = token_obj.get_verification_url(request=request)
             grouped_results[result.student_id] = {
                 "first_name": result.student.first_name,
                 "last_name": result.student.last_name,
@@ -126,6 +127,7 @@ def get_full_result_data(school, session, term, branch, class_ids, students):
                 ],
                 "principal_comment": principal_comment,
                 "verification_token": str(token_obj.token),
+                "verification_url": verification_url,
                 "max_obtainable_score": 100 * results.filter(student_id=result.student_id).count(),
                 "obtained_score": round(
                     results.filter(student_id=result.student_id).aggregate(Sum("total_score"))["total_score__sum"] or 0,

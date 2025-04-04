@@ -995,7 +995,8 @@ def fetch_students_result(request, short_code):
                 term=term,
                 branch=branch,
                 class_ids=class_ids,
-                students=students
+                students=students,
+                request=request 
             )
 
             # Prepare response data
