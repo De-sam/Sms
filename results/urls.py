@@ -34,6 +34,8 @@ urlpatterns = [
     path('<str:short_code>/fetch-students-broadsheet/', views.fetch_results_wrapper, name='fetch_students_broadsheet'),
     path('<str:short_code>/results-audit/', views.results_audit_view, name="results_audit"),
     path('<str:short_code>/get-results-audit/', views.get_results_audit, name="get_results_audit"),
+    # Verify result via QR code
+    path('<str:short_code>/verify-result/<uuid:token>/', views.verify_result_view, name='verify_result'),
 
 
     # Grading System

@@ -227,6 +227,12 @@ if (isStudent) {
     });
 }
 
+// current date
+const today = new Date().toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric"
+});
 
 // Adjust branch value retrieval for both students and admins
 const getBranchValue = () => {
@@ -302,154 +308,356 @@ const getBranchValue = () => {
 
                         
                         const studentCard = `
-                            <div class="card mb-0 school-details-card" style="max-width: 80%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                                    <!-- School Details -->
-                                    <div class="card-header d-flex align-items-center justify-content-between border rounded bg-light">
-                                        <div class="d-flex align-items-center justify-content-center w-100">
-                                            <!-- School Logo -->
-                                            <img src="${schoolLogo}" alt="School Logo" class="img-fluid" style="width: 70px; height: 70px; margin-right: 5px;">
-                                            <!-- Middle Details -->
-                                            <div style="text-align: center; flex-grow: 1; margin: 0 10px;">
-                                                <h5 class="mb-0">${data.school_details.school_name}</h5>
-                                                <p class="text-muted mb-0">${data.school_details.school_address}</p>
-                                                <div class="d-flex justify-content-center" style="gap: 1rem;">
-                                                    <span class="text-muted">
-                                                        <strong>Email:</strong> ${data.school_details.school_email || "N/A"}
-                                                    </span>
-                                                    <span class="text-muted">
-                                                        <strong>Phone:</strong> ${data.school_details.school_phone || "N/A"}
-                                                    </span>
-                                                </div>
-                                                <p class="text-primary mt-1">
-                                                    <strong>${data.school_details.term_label || "N/A"}</strong>
-                                                </p>
-                                            </div>
-                                            <!-- Profile Picture -->
-                                            <img src="${profileImage}" alt="Student Profile" class="img-fluid rounded-circle" style="width: 70px; height: 70px; margin-left: 5px;">
-                                        </div>
+                            <div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                <div class="header" style="background: #1a3a6e; color: white; padding: 20px; display: flex; align-items: center;">
+                                    <!-- School Logo Image inside a styled circle -->
+                                    <div class="logo" style="
+                                        width: 80px;
+                                        height: 80px;
+                                        background: white;
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        overflow: hidden;
+                                        border: 3px solid #d4af37;
+                                        margin-right: 20px;
+                                    ">
+                                        <img src="${schoolLogo}" alt="School Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+
+                                    <!-- School Information -->
+                                    <div class="school-info" style="flex-grow: 1;">
+                                        <h1 class="school-name" style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">
+                                            ${data.school_details.school_name}
+                                        </h1>
+                                        <p class="school-address" style="margin: 5px 0;">${data.school_details.school_address}</p>
+                                        <p class="school-contact" style="margin: 0;">
+                                            Email: ${data.school_details.school_email || "N/A"} |
+                                            Phone: ${data.school_details.school_phone || "N/A"}
+                                        </p>
                                     </div>
                                 </div>
 
-
-
-                                <!-- Student Details -->
-                                <div class="card-body text-center">
-                                    <div class="d-flex justify-content-center ">
-                                        <span class="mr-3" style="font-size: 1.5rem;">
-                                            <strong style="font-size: 1.5rem; font-weight: bold;">
-                                                Name:
-                                            </strong>
-                                             ${student.last_name}  &nbsp;  ${student.first_name}
-                                        </span>
-
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    
-                                        <span style="font-size: 1.5rem; ">
-                                            <strong style="font-size: 1.5rem; font-weight: bold;">
-                                                Class:
-                                            </strong>
-                                             ${student.class}
-                                        </span>
+                                <!-- Report Title -->
+                                    <div class="report-title" style="
+                                        text-align: center;
+                                        background: #d4af37;
+                                        color: #1a3a6e;
+                                        padding: 10px;
+                                        font-weight: bold;
+                                        font-size: 18px;
+                                        text-transform: uppercase;
+                                    ">
+                                        ${data.school_details.term_label || "N/A"}
                                     </div>
 
-                                    <div class="mt-0">
-                                        <span class="badge badge-primary">Subjects Done: ${student.total_subjects}</span>
-                                        <span class="badge badge-success">Subjects Passed: ${student.subjects_passed}</span>
-                                        <span class="badge badge-danger">Subjects Failed: ${student.subjects_failed}</span>
-                                    </div>
-                                   <div class="mt-0">
-                                         <span class="badge badge-info">
-                                            &nbsp;&nbsp;&nbsp; School Opened: ${student.total_days_school_opened || "N/A"} Days &nbsp;&nbsp;&nbsp;
-                                            Present: ${student.attendance_count || "N/A"} Days  &nbsp;&nbsp;&nbsp; 
-                                            Absent: ${student.times_absent || "N/A"} Days &nbsp;&nbsp;&nbsp;
-                                        </span>
+                               <!-- Student Info Section -->
+                                   <div class="student-info" style="
+                                        display: flex;
+                                        flex-wrap: wrap;
+                                        padding: 15px 20px;
+                                        background: #f0f4f8;
+                                        border-bottom: 2px solid #d4af37;
+                                    ">
+                                        <!-- Student Photo -->
+                                        <div class="student-photo" style="margin-right: 30px;">
+                                            <img src="${profileImage}" alt="Student Profile" style="width: 70px; height: 70px; border-radius: 5px;">
+                                        </div>
+
+                                        <!-- Student Details Container -->
+                                        <div class="student-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                                            <!-- Row 1: Name, Class, Sex -->
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <div class="student-info-item">
+                                                    <span class="student-info-label" style="font-weight: bold;">Name:</span>
+                                                    <span class="student-info-value">${student.last_name} ${student.first_name}</span>
+                                                </div>
+                                                <div class="student-info-item">
+                                                    <span class="student-info-label" style="font-weight: bold;">Class:</span>
+                                                    <span class="student-info-value">${student.class}</span>
+                                                </div>
+                                                <div class="student-info-item">
+                                                    <span class="student-info-label" style="font-weight: bold;">Sex:</span>
+                                                    <span class="student-info-value">${student.gender || "N/A"}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Row 2: Student ID, Date Issued -->
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <div class="student-info-item">
+                                                    <span class="student-info-label" style="font-weight: bold;">Student ID:</span>
+                                                    <span class="student-info-value">${student.student_id || "N/A"}</span>
+                                                </div>
+                                                <div class="student-info-item">
+                                                    <span class="student-info-label" style="font-weight: bold;">Date Issued:</span>
+                                                    <span class="student-info-value">${today}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Subject Scores -->
-                                   <div class="card mt-0 mx-auto" style="max-width: 80%; width: auto;">
-                                        <div class="card-header bg-secondary text-white">
-                                            <div class="score-details d-flex justify-content-center align-items-center text-center">
-                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                <span><strong>Total Obtainable Score:</strong> ${student.average.total_score_maximum}</span>
-                                                <span><strong>Total Obtained Score:</strong> ${student.average.total_score_obtained}</span>
-                                                <span><strong>Average Percentage:</strong> ${student.average.average_percentage.toFixed(2)}%</span>
+
+                                     <!-- Subjects and attendance summary -->
+                                    <div class="academic-summary" style="
+                                            display: flex;
+                                            padding: 15px 20px;
+                                            background: white;
+                                            flex-wrap: wrap;
+                                            justify-content: space-between;
+                                            border-bottom: 1px solid #e9ecef;
+                                        ">
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.total_subjects}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Subjects Taken
+                                                </div>
+                                            </div>
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.subjects_passed}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Subjects Passed
+                                                </div>
+                                            </div>
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.subjects_failed}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Subjects Failed
+                                                </div>
+                                            </div>
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.total_days_school_opened || "N/A"}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Days School Opened
+                                                </div>
+                                            </div>
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.attendance_count || "N/A"}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Days Present
+                                                </div>
+                                            </div>
+                                            <div class="summary-item" style="text-align: center; min-width: 100px; margin: 5px 10px;">
+                                                <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.times_absent || "N/A"}
+                                                </div>
+                                                <div class="summary-label" style="font-size: 12px; text-transform: uppercase;">
+                                                    Days Absent
+                                                </div>
                                             </div>
                                         </div>
 
 
-                                        <div class="card-body">
-                                            <table class="table table-bordered mx-auto" style="font-size: 11px; width: auto; text-align: center;">
-
-                                                <thead>
-                                                    <tr>
-                                                        <th>Subjects</th>
-                                                        <th style="writing-mode: vertical-lr;">CA Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Exam Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Total Score</th>
-                                                        <th style="writing-mode: vertical-lr;">Grade</th>
-                                                        <th>Remarks</th>
-                                                        <th style="writing-mode: vertical-lr;">Highest</th>
-                                                        <th style="writing-mode: vertical-lr;">Average</th>
-                                                        <th style="writing-mode: vertical-lr;">Lowest</th>
-                                                        
+                                   
+                                   <div class="card mt-0 mx-auto" style="max-width: 90%; width: auto;">      
+                                         <!-- Subjects and scores -->
+                                        <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 12px; margin: 0 auto;">
+                                            <thead style="background-color: #1a3a6e; color: white;">
+                                                <tr>
+                                                    <th>Subjects</th>
+                                                    <th>CA Score</th>
+                                                    <th>Exam Score</th>
+                                                    <th>Total Score</th>
+                                                    <th>Grade</th>
+                                                    <th>Remarks</th>
+                                                    <th>Highest</th>
+                                                    <th>Average</th>
+                                                    <th>Lowest</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${student.subjects.map((subject, index) => `
+                                                    <tr style="background-color: ${index % 2 === 0 ? '#f0f4f8' : 'transparent'};">
+                                                        <td>${subject.subject}</td>
+                                                        <td>${subject.converted_ca ?? "N/A"}</td>
+                                                        <td>${subject.exam_score ?? "N/A"}</td>
+                                                        <td>${subject.total_score ?? "N/A"}</td>
+                                                        <td>${subject.grade ?? "N/A"}</td>
+                                                        <td>${subject.remark || "N/A"}</td>
+                                                        <td>${subject.highest_score ?? "N/A"}</td>
+                                                        <td>${subject.average_score ? subject.average_score.toFixed(2) : "N/A"}</td>
+                                                        <td>${subject.lowest_score ?? "N/A"}</td>
                                                     </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${student.subjects.map(subject => `
-                                                        <tr>
-                                                            <td>${subject.subject}</td>
-                                                            <td>${subject.converted_ca || "N/A"}</td>
-                                                            <td>${subject.exam_score || "N/A"}</td>
-                                                            <td>${subject.total_score || "N/A"}</td>
-                                                            <td>${subject.grade || "N/A"}</td>
-                                                            <td>${subject.remark || "N/A"}</td>
-                                                            <td>${subject.highest_score || "N/A"}</td>
-                                                            <td>${subject.average_score ? subject.average_score.toFixed(2) : "N/A"}</td>
-                                                            <td>${subject.lowest_score || "N/A"}</td>
-                                                            
-                                                        </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                        <div class="percentile-box" style="
+                                            margin-top: 20px;
+                                            background-color: #f0f4f8;
+                                            padding: 15px;
+                                            border-radius: 5px;
+                                            display: flex;
+                                            justify-content: space-between;
+                                        ">
+                                            <div class="percentile-item" style="text-align: center;">
+                                                <div class="percentile-label" style="font-size: 13px;">Total Obtainable</div>
+                                                <div class="percentile-value" style="font-size: 20px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.average.total_score_maximum ?? "N/A"}
+                                                </div>
+                                            </div>
+                                            <div class="percentile-item" style="text-align: center;">
+                                                <div class="percentile-label" style="font-size: 13px;">Total Obtained</div>
+                                                <div class="percentile-value" style="font-size: 20px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.average.total_score_obtained ?? "N/A"}
+                                                </div>
+                                            </div>
+                                            <div class="percentile-item" style="text-align: center;">
+                                                <div class="percentile-label" style="font-size: 13px;">Average Percentage</div>
+                                                <div class="percentile-value" style="font-size: 20px; font-weight: bold; color: #1a3a6e;">
+                                                    ${student.average.average_percentage?.toFixed(2) ?? "N/A"}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="ratings-section" style="padding: 20px; display: flex; justify-content: space-between; flex-wrap: wrap;">
+                                            <!-- Psychomotor Ratings -->
+                                            <div class="rating-container" style="width: 48%; margin-bottom: 20px;">
+                                                <div class="rating-title" style="font-weight: bold; margin-bottom: 10px; color: #1a3a6e; border-bottom: 2px solid #d4af37; padding-bottom: 5px;">
+                                                    Psychomotor Skills
+                                                </div>
+                                                <div class="rating-grid" style="display: flex; flex-wrap: wrap;">
+                                                    ${student.ratings.psychomotor.map(item => `
+                                                        <div class="rating-item" style="width: 18%; margin: 1%; margin-bottom: 15px;">
+                                                            <div class="rating-label" style="font-size: 12px; margin-bottom: 3px;">${item.criteria}</div>
+                                                            <div class="rating-stars" style="display: flex;">
+                                                                ${[1, 2, 3, 4, 5].map(i => `
+                                                                    <div class="star" style="
+                                                                        width: 12px;
+                                                                        height: 12px;
+                                                                        margin-right: 1px;
+                                                                        background-color: ${i <= item.value ? '#d4af37' : '#e9ecef'};
+                                                                        border-radius: 50%;
+                                                                    "></div>
+                                                                `).join('')}
+                                                            </div>
+                                                        </div>
                                                     `).join('')}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!-- Psychomotor Ratings -->
-                                        <div class="mt-3">
-                                        <h6 class="text-primary">Psychomotor Ratings</h6>
-                                        <table class="table table-bordered">
-                                           
-                                            <tbody>
-                                                ${psychomotorRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- Behavioral Ratings -->
-                                    <div class="mt-3">
-                                        <h6 class="text-primary">Behavioral Ratings</h6>
-                                        <table class="table table-bordered">
+                                                </div>
+                                            </div>
 
-                                            <tbody>
-                                                ${behavioralRatings || "<tr><td colspan='6'>No ratings available</td></tr>"}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            <!-- Behavioral Ratings -->
+                                            <div class="rating-container" style="width: 48%; margin-bottom: 20px;">
+                                                <div class="rating-title" style="font-weight: bold; margin-bottom: 10px; color: #1a3a6e; border-bottom: 2px solid #d4af37; padding-bottom: 5px;">
+                                                    Behavioral Traits
+                                                </div>
+                                                <div class="rating-grid" style="display: flex; flex-wrap: wrap;">
+                                                    ${student.ratings.behavioral.map(item => `
+                                                        <div class="rating-item" style="width: 18%; margin: 1%; margin-bottom: 15px;">
+                                                            <div class="rating-label" style="font-size: 12px; margin-bottom: 3px;">${item.criteria}</div>
+                                                            <div class="rating-stars" style="display: flex;">
+                                                                ${[1, 2, 3, 4, 5].map(i => `
+                                                                    <div class="star" style="
+                                                                        width: 12px;
+                                                                        height: 12px;
+                                                                        margin-right: 1px;
+                                                                        background-color: ${i <= item.value ? '#d4af37' : '#e9ecef'};
+                                                                        border-radius: 50%;
+                                                                    "></div>
+                                                                `).join('')}
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Comments Section with Signatures -->
+                                        <div class="comments-section" style="
+                                            display: flex;
+                                            justify-content: space-between;
+                                            gap: 20px;
+                                            margin-top: 20px;
+                                            flex-wrap: wrap;
+                                        ">
+                                            <!-- Teacher's Comment -->
+                                            <div class="comment-box" style="
+                                                flex: 1 1 48%;
+                                                background-color: #f0f4f8;
+                                                padding: 15px;
+                                                border: 1px solid #d4af37;
+                                                border-radius: 5px;
+                                            ">
+                                                <div class="comment-title" style="font-weight: bold; color: #1a3a6e; mmargin-bottom: 5px;">
+                                                    Teacher's Comment
+                                                </div>
+                                                <p class="comment-text" style="margin-bottom: 10px; font-size: 13px; text-align: justify;">
+                                                    ${student.comments[0]?.text || "N/A"}
+                                                </p>
+                                                <!--
+                                                <div class="signature-block" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 80px; height: 30px; border-bottom: 1px solid #ccc;">
+                                                        ${student.comments[0]?.signature ? `<img src="${student.comments[0].signature}" alt="Signature" style="width: 100%; height: 100%; object-fit: contain;">` : "N/A"}
+                                                    </div>
+                                                    <span style="font-size: 12px; color: #333;">-${student.comments[0]?.author || "N/A"}</span>
+                                                </div>
+                                                -->
+                                            </div>
 
-                                          
-                                        <!-- Comments -->
-                                        <div class="mt-1 text-left">
-                                            <h6 class="text-primary">Teacher's Comment</h6>
-                                            <p class="comment-text">${student.comments[0]?.text || "N/A"}</p>
-                                            <h6 class="text-primary">${schoolCommentLabel}'s Comment</h6>
-                                            <p class="comment-text">${student.principal_comment || "N/A"}</p>
+                                            <!-- Principal's Comment -->
+                                            <div class="comment-box" style="
+                                                flex: 1 1 48%;
+                                                background-color: #f0f4f8;
+                                                padding: 15px;
+                                                border: 1px solid #d4af37;
+                                                border-radius: 5px;
+                                            ">
+                                                <div class="comment-title" style="font-weight: bold; color: #1a3a6e; mmargin-bottom: 5px;">
+                                                    ${schoolCommentLabel}'s Comment
+                                                </div>
+                                                <p class="comment-text" style="margin-bottom: 10px; font-size: 13px; text-align: justify;">
+                                                    ${student.principal_comment || "N/A"}
+                                                </p>
+                                                <!--
+                                                <div class="signature-block" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 80px; height: 30px; border-bottom: 1px solid #ccc;">
+                                                        ${student.principal_signature ? `<img src="${student.principal_signature}" alt="Signature" style="width: 100%; height: 100%; object-fit: contain;">` : "N/A"}
+                                                    </div>
+                                                    <span style="font-size: 12px; color: #333;">${student.principal_name || "N/A"}</span>
+                                                </div>
+                                               --> 
+                                            </div>
                                         </div>
-                                         <!-- Resumption -->
-                                        <div class="mt-1 text-left next-term-section">
-                                         <strong class="text-muted">Next Term Begins: ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}</strong>
-                                        </div>
+
+
                                     </div>
-                                    
+                                                                            <!-- Result Footer -->
+
+                                                <div class="footer" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 20px;
+                background-color: #f0f4f8;
+                border-top: 2px solid #d4af37;
+                margin-top: 20px;
+                flex-wrap: wrap;
+            ">
+                <!-- Left: Resumption Date -->
+                <div class="next-term" style="font-size: 14px; color: #555;">
+                    <strong>Next Term Begins:</strong> ${data.school_details.next_term_begins ? data.school_details.next_term_begins : "Not Set"}
+                </div>
+
+                <!-- Right: QR Section -->
+                <div class="qr-section" style="display: flex; align-items: center; gap: 10px;">
+                    <div class="qr-text" style="font-size: 12px; text-align: right;">
+                        <div style="font-weight: bold;">Scan to verify</div>
+                        <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
+                    </div>
+                    <div class="qr-image" style="width: 70px; height: 70px;">
+                        <img src="${student.verification_token}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+
                             </div>
                                 </div>
                             </div>
@@ -552,6 +760,7 @@ if (printButton) {
 
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
 @media print {
     /* General settings */

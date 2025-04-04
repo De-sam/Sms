@@ -980,7 +980,6 @@ def fetch_students_result(request, short_code):
                 )
                 print(f"Filtered students for parent {request.user}: {students}")
 
-   
             else:
                 students = Student.objects.filter(
                      student_class__id__in=class_ids,
@@ -988,154 +987,15 @@ def fetch_students_result(request, short_code):
                  )
                 print(f"Admin fetching results: {students}")
 
-            # Fetch attendance, averages, and ratings
-            attendance_counts = StudentAttendance.objects.filter(
-                session=session, term=term, branch=branch, student__in=students
-            ).values("student").annotate(total_attendance=Sum("attendance_count"))
-
-            averages = StudentAverageResult.objects.filter(
-                session=session, term=term, branch=branch, student__in=students
-            ).select_related("student")
-
-            comments = Comment.objects.filter(
-                session=session, term=term, student__in=students
-            ).select_related("student", "author")
-
-            # Fetch results for the students
-            results = StudentFinalResult.objects.filter(
+            # ✅ NEW: Use the utility function to generate student result data
+            from utils.verify_result import get_full_result_data  # import your utility here
+            sorted_students = get_full_result_data(
+                school=school,
                 session=session,
                 term=term,
                 branch=branch,
-                student_class__id__in=class_ids,
-                student__in=students
-            ).select_related("subject", "student").order_by("student__last_name", "subject__name")
-
-            # Group results by student
-            grouped_results = {}
-            for result in results:
-                # Skip subjects where both CA and exam scores are zero
-                if result.converted_ca == 0 and result.exam_score == 0:
-                    continue
-                
-                # Ensure the branch is available for the result
-                branch = result.branch
-
-                # Fetch grade and remark dynamically
-                grade, remark = get_grade_and_remark(result.total_score, branch)
-
-                # Update result object if needed (optional)
-                result.grade = grade
-                result.remarks = remark
-                result.save()
-
-                
-                if result.student_id not in grouped_results:
-                    attendance = next(
-                        (item["total_attendance"] for item in attendance_counts if item["student"] == result.student_id), 0
-                    )
-                    avg_result = averages.filter(student_id=result.student_id).first()
-
-                    average_percentage = (
-                        round(avg_result.average_percentage, 2)
-                        if avg_result and avg_result.average_percentage is not None
-                        else 0
-                    )
-                    
-                    # Use `get_comment_by_percentage` for principal/headteacher comments
-                    principal_comment = get_comment_by_percentage(average_percentage)
-
-
-                    # Fetch profile picture
-                    profile_picture = (
-                        result.student.profile_picture.url
-                        if hasattr(result.student, "profile_picture") and result.student.profile_picture
-                        else result.student.user.profile_picture.url
-                        if hasattr(result.student.user, "profile_picture") and result.student.user.profile_picture
-                        else None
-                    )
-                    
-                    # Fetch psychomotor and behavioral ratings for the student
-                    psychomotor_ratings = Rating.objects.filter(
-                        student=result.student,
-                        branch=branch,
-                        session=session,
-                        term=term,
-                        rating_type="psychomotor"
-                    )
-
-                    behavioral_ratings = Rating.objects.filter(
-                        student=result.student,
-                        branch=branch,
-                        session=session,
-                        term=term,
-                        rating_type="behavioral"
-                    )
-
-                    grouped_results[result.student_id] = {
-                        "first_name": result.student.first_name,
-                        "last_name": result.student.last_name,
-                        "profile_picture": profile_picture,
-                        "class": result.student.student_class.name,
-                        "attendance_count": attendance,
-                        "times_absent": max(0, total_days_open - attendance),  # Calculate times absent
-                        "total_days_school_opened": total_days_open,
-                        "subjects": [],
-                        "total_subjects": 0,
-                        "subjects_failed": 0,
-                        "subjects_passed": 0,
-                        "highest_score": None,
-                        "lowest_score": None,
-                        "average_score": None,
-                        "average": {
-                            "total_score_obtained": avg_result.total_score_obtained if avg_result else 0,
-                            "total_score_maximum": avg_result.total_score_maximum if avg_result else 0,
-                            "average_percentage": average_percentage,
-                        },
-                        "ratings": {
-                            "psychomotor": [rating.to_dict() for rating in psychomotor_ratings],
-                            "behavioral": [rating.to_dict() for rating in behavioral_ratings],
-                        },                     
-                        "comments": [
-                            {
-                                "author": comment.author.get_full_name(),
-                                "text": comment.comment_text,
-                                "date": comment.created_at
-                            }
-                            for comment in comments if comment.student_id == result.student_id
-                        ],
-                        "max_obtainable_score": 100 * results.filter(student_id=result.student_id).count(),
-                        "obtained_score": round(
-                            results.filter(student_id=result.student_id).aggregate(Sum("total_score"))["total_score__sum"] or 0,
-                            2
-                        ),
-                        "principal_comment": principal_comment
-                    }
-
-                # Add subject details
-                grouped_results[result.student_id]["total_subjects"] += 1
-                grouped_results[result.student_id]["subjects"].append({
-                    "subject": result.subject.name,
-                    "converted_ca": result.converted_ca,
-                    "exam_score": result.exam_score,
-                    "total_score": result.total_score,
-                    "grade": grade,  # Add grade here
-                    "remark": remark, # Use the grading function here
-                    "highest_score": result.highest_score,  # From database
-                    "lowest_score": result.lowest_score,    # From database
-                    "average_score": round(result.average_score, 2) if result.average_score else None  # From database
-                })
-
-                # Increment subjects passed and failed
-                if result.grade == "F9":  # Assuming F9 is the failing grade
-                    grouped_results[result.student_id]["subjects_failed"] += 1
-                else:
-                    grouped_results[result.student_id]["subjects_passed"] += 1
-
-            # Sort students by highest percentage to lowest
-            sorted_students = sorted(
-                grouped_results.values(),
-                key=lambda x: x["average"]["average_percentage"],
-                reverse=True
+                class_ids=class_ids,
+                students=students
             )
 
             # Prepare response data
@@ -1237,6 +1097,44 @@ def fetch_results_wrapper(request, short_code):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
+
+# results/views.py
+from results.models import ResultVerificationToken
+from utils.verify_result import get_full_result_data # This is your new shared logic
+from django.http import Http404
+
+def verify_result_view(request, short_code, token):
+    """
+    Public-facing view for verifying a student's result via QR code.
+    """
+    # 1. Get the token object
+    token_obj = get_object_or_404(ResultVerificationToken, token=token)
+
+    # 2. Confirm the school short code matches
+    if token_obj.branch.school.short_code != short_code:
+        raise Http404("Invalid school code or token.")
+
+    # 3. Fetch result data using utility function
+    try:
+        result_data = get_full_result_data(
+            students=token_obj.student,
+            session=token_obj.session,
+            term=token_obj.term,
+            branch=token_obj.branch,
+            class_ids=short_code
+        )
+    except Exception as e:
+        return render(request, "results/invalid_verification.html", {"error": str(e)})
+
+    # 4. Render a simple readonly result preview page
+    return render(request, "results/verify_result.html", {
+        "result": result_data,
+        "school": token_obj.branch.school,
+        "student": token_obj.student,
+    })
+
 
 
 @login_required_with_short_code

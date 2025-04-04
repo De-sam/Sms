@@ -539,7 +539,7 @@ document.getElementById("saveScoresButton").addEventListener("click", function (
 
     // Submit the data via AJAX
     fetch(`/results/${shortCode}/save-student-scores/`, {
-        method: "POST",
+-        method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": "{{ csrf_token }}"

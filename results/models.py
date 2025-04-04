@@ -4,6 +4,7 @@ from schools.models import Branch
 from students.models import Student  # Assuming you have a Student model
 from academics.models import Session, Term
 from classes.models import Class, Subject
+import uuid
 
 
 
@@ -341,3 +342,21 @@ class GradingSystem(models.Model):
 
     def __str__(self):
         return f"{self.grade} ({self.lower_bound}% - {self.upper_bound}%) - {self.remark}"
+
+class ResultVerificationToken(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="verification_tokens")
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'session', 'term', 'branch')
+
+    def __str__(self):
+        return f"Token for {self.student} ({self.session}, {self.term})"
+
+    def get_verification_url(self):
+        return f"/verify-result/{self.token}/"
