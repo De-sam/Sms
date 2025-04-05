@@ -672,8 +672,6 @@ const getBranchValue = () => {
                                         justify-content: space-between;
                                         align-items: center;
                                         padding: 15px 20px;
-                                        background-color: #f0f4f8;
-                                        border-top: 2px solid #d4af37;
                                         margin-top: 20px;
                                         flex-wrap: wrap;
                                     ">
@@ -688,7 +686,7 @@ const getBranchValue = () => {
                                                 <div style="font-weight: bold;">Scan to verify</div>
                                                 <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
                                             </div>
-                                            <div class="qr-image" id="qrcode-${student.student_id}" style="width: 70px; height: 70px;"></div>
+                                            <div class="qr-image" id="qrcode-${student.student_id}" style="width: 200px; height: 200px;"></div>
                                         </div>
                                     </div>
 
@@ -705,8 +703,8 @@ const getBranchValue = () => {
                             if (qrContainer) {
                                 new QRCode(qrContainer, {
                                     text: `${window.location.origin}/verify-result/${student.verification_token}/`,
-                                    width: 70,
-                                    height: 70
+                                    width:200,
+                                    height: 200
                                 });
                             }
                         });
