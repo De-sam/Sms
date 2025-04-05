@@ -344,7 +344,7 @@ const getBranchValue = () => {
                         
                         const studentCard = `
                          <div class="pdf-page">
-                            <div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 <div class="header" style="background: #1a3a6e; color: white; padding: 20px; display: flex; align-items: center;">
                                     <!-- School Logo Image inside a styled circle -->
                                     <div class="logo" style="
@@ -670,7 +670,7 @@ const getBranchValue = () => {
                                     <div class="footer" style="
                                         display: flex;
                                         justify-content: space-between;
-                                        align-items: center;
+                                        align-items: flex-end;
                                         padding: 15px 20px;
                                         margin-top: 20px;
                                         flex-wrap: wrap;
@@ -681,7 +681,7 @@ const getBranchValue = () => {
                                         </div>
 
                                         <!-- Right: QR Section -->
-                                        <div class="qr-section" style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="qr-section" style="display: flex; align-items: flex-end; gap: 10px;">
                                             <div class="qr-text" style="font-size: 12px; text-align: right;">
                                                 <div style="font-weight: bold;">Scan to verify</div>
                                                 <div style="font-style: italic;">Student ID: ${student.student_id || "N/A"}</div>
