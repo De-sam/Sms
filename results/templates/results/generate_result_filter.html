@@ -816,19 +816,27 @@ if (printButton) {
     break-before: always;
     break-after: always;
     break-inside: avoid;
-    min-height: 700px; /* optional - ensure full page usage */
+    min-height: 1000px; /* optional - ensure full page usage */
 }
 @media print {
   .pdf-page {
     min-height: auto;
     overflow: hidden;
   }
-}   
+}
+
 @media print {
     /* General settings */
     body {
         margin: 0;
         padding: 0;
+    }
+    .card-header img {
+        max-height: 80px; /* Reduce image sizes */
+    }
+    .card-header {
+        font-size: 12px; /* Reduce text size */
+        padding: 5px; /* Reduce padding */
     }
 
     @page {
@@ -837,9 +845,9 @@ if (printButton) {
     }
 
     /* Prevent splitting of individual cards */
-    .card {
+    .pdf-page {
         page-break-inside: avoid; /* Prevent cards from breaking across pages */
-        margin-bottom: 0.5rem; /* Add space between cards */
+        margin-bottom: 0.2rem; /* Add space between cards */
     }
 
     /* Keep headers and content together */
