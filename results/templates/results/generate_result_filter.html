@@ -699,22 +699,21 @@ const getBranchValue = () => {
                             </div>
                         </div>
                     </div>
-                 </div>
+                         </div>
                         `;
                         resultsContainer.innerHTML += studentCard;
                     });
                      // ✅ Generate QR codes for all students after rendering
-                        data.students.forEach(student => {
-                            const qrContainer = document.getElementById(`qrcode-${student.student_id}`);
-                            if (qrContainer) {
-                                new QRCode(qrContainer, {
-                                    text: `${window.location.origin}/verify-result/${student.verification_token}/`,
-                                    width:200,
-                                    height: 200
-                                });
-                            }
+                     data.students.forEach(student => {
+                    const qrContainer = document.getElementById(`qrcode-${student.student_id}`);
+                    if (qrContainer && student.verification_url) {  // Make sure verification_url exists in your API response
+                        new QRCode(qrContainer, {
+                            text: student.verification_url,  // Use the full URL from Django
+                            width: 200,
+                            height: 200
                         });
-
+                    }
+});
                     actionButtons.classList.remove("d-none"); // Show action buttons
                 }
             })
