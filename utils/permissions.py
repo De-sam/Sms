@@ -161,3 +161,39 @@ def admin_student_parent_required(view_func):
     
     return wrapper
 
+def admin_teacher_student_parent_required(view_func):
+    """
+    Decorator to check if the user is either:
+    - School admin
+    - Teacher in the school
+    - Student belonging to the school
+    - Parent of a student in the school
+    """
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        school = get_object_or_404(SchoolRegistration, short_code=kwargs.get('short_code'))
+        
+        # Check if user is admin
+        if request.user == school.admin_user:
+            return view_func(request, *args, **kwargs)
+        
+        # Check if user is a teacher in this school
+        if hasattr(request.user, 'staff') and request.user.staff.role.name.lower() == 'teacher':
+            if request.user.staff.branch.school == school:
+                return view_func(request, *args, **kwargs)
+        
+        # Check if user is a student in this school
+        if hasattr(request.user, 'student_profile') and request.user.student_profile.branch.school == school:
+            return view_func(request, *args, **kwargs)
+        
+        # Check if user is a parent with children in this school
+        if hasattr(request.user, 'parent_profile'):
+            if ParentStudentRelationship.objects.filter(
+                parent_guardian=request.user.parent_profile,
+                student__branch__school=school
+            ).exists():
+                return view_func(request, *args, **kwargs)
+        
+        raise PermissionDenied("You do not have permission to access this view.")
+    
+    return wrapper

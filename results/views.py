@@ -7,7 +7,7 @@ from .models import ResultStructure, ResultComponent
 from .forms import ResultStructureForm, ResultComponentForm
 from landingpage.models import SchoolRegistration
 from utils.decorator import login_required_with_short_code
-from utils.permissions import admin_required,admin_or_teacher_required,admin_student_parent_required
+from utils.permissions import admin_required,admin_or_teacher_required,admin_teacher_student_parent_required
 from utils.context_helpers import get_user_roles
 from classes.models import Subject
 from django.http import QueryDict
@@ -1024,6 +1024,7 @@ def fetch_students_result(request, short_code):
 
 @csrf_exempt
 @login_required_with_short_code
+@admin_teacher_student_parent_required
 def fetch_results_wrapper(request, short_code):
     """
     Handles both GET requests for rendering templates and POST requests for fetching data.
