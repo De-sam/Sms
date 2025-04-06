@@ -1105,7 +1105,7 @@ def fetch_results_wrapper(request, short_code):
 from results.models import ResultVerificationToken
 from utils.verify_result import get_full_result_data # This is your new shared logic
 from django.http import Http404
-
+from django.utils import timezone
 def verify_result_view(request, short_code, token):
     """
     Public-facing view for verifying a student's result via QR code.
@@ -1120,23 +1120,64 @@ def verify_result_view(request, short_code, token):
     # 3. Fetch result data using utility function
     try:
         result_data = get_full_result_data(
-            students=token_obj.student,
+            school=token_obj.branch.school,
             session=token_obj.session,
             term=token_obj.term,
             branch=token_obj.branch,
-            class_ids=short_code
+            class_ids=[token_obj.student.student_class.id],
+            students=[token_obj.student],
+            request=request
         )
+        
+        if not result_data:
+            raise ValueError("No result data found for this student")
+            
+        student_result = result_data[0]
+        
+        # Calculate next term start date (same logic as original results)
+        next_term_start_date = None
+        if token_obj.term.term_name == "First Term":
+            next_term = Term.objects.filter(session=token_obj.session, term_name="Second Term").first()
+            if next_term:
+                next_term_start_date = next_term.start_date
+        elif token_obj.term.term_name == "Second Term":
+            next_term = Term.objects.filter(session=token_obj.session, term_name="Third Term").first()
+            if next_term:
+                next_term_start_date = next_term.start_date
+        elif token_obj.term.term_name == "Third Term":
+            next_session = Session.objects.filter(id__gt=token_obj.session.id).order_by("id").first()
+            if next_session:
+                next_term = Term.objects.filter(session=next_session, term_name="First Term").first()
+                if next_term:
+                    next_term_start_date = next_term.start_date
+
+        # Format the next term date
+        formatted_next_term_start_date = (
+            next_term_start_date.strftime("%B %d, %Y") if next_term_start_date else "Not Available"
+        )
+        
+        # Prepare school details
+        school_details = {
+            "logo": token_obj.branch.school.logo.url if token_obj.branch.school.logo else "",
+            "school_name": token_obj.branch.school.school_name,
+            "school_address": token_obj.branch.school.address,
+            "school_email": token_obj.branch.school.email,
+            "school_phone": token_obj.branch.school.admin_phone_number,
+            "term_label": f"{token_obj.term.term_name} {token_obj.session.session_name} Result",
+            "next_term_begins": formatted_next_term_start_date  # Use calculated date
+        }
+        
+        # Add QR code URL to student data
+        student_result['qr_code_url'] = student_result.get('verification_url', '')
+        
+        return render(request, "results/verify_result.html", {
+            "student": student_result,
+            "school_details": school_details,
+            "today": timezone.now().strftime("%d %B, %Y")
+        })
+        
     except Exception as e:
         return render(request, "results/invalid_verification.html", {"error": str(e)})
-
-    # 4. Render a simple readonly result preview page
-    return render(request, "results/verify_result.html", {
-        "result": result_data,
-        "school": token_obj.branch.school,
-        "student": token_obj.student,
-    })
-
-
 
 @login_required_with_short_code
 @admin_required

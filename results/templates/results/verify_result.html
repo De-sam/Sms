@@ -14,140 +14,185 @@
 </head>
 <body>
 
-<div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <div class="header" style="background: #1a3a6e; color: white; padding: 20px; display: flex; align-items: center;">
-        <div class="logo" style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid #d4af37; margin-right: 20px;">
-            <img src="{{ school_details.logo }}" alt="School Logo" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <div class="school-info" style="flex-grow: 1;">
-            <h1 class="school-name" style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">
-                {{ school_details.school_name }}
-            </h1>
-            <p class="school-address" style="margin: 5px 0;">{{ school_details.school_address }}</p>
-            <p class="school-contact" style="margin: 0;">
-                Email: {{ school_details.school_email|default:"N/A" }} |
-                Phone: {{ school_details.school_phone|default:"N/A" }}
-            </p>
-        </div>
-    </div>
-
-    <div class="report-title" style="text-align: center; background: #d4af37; color: #1a3a6e; padding: 10px; font-weight: bold; font-size: 18px; text-transform: uppercase;">
-        {{ school_details.term_label|default:"N/A" }}
-    </div>
-
-    <div class="student-info" style="display: flex; flex-wrap: wrap; padding: 15px 20px; background: #f0f4f8; border-bottom: 2px solid #d4af37;">
-        <div class="student-photo" style="margin-right: 30px;">
-            <img src="{{ student.profile_picture }}" alt="Student Profile" style="width: 70px; height: 70px; border-radius: 5px;">
-        </div>
-        <div class="student-details" style="flex-grow: 1;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <div><strong>Name:</strong> {{ student.last_name }} {{ student.first_name }}</div>
-                <div><strong>Class:</strong> {{ student.class }}</div>
-                <div><strong>Sex:</strong> {{ student.gender|default:"N/A" }}</div>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <div><strong>Student ID:</strong> {{ student.student_id|default:"N/A" }}</div>
-                <div><strong>Date Issued:</strong> {{ today }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="academic-summary" style="display: flex; padding: 15px 20px; background: white; flex-wrap: wrap; justify-content: space-between; border-bottom: 1px solid #e9ecef;">
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.total_subjects }}</div><div>Subjects Taken</div></div>
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.subjects_passed }}</div><div>Subjects Passed</div></div>
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.subjects_failed }}</div><div>Subjects Failed</div></div>
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.total_days_school_opened|default:"N/A" }}</div><div>Days School Opened</div></div>
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.attendance_count|default:"N/A" }}</div><div>Days Present</div></div>
-        <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.times_absent|default:"N/A" }}</div><div>Days Absent</div></div>
-    </div>
-
-    <div style="padding: 20px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead style="background-color: #1a3a6e; color: white;">
-                <tr>
-                    <th>Subjects</th>
-                    <th>CA</th>
-                    <th>Exam</th>
-                    <th>Total</th>
-                    <th>Grade</th>
-                    <th>Remarks</th>
-                    <th>Highest</th>
-                    <th>Average</th>
-                    <th>Lowest</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for subject in student.subjects %}
-                <tr style="background-color: {% cycle '#f0f4f8' 'white' %}; text-align: center;">
-                    <td>{{ subject.subject }}</td>
-                    <td>{{ subject.converted_ca|default:"N/A" }}</td>
-                    <td>{{ subject.exam_score|default:"N/A" }}</td>
-                    <td>{{ subject.total_score|default:"N/A" }}</td>
-                    <td>{{ subject.grade|default:"N/A" }}</td>
-                    <td>{{ subject.remark|default:"N/A" }}</td>
-                    <td>{{ subject.highest_score|default:"N/A" }}</td>
-                    <td>{{ subject.average_score|floatformat:2|default:"N/A" }}</td>
-                    <td>{{ subject.lowest_score|default:"N/A" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div style="margin-top: 20px; display: flex; justify-content: space-around; background: #f0f4f8; padding: 15px;">
-            <div><strong>Total Obtainable:</strong> {{ student.average.total_score_maximum }}</div>
-            <div><strong>Total Obtained:</strong> {{ student.average.total_score_obtained }}</div>
-            <div><strong>Average %:</strong> {{ student.average.average_percentage|floatformat:2 }}%</div>
-        </div>
-
-        <div class="ratings-section" style="margin-top: 20px; display: flex; gap: 40px;">
-            <div style="flex: 1;">
-                <h4>Psychomotor</h4>
-                {% for rating in student.ratings.psychomotor %}
-                <div style="margin-bottom: 8px;">{{ rating.criteria }}:
-                    {% for i in "12345"|slice:":5" %}
-                        <span class="star" style="background-color: {% if i <= rating.value %}#d4af37{% else %}#e9ecef{% endif %}; display:inline-block;"></span>
-                    {% endfor %}
+    <div class="container-fluid">
+        <div class="pdf-page">
+            <div class="card mb-0 school-details-card" style="max-width: 100%; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                <!-- School Header -->
+                <div class="header" style="background: #1a3a6e; color: white; padding: 20px; display: flex; align-items: center;">
+                    <div class="logo" style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid #d4af37; margin-right: 20px;">
+                        <img src="{{ school_details.logo }}" alt="School Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="school-info" style="flex-grow: 1;">
+                        <h1 class="school-name" style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">
+                            {{ school_details.school_name }}
+                        </h1>
+                        <p class="school-address" style="margin: 5px 0;">{{ school_details.school_address }}</p>
+                        <p class="school-contact" style="margin: 0;">
+                            Email: {{ school_details.school_email|default:"N/A" }} |
+                            Phone: {{ school_details.school_phone|default:"N/A" }}
+                        </p>
+                    </div>
                 </div>
-                {% endfor %}
-            </div>
-            <div style="flex: 1;">
-                <h4>Behavioral</h4>
-                {% for rating in student.ratings.behavioral %}
-                <div style="margin-bottom: 8px;">{{ rating.criteria }}:
-                    {% for i in "12345"|slice:":5" %}
-                        <span class="star" style="background-color: {% if i <= rating.value %}#d4af37{% else %}#e9ecef{% endif %}; display:inline-block;"></span>
-                    {% endfor %}
+    
+                <!-- Term Label -->
+                <div class="report-title" style="text-align: center; background: #d4af37; color: #1a3a6e; padding: 10px; font-weight: bold; font-size: 18px; text-transform: uppercase;">
+                    {{ school_details.term_label|default:"N/A" }}
                 </div>
-                {% endfor %}
+    
+                <!-- Student Info -->
+                <div class="student-info" style="display: flex; flex-wrap: wrap; padding: 15px 20px; background: #f0f4f8; border-bottom: 2px solid #d4af37;">
+                    <div class="student-photo" style="margin-right: 30px;">
+                        <img src="{{ student.profile_picture|default:'https://i.pinimg.com/564x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg' }}" alt="Student Profile" style="width: 70px; height: 70px; border-radius: 5px;">
+                    </div>
+                    <div class="student-details" style="flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div><strong>Name:</strong> {{ student.last_name }} {{ student.first_name }}</div>
+                            <div><strong>Class:</strong> {{ student.class }}</div>
+                            <div><strong>Sex:</strong> {{ student.gender|default:"N/A" }}</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <div><strong>Student ID:</strong> {{ student.student_id|default:"N/A" }}</div>
+                            <div><strong>Date Issued:</strong> {{ today }}</div>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Academic Summary -->
+                <div class="academic-summary" style="display: flex; padding: 15px 20px; background: white; flex-wrap: wrap; justify-content: space-between; border-bottom: 1px solid #e9ecef;">
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.total_subjects }}</div><div>Subjects Taken</div></div>
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.subjects_passed }}</div><div>Subjects Passed</div></div>
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.subjects_failed }}</div><div>Subjects Failed</div></div>
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.total_days_school_opened|default:"N/A" }}</div><div>Days School Opened</div></div>
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.attendance_count|default:"N/A" }}</div><div>Days Present</div></div>
+                    <div style="text-align: center;"><div style="font-size: 24px; font-weight: bold;">{{ student.times_absent|default:"N/A" }}</div><div>Days Absent</div></div>
+                </div>
+    
+                <!-- Subjects Table -->
+                <div style="padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead style="background-color: #1a3a6e; color: white;">
+                            <tr>
+                                <th>Subjects</th>
+                                <th>CA</th>
+                                <th>Exam</th>
+                                <th>Total</th>
+                                <th>Grade</th>
+                                <th>Remarks</th>
+                                <th>Highest</th>
+                                <th>Average</th>
+                                <th>Lowest</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in student.subjects %}
+                            <tr style="background-color: {% cycle '#f0f4f8' 'white' %}; text-align: center;">
+                                <td>{{ subject.subject }}</td>
+                                <td>{{ subject.converted_ca|default:"N/A" }}</td>
+                                <td>{{ subject.exam_score|default:"N/A" }}</td>
+                                <td>{{ subject.total_score|default:"N/A" }}</td>
+                                <td>{{ subject.grade|default:"N/A" }}</td>
+                                <td>{{ subject.remark|default:"N/A" }}</td>
+                                <td>{{ subject.highest_score|default:"N/A" }}</td>
+                                <td>{{ subject.average_score|floatformat:2|default:"N/A" }}</td>
+                                <td>{{ subject.lowest_score|default:"N/A" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+    
+                    <!-- Totals -->
+                    <div style="margin-top: 20px; display: flex; justify-content: space-around; background: #f0f4f8; padding: 15px;">
+                        <div><strong>Total Obtainable:</strong> {{ student.average.total_score_maximum }}</div>
+                        <div><strong>Total Obtained:</strong> {{ student.average.total_score_obtained }}</div>
+                        <div><strong>Average %:</strong> {{ student.average.average_percentage|floatformat:2 }}%</div>
+                    </div>
+    
+                    <div style="padding: 15px; background: linear-gradient(to right, #d4edda 0%, #f8fff9 100%); border-radius: 6px;">
+                        <div style="display: flex; align-items: center;">
+                            <div style="background: #28a745; color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 24px; margin-right: 12px;">✓</div>
+                            <div>
+                                <div style="font-weight: bold; color: #155724;">Authentic Result</div>
+                                <div style="font-size: 0.9em; color: #0c5460; margin-top: 4px;">
+                                    Verification ID: <span style="font-family: monospace;">{{ student.verification_token }}</span>
+                                    <span style="display: inline-block; margin: 0 8px;">•</span>
+                                    Valid until: {{ expiry_date }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+                    <!-- Comments -->
+                    <div class="comments-section" style="margin-top: 30px; display: flex; gap: 40px;">
+                        <div style="flex: 1;">
+                            <h4>Teacher's Comment</h4>
+                            <p>{{ student.comments.0.text|default:"N/A" }}</p>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4>{% if school_details.school_type == "Primary" %}Head Teacher{% else %}Principal{% endif %}'s Comment</h4>
+                            <p>{{ student.principal_comment|default:"N/A" }}</p>
+                        </div>
+                    </div>
+    
+                    <!-- Footer with QR Code -->
+                    <div class="footer" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #d4af37; padding-top: 10px;">
+                        <div><strong>Next Term Begins:</strong> {{ school_details.next_term_begins|default:"Not Set" }}</div>
+                        <div style="display: flex; align-items: center;">
+                            <div style="margin-right: 10px; text-align: right;">
+                                <strong>Scan to verify</strong><br>
+                                Student ID: {{ student.student_id }}
+                            </div>
+                            <div id="qrcode" style="width: 70px; height: 70px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="comments-section" style="margin-top: 30px; display: flex; gap: 40px;">
-            <div style="flex: 1;">
-                <h4>Teacher's Comment</h4>
-                <p>{{ student.comments.0.text|default:"N/A" }}</p>
-            </div>
-            <div style="flex: 1;">
-                <h4>Principal's Comment</h4>
-                <p>{{ student.principal_comment|default:"N/A" }}</p>
-            </div>
-        </div>
-
-        <div class="footer" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #d4af37; padding-top: 10px;">
-            <div><strong>Next Term Begins:</strong> {{ school_details.next_term_begins|default:"Not Set" }}</div>
-            <div style="display: flex; align-items: center;">
-                <div style="margin-right: 10px; text-align: right;">
-                    <strong>Scan to verify</strong><br>
-                    Student ID: {{ student.student_id }}
-                </div>
-                <div style="width: 70px; height: 70px;">
-                    <img src="{{ student.qr_code_url|default:'/static/img/default-qr.png' }}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-            </div>
-        </div>
-
     </div>
-</div>
-
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Generate QR Code
+        new QRCode(document.getElementById("qrcode"), {
+            text: "{{ student.verification_url }}",
+            width: 70,
+            height: 70
+        });
+        
+        // Print functionality
+        document.getElementById("printButton").addEventListener("click", function() {
+            window.print();
+        });
+    });
+    </script>
+    
+    <style>
+    .pdf-page {
+        page-break-before: always;
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+    
+    .star {
+        width: 12px;
+        height: 12px;
+        margin-right: 1px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .pdf-page {
+            page-break-inside: avoid;
+            margin-bottom: 0;
+        }
+        .btn {
+            display: none !important;
+        }
+    }
+    </style>
 </body>
 </html>
