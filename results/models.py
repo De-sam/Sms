@@ -360,11 +360,15 @@ class ResultVerificationToken(models.Model):
     
     def get_verification_url(self, request=None):
         from django.urls import reverse
-        path = reverse("verify_result", kwargs={
+        # Build the base path using reverse
+        base_path = reverse("verify_result", kwargs={
             "short_code": self.branch.school.short_code,
             "token": str(self.token)
         })
-
+        
+        # Manually prepend '/results' to the path
+        path = f"/results{base_path}"
+        
         if request:
             return request.build_absolute_uri(path)
-        return path
+        return f"https://sms-lme5.onrender.com{path}"
