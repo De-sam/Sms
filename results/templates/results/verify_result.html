@@ -107,17 +107,29 @@
                         <div><strong>Average %:</strong> {{ student.average.average_percentage|floatformat:2 }}%</div>
                     </div>
     
-                    <div style="padding: 15px; background: linear-gradient(to right, #d4edda 0%, #f8fff9 100%); border-radius: 6px;">
-                        <div style="display: flex; align-items: center;">
-                            <div style="background: #28a745; color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 24px; margin-right: 12px;">✓</div>
-                            <div>
-                                <div style="font-weight: bold; color: #155724;">Authentic Result</div>
-                                <div style="font-size: 0.9em; color: #0c5460; margin-top: 4px;">
-                                    Verification ID: <span style="font-family: monospace;">{{ student.verification_token }}</span>
-                                    <span style="display: inline-block; margin: 0 8px;">•</span>
-                                    Valid until: {{ expiry_date }}
-                                </div>
-                            </div>
+                    <!-- Authenticity Verification Box (Green Version) -->
+                    <div style="margin: 30px 0; padding: 20px; border: 2px solid #28a745; border-radius: 8px; background-color: #d4edda; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#28a745" viewBox="0 0 16 16" style="margin-right: 10px;">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            </svg>
+                            <h3 style="color: #155724; margin: 0; font-weight: bold; font-size: 1.4rem;">THIS RESULT IS VERIFIED AUTHENTIC</h3>
+                        </div>
+                        <div style="margin-top: 15px; text-align: center; color: #0c5460;">
+                            <p style="margin-bottom: 5px; font-size: 1.05rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#28a745" viewBox="0 0 16 16" style="vertical-align: text-top;">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                                </svg>
+                                Verified on: {{ today }}
+                            </p>
+                            <p style="margin-bottom: 0; font-size: 1.05rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#28a745" viewBox="0 0 16 16" style="vertical-align: text-top;">
+                                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                                </svg>
+                                Verification Token: <span style="font-family: monospace; font-weight: bold;">{{ student.verification_token }}</span>
+                            </p>
                         </div>
                     </div>    
                     <!-- Comments -->
