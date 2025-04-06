@@ -270,6 +270,7 @@ const getBranchValue = () => {
                                                 <tr>
                                                     <th rowspan="2">Student Name</th>
                                                     ${allSubjects.map(subject => `<th colspan="3" style="writing-mode: vertical-lr; text-align: center; vertical-align: middle; transform: rotate(180deg); ">${subject}</th>`).join('')}
+                                                    <th rowspan="2" style="writing-mode: vertical-lr; text-align: center; vertical-align: middle; transform: rotate(180deg);">Total(100)</th>
                                                     <th rowspan="2" style="writing-mode: vertical-lr; text-align: center; vertical-align: middle; transform: rotate(180deg);">Percentage</th>
                                                 </tr>
                                                 <tr>
@@ -298,6 +299,7 @@ const getBranchValue = () => {
                                                                     <td>${subj.total_score || "N/A"}</td>
                                                                 `;
                                                             }).join('')}
+                                                            <td>${student.average.total_score_obtained ?? "N/A"}</td>
                                                             <td>${student.average?.average_percentage?.toFixed(2) || "N/A"}%</td>
                                                         </tr>
                                                     `;
@@ -387,197 +389,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Print functionality
 if (printButton) {
-    printButton.addEventListener("click", function () {
+    printButton.addEventListener("click", function() {
         const printContent = resultsContainer.innerHTML;
-        const originalContent = document.body.innerHTML;
-
-        document.body.innerHTML = `
-            <div style="margin: 20px; font-family: Arial, sans-serif;">
-                ${printContent}
-            </div>
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Results</title>
+                <style>
+                    @page { size: landscape; margin: 0.5cm; }
+                    body { font-family: Arial; margin: 20px; }
+                    /* Your other print styles */
+                </style>
+            </head>
+            <body>${printContent}</body>
+            </html>
         `;
-        window.print();
-        document.body.innerHTML = originalContent;
-      
+        
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        
+        // Give the content time to load before printing
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.print();
+                // Optional: close after printing
+                // printWindow.close();
+            }, 500);
+        };
     });
-    
 }
 
 
 </script>
 <style>
 @media print {
-    /* General settings */
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
     @page {
-        size: auto; /* Let the browser determine the page size */
-        margin: 0.5cm; /* Set consistent margins for all pages */
+        size: auto;
     }
-
-    /* Prevent splitting of individual cards */
-    .card {
-        page-break-inside: avoid; /* Prevent cards from breaking across pages */
-        margin-bottom: 0.5rem; /* Add space between cards */
-    }
-
-    /* Keep headers and content together */
-    .card-header, .card-body {
-        page-break-inside: avoid; /* Ensure headers and bodies stay together */
-    }
-
-    /* Force a new page before the school details card */
-    .card.school-details-card {
-        page-break-before: always; /* Start on a new page */
-    }
-
-    /* Force a new page after the resumption date */
-    .next-term-section {
-        page-break-after: always; /* Start new page after this section */
-    }
-
-    /* Auatomatic scaling for oversized content */
-    .print-container {
-        transform: scale(0.80); /* Scale down to fit */
-        transform-origin: top center; /* Center scaling */
-    }
-
-    /* Tables */
-    .table-bordered {
-        page-break-inside: avoid; /* Prevent tables from breaking across pages */
-        font-size: 10px; /* Adjust font size for better readability */
-        text-align: center; /* Ensure table text is centered */
-        margin: 0 auto; /* Center tables */
-        border-collapse: collapse; /* Remove spacing between table cells */
-    }
-
-    .table-bordered td,
-    .table-bordered th {
-        padding: 4px; /* Adjust cell padding for compact tables */
-    }
-
-    /* Hide buttons and form controls when printing */
-    .btn, #filterForm {
-        display: none !important;
-    }
-
-    /* Images */
-    img {
-        max-width: 100%;
-        height: auto;
-    }
-
-
-    .card-header img.logo {
-        margin-right: 10px; /* Reduce spacing between the logo and the middle details */
-    }
-
-    .card-header img.profile-picture {
-        margin-left: 10px; /* Reduce spacing between the profile picture and the middle details */
-    }
-
-    /* Score Details */
-    .score-details {
-        display: flex; /* Flexbox for alignment */
-        justify-content: center; /* Horizontally center items */
-        align-items: center; /* Vertically center items */
-        gap: 0.5rem; /* Space between elements */
-        text-align: center; /* Center align text */
-        font-size: 12px; /* Adjust font size for clarity */
-        margin: 0; /* Remove unnecessary margins */
-    }
-
-    .score-details span {
-        text-align: center; /* Ensure each span's text is centered */
-    }
-
-    /* Comments */
-    .comment-text {
-        font-size: 11px; /* Reduce font size to 11px */
-        text-align: justify; /* Align text for better readability */
-        margin-bottom: 5px; /* Add some spacing between comments */
-    }
-
-    /* Layout adjustments for print */
-    @page {
-        size: auto; /* Adjust page size dynamically */
-        margin: 1cm; /* Set consistent page margins */
-    }
-
-    /* Hide elements like buttons that are irrelevant for printing */
-    .btn,
-    #filterForm {
-        display: none !important; /* Exclude filter form and buttons from print */
+    
+    body.print-landscape {
+        transform: rotate(90deg);
+        transform-origin: left top;
+        width: 100vh;
+        height: 100vw;
+        overflow-x: hidden;
+        position: absolute;
+        top: 100%;
+        left: 0;
     }
 }
-
-.card {
-    margin: 0 auto; /* Center the card horizontally */
-    width: calc(100% + 50px); /* Slightly extend the card past the table width */
-    max-width: 90%; /* Prevent the card from spanning the full screen width */
-    padding: 10px; /* Adjust padding for better aesthetics */
-}
-
-.comment-text {
-    font-size: 11px; /* Reduce font size to 11px */
-    text-align: justify; /* Align text for better readability */
-    margin-bottom: 5px; /* Add spacing between comments */
-}
-
-.score-details {
-    display: flex; /* Ensure flexbox alignment */
-    justify-content: center; /* Center-align score details */
-    align-items: center; /* Vertically center items */
-    gap: 1rem; /* Add spacing between details */
-    font-size: 11px; /* Slightly smaller font size for compactness */
-    text-align: center;
-}
-
-.table-bordered {
-    border-collapse: collapse; /* Ensures no extra spacing between cells */
-    width: auto; /* Prevents the table from spanning the full width of the screen */
-    font-size: 11px; /* Reduce font size for readability */
-    text-align: center; /* Center-align all text within the table */
-    margin: 0 auto; /* Center the table */
-    padding: 2px; /* Reduced padding for all table cells */
-}
-
-.table-bordered td,
-.table-bordered th {
-    padding: 4px; /* Adjust top, bottom, left, and right padding */
-}
-
-.card-header {
-    text-align: center; /* Center-align text in the card header */
-    padding: 10px; /* Adjust padding for a balanced look */
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Ensure alignment and spacing */
-    gap: 5px; /* Adds uniform spacing between all items */
-}
-
-.card-header img.logo {
-    margin-right: 10px; /* Reduce spacing between the logo and the middle details */
-}
-
-.card-header img.profile-picture {
-    margin-left: 10px; /* Reduce spacing between the profile picture and the middle details */
-}
-
-#loader {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
 </style>
 {% endblock %}
